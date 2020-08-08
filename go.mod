@@ -1,4 +1,4 @@
-module github.com/free/sql_exporter
+module github.com/burningalchemist/sql_exporter
 
 go 1.14
 

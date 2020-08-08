@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/free/sql_exporter/config"
+	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
