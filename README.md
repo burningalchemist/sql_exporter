@@ -1,4 +1,4 @@
-# Prometheus SQL Exporter ![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg) ![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)
+# Prometheus SQL Exporter [![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo) [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter)
 This is a fork of Database agnostic SQL exporter for [Prometheus](https://prometheus.io), created by [@free](https://github.com/free/sql_exporter). The main goal is to bring some maintenance to the project until the original maintainer is back.
 
 ## Overview
@@ -19,7 +19,7 @@ metrics when queried more frequently than the configured interval.
 
 ## Usage
 
-Get Prometheus SQL Exporter, either as a [packaged release](https://github.com/burningalchemist/sql_exporter/releases/latest), as a [Docker image](https://hub.docker.com/r/githubfree/sql_exporter) or
+Get Prometheus SQL Exporter, either as a [packaged release](https://github.com/burningalchemist/sql_exporter/releases/latest), as a [Docker image](https://hub.docker.com/r/burningalchemist/sql_exporter) or
 build it yourself:
 
 ```
@@ -56,9 +56,9 @@ SQL Exporter process metrics are exported at `/sql_exporter_metrics`.
 
 The configuration examples listed here only cover the core elements. For a comprehensive and comprehensively documented
 configuration file check out 
-[`documentation/sql_exporter.yml`](https://github.com/free/sql_exporter/tree/master/documentation/sql_exporter.yml).
+[`documentation/sql_exporter.yml`](https://github.com/burningalchemist/sql_exporter/tree/master/documentation/sql_exporter.yml).
 You will find ready to use "standard" DBMS-specific collector definitions in the
-[`examples`](https://github.com/free/sql_exporter/tree/master/examples) directory. You may contribute your own collector
+[`examples`](https://github.com/burningalchemist/sql_exporter/tree/master/examples) directory. You may contribute your own collector
 definitions and metric additions if you think they could be more widely useful, even if they are merely different takes
 on already covered DBMSs.
 
