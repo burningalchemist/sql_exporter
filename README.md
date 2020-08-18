@@ -142,6 +142,7 @@ MySQL | `mysql://user:passw@protocol(host:port)/dbname` | `user:passw@protocol(h
 PostgreSQL | `postgres://user:passw@host:port/dbname` | *unchanged*
 SQL Server | `sqlserver://user:passw@host:port/instance` | *unchanged*
 Clickhouse | `clickhouse://host:port?username=user&password=passw&database=dbname` | `tcp://host:port?username=user&password=passw&database=dbname`
+Snowflake  | ` snowflake://user:pass@account/dbname?role=rolename&warehouse=warehousename` | `user:pass@account/dbname?role=rolename&warehouse=warehousename`
 
 ## Why It Exists
 
