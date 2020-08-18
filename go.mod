@@ -16,6 +16,7 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.11.1
 	github.com/prometheus/procfs v0.1.4-0.20200701203502-869cfc74c3b4 // indirect
+	github.com/snowflakedb/gosnowflake v1.3.7
 	github.com/stretchr/testify v1.6.2-0.20200803095430-a3bed97cf337 // indirect
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
 	golang.org/x/sys v0.0.0-20200805065543-0cf7623e9dbd // indirect
