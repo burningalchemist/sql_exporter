@@ -4,8 +4,9 @@ This is a fork of Database agnostic SQL exporter for [Prometheus](https://promet
 ## Overview
 
 SQL Exporter is a configuration driven exporter that exposes metrics gathered from DBMSs, for use by the Prometheus
-monitoring system. Out of the box, it provides support for MySQL, PostgreSQL, Microsoft SQL Server and Clickhouse, but
-any DBMS for which a Go driver is available may be monitored after rebuilding the binary with the DBMS driver included.
+monitoring system. Out of the box, it provides support for MySQL, PostgreSQL, Microsoft SQL Server, Clickhouse, and
+Snowflake, but any DBMS for which a Go driver is available may be monitored after rebuilding the binary with the DBMS
+driver included.
 
 The collected metrics and the queries that produce them are entirely configuration defined. SQL queries are grouped into
 collectors -- logical groups of queries, e.g. *query stats* or *I/O stats*, mapped to the metrics they populate.
@@ -141,6 +142,7 @@ MySQL | `mysql://user:passw@protocol(host:port)/dbname` | `user:passw@protocol(h
 PostgreSQL | `postgres://user:passw@host:port/dbname` | *unchanged*
 SQL Server | `sqlserver://user:passw@host:port/instance` | *unchanged*
 Clickhouse | `clickhouse://host:port?username=user&password=passw&database=dbname` | `tcp://host:port?username=user&password=passw&database=dbname`
+Snowflake  | ` snowflake://user:pass@account/dbname?role=rolename&warehouse=warehousename` | `user:pass@account/dbname?role=rolename&warehouse=warehousename`
 
 ## Why It Exists
 
