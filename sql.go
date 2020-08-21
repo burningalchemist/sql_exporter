@@ -11,6 +11,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"      // register the MySQL driver
 	_ "github.com/lib/pq"                   // register the PostgreSQL driver
 	_ "github.com/snowflakedb/gosnowflake"  // register the Snowflake driver
+	_ "github.com/vertica/vertica-sql-go"   // register the Vertica driver
 
 	log "github.com/golang/glog"
 )
@@ -51,7 +52,11 @@ import (
 // Using the https://godoc.org/github.com/snowflakedb/gosnowflake driver, DSN format (passed to the driver stripped
 // of the `snowflake://`` prefix):
 //   snowflake://username:password@account/dbname?role=rolename&warehouse=warehousename&param=value
-
+//
+// Vertica
+//
+// Using the https://github.com/vertica/vertica-sql-go driver, DSN format (passed through to the driver unchanged):
+//   vertica://user:password@host:port/dbname?param=value
 func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxIdleConns int) (*sql.DB, error) {
 	// Extract driver name from DSN.
 	idx := strings.Index(dsn, "://")
