@@ -137,11 +137,12 @@ func (c *Config) loadCollectorFiles() error {
 
 // GlobalConfig contains globally applicable defaults.
 type GlobalConfig struct {
-	MinInterval   model.Duration `yaml:"min_interval"`          // minimum interval between query executions, default is 0
-	ScrapeTimeout model.Duration `yaml:"scrape_timeout"`        // per-scrape timeout, global
-	TimeoutOffset model.Duration `yaml:"scrape_timeout_offset"` // offset to subtract from timeout in seconds
-	MaxConns      int            `yaml:"max_connections"`       // maximum number of open connections to any one target
-	MaxIdleConns  int            `yaml:"max_idle_connections"`  // maximum number of idle connections to any one target
+	MinInterval     model.Duration `yaml:"min_interval"`            // minimum interval between query executions, default is 0
+	ScrapeTimeout   model.Duration `yaml:"scrape_timeout"`          // per-scrape timeout, global
+	TimeoutOffset   model.Duration `yaml:"scrape_timeout_offset"`   // offset to subtract from timeout in seconds
+	MaxConnLifetime time.Duration  `yaml:"max_connection_lifetime"` // maximum amount of time a connection may be reused to any one target
+	MaxConns        int            `yaml:"max_connections"`         // maximum number of open connections to any one target
+	MaxIdleConns    int            `yaml:"max_idle_connections"`    // maximum number of idle connections to any one target
 
 	// Catches all undefined fields and must be empty after parsing.
 	XXX map[string]interface{} `yaml:",inline" json:"-"`
@@ -157,6 +158,7 @@ func (g *GlobalConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	g.TimeoutOffset = model.Duration(500 * time.Millisecond)
 	g.MaxConns = 3
 	g.MaxIdleConns = 3
+	g.MaxConnLifetime = time.Duration(0)
 
 	type plain GlobalConfig
 	if err := unmarshal((*plain)(g)); err != nil {
