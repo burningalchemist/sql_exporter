@@ -10,6 +10,9 @@ global:
   # Maximum number of idle connections to any one target. Unless you use very long collection intervals, this should
   # always be the same as max_connections.
   max_idle_connections: 3
+  # Maximum number of maximum amount of time a connection may be reused. Expired connections may be closed lazily before reuse.
+  # If 0, connections are not closed due to a connection's age.
+  max_connection_lifetime: 5m
 
 # The target to monitor and the collectors to execute on it.
 target:

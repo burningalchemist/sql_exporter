@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	_ "github.com/ClickHouse/clickhouse-go" // register the ClickHouse driver
 	_ "github.com/denisenkom/go-mssqldb"    // register the MS-SQL driver
@@ -57,7 +58,7 @@ import (
 //
 // Using the https://github.com/vertica/vertica-sql-go driver, DSN format (passed through to the driver unchanged):
 //   vertica://user:password@host:port/dbname?param=value
-func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxIdleConns int) (*sql.DB, error) {
+func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxIdleConns int, maxConnLifetime time.Duration) (*sql.DB, error) {
 	// Extract driver name from DSN.
 	idx := strings.Index(dsn, "://")
 	if idx == -1 {
@@ -96,6 +97,7 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 
 	conn.SetMaxIdleConns(maxIdleConns)
 	conn.SetMaxOpenConns(maxConns)
+	conn.SetConnMaxLifetime(maxConnLifetime)
 
 	if log.V(1) {
 		if len(logContext) > 0 {
