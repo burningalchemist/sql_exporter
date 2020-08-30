@@ -9,6 +9,7 @@ import (
 
 	"github.com/burningalchemist/sql_exporter"
 	log "github.com/golang/glog"
+	_ "github.com/kardianos/minwinsvc"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"

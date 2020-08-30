@@ -1,4 +1,5 @@
 # Prometheus SQL Exporter [![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo) [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter)
+
 This is a fork of Database agnostic SQL exporter for [Prometheus](https://prometheus.io), created by [@free](https://github.com/free/sql_exporter). The main goal is to bring some maintenance to the project until the original maintainer is back.
 
 ## Overview
@@ -23,19 +24,19 @@ metrics when queried more frequently than the configured interval.
 Get Prometheus SQL Exporter, either as a [packaged release](https://github.com/burningalchemist/sql_exporter/releases/latest), as a [Docker image](https://hub.docker.com/r/burningalchemist/sql_exporter) or
 build it yourself:
 
-```
+```shell
 $ go install github.com/burningalchemist/sql_exporter/cmd/sql_exporter
 ```
 
 then run it from the command line:
 
-```
+```shell
 $ sql_exporter
 ```
 
 Use the `-help` flag to get help information.
 
-```
+```shell
 $ ./sql_exporter -help
 Usage of ./sql_exporter:
   -config.file string
@@ -46,6 +47,28 @@ Usage of ./sql_exporter:
       Path under which to expose metrics. (default "/metrics")
   [...]
 ```
+
+## Run as a Windows service
+
+If you run SQL Exporter from Windows, it might come in handy to register it as a service to avoid interactive sessions. It is **important** to define `-config.file` parameter to load the configuration file. The other settings can be added as well. The registration itself is performed with Powershell or CMD (make sure you run them as Administrator):
+
+Powershell:
+
+```powershell
+New-Service -name "SqlExporterSvc" `
+-BinaryPathName "%SQL_EXPORTER_PATH%\sql_exporter.exe -config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" `
+-StartupType Automatic `
+-DisplayName "SQL Exporter" `
+-Description "SQL Exporter for Prometheus"
+```
+
+CMD:
+
+```shell
+sc.exe create SqlExporterSvc binPath= "%SQL_EXPORTER_PATH%\sql_exporter.exe -config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" start= auto
+```
+
+`%SQL_EXPORTER_PATH%` is a path to the SQL Exporter binary executable. This document assumes that configuration files are in the same location.
 
 ## Configuration
 
@@ -78,6 +101,8 @@ global:
   max_connections: 3
   # Maximum number of idle connections to any one target.
   max_idle_connections: 3
+  #Maximum amount of time a connection may be reused to any one target. Infinite by default.
+  max_connection_lifetime: 10m
 
 # The target to monitor and the list of collectors to execute on it.
 target:
@@ -89,7 +114,7 @@ target:
   collectors: [pricing_data_freshness]
 
 # Collector definition files.
-collector_files: 
+collector_files:
   - "*.collector.yml"
 ```
 
