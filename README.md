@@ -46,6 +46,20 @@ Usage of ./sql_exporter:
       Path under which to expose metrics. (default "/metrics")
   [...]
 ```
+## Windows service
+
+If you are running SQL Exporter from Windows, it might be handy to register it as a service to avoid interactive sessions. It is important to explicitly provide `-config.file` parameter to load the configuration. The other configuration settings can be added inline. The registration itself is done with one of the following ways with Powershell or CMD (make sure you run them as Administrator):
+
+```powershell
+New-Service -name "SqlExporterSvc" -BinaryPathName "%SQL_EXPORTER_PATH%\sql_exporter.exe -config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" -StartupType Automatic -DisplayName "SQL Exporter" -Description "SQL Exporter for Prometheus"
+```
+
+```shell
+sc.exe create SqlExporterSvc binPath= "%SQL_EXPORTER_PATH%\sql_exporter.exe -config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" start= auto
+```
+
+`%SQL_EXPORTER_PATH%` is a path to the SQL Exporter binary file. This document assumes that configuration files are based in the same location.
+
 
 ## Configuration
 
