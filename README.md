@@ -1,4 +1,4 @@
-# Prometheus SQL Exporter [![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo) [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter)
+# Prometheus SQL Exporter [![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo) [![Go Report Card](https://goreportcard.com/badge/github.com/burningalchemist/sql_exporter)](https://goreportcard.com/report/github.com/burningalchemist/sql_exporter) [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter)
 
 This is a fork of Database agnostic SQL exporter for [Prometheus](https://prometheus.io), created by [@free](https://github.com/free/sql_exporter). The main goal is to bring some maintenance to the project until the original maintainer is back.
 
@@ -58,8 +58,7 @@ Powershell:
 New-Service -name "SqlExporterSvc" `
 -BinaryPathName "%SQL_EXPORTER_PATH%\sql_exporter.exe -config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" `
 -StartupType Automatic `
--DisplayName "SQL Exporter" `
--Description "SQL Exporter for Prometheus"
+-DisplayName "Prometheus SQL Exporter"
 ```
 
 CMD:
@@ -164,7 +163,8 @@ of DSNs for the latter two drivers in order for this to work:
 DB | SQL Exporter expected DSN | Driver sees
 :---|:---|:---
 MySQL | `mysql://user:passw@protocol(host:port)/dbname` | `user:passw@protocol(host:port)/dbname`
-PostgreSQL | `postgres://user:passw@host:port/dbname` | *unchanged*
+PostgreSQL (libpq) | `postgres://user:passw@host:port/dbname` | *unchanged*
+PostgreSQL (pgx) | `pgx://user:passw@host:port/dbname` | `postgres://user:passw@host:port/dbname`
 SQL Server | `sqlserver://user:passw@host:port/instance` | *unchanged*
 Clickhouse | `clickhouse://host:port?username=user&password=passw&database=dbname` | `tcp://host:port?username=user&password=passw&database=dbname`
 Snowflake  | ` snowflake://user:pass@account/dbname?role=rolename&warehouse=warehousename` | `user:pass@account/dbname?role=rolename&warehouse=warehousename`
