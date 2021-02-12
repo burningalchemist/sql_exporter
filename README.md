@@ -1,4 +1,4 @@
-# Prometheus SQL Exporter [![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo) [![Go Report Card](https://goreportcard.com/badge/github.com/burningalchemist/sql_exporter)](https://goreportcard.com/report/github.com/burningalchemist/sql_exporter) [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter)
+# Prometheus SQL Exporter [![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo) [![Go Report Card](https://goreportcard.com/badge/github.com/burningalchemist/sql_exporter)](https://goreportcard.com/report/github.com/burningalchemist/sql_exporter) [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter) ![Downloads](https://img.shields.io/github/downloads/burningalchemist/sql_exporter/total)
 
 This is a fork of Database agnostic SQL exporter for [Prometheus](https://prometheus.io), created by [@free](https://github.com/free/sql_exporter). The main goal is to bring some maintenance to the project until the original maintainer is back.
 
@@ -100,7 +100,7 @@ global:
   max_connections: 3
   # Maximum number of idle connections to any one target.
   max_idle_connections: 3
-  #Maximum amount of time a connection may be reused to any one target. Infinite by default.
+  # Maximum amount of time a connection may be reused to any one target. Infinite by default.
   max_connection_lifetime: 10m
 
 # The target to monitor and the list of collectors to execute on it.
