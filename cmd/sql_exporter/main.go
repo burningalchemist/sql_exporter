@@ -38,7 +38,7 @@ func main() {
 	// Override --alsologtostderr default value.
 	if alsoLogToStderr := flag.Lookup("alsologtostderr"); alsoLogToStderr != nil {
 		alsoLogToStderr.DefValue = "true"
-		alsoLogToStderr.Value.Set("true")
+		_ = alsoLogToStderr.Value.Set("true")
 	}
 	// Override the config.file default with the CONFIG environment variable, if set. If the flag is explicitly set, it
 	// will end up overriding either.

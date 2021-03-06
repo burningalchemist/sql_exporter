@@ -86,7 +86,7 @@ func pageTemplate(name string) *template.Template {
 // HomeHandlerFunc is the HTTP handler for the home page (`/`).
 func HomeHandlerFunc(metricsPath string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		homeTemplate.Execute(w, &tdata{
+		_ = homeTemplate.Execute(w, &tdata{
 			MetricsPath: metricsPath,
 			DocsUrl:     docsUrl,
 		})
@@ -101,7 +101,7 @@ func ConfigHandlerFunc(metricsPath string, exporter sql_exporter.Exporter) func(
 			HandleError(err, metricsPath, w, r)
 			return
 		}
-		configTemplate.Execute(w, &tdata{
+		_ = configTemplate.Execute(w, &tdata{
 			MetricsPath: metricsPath,
 			DocsUrl:     docsUrl,
 			Config:      string(config),
@@ -113,7 +113,7 @@ func ConfigHandlerFunc(metricsPath string, exporter sql_exporter.Exporter) func(
 // anything to w before calling HandleError(), or the 500 status code won't be set (and the content might be mixed up).
 func HandleError(err error, metricsPath string, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusInternalServerError)
-	errorTemplate.Execute(w, &tdata{
+	_ = errorTemplate.Execute(w, &tdata{
 		MetricsPath: metricsPath,
 		DocsUrl:     docsUrl,
 		Err:         err,

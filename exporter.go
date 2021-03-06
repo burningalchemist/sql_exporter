@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/burningalchemist/sql_exporter/config"
-	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
+	"google.golang.org/protobuf/proto"
 )
 
 var dsnOverride = flag.String("config.data-source-name", "", "Data source name to override the value in the configuration file with.")
@@ -42,9 +42,8 @@ func NewExporter(configFile string) (Exporter, error) {
 	if *dsnOverride != "" {
 		if len(c.Jobs) > 0 {
 			return nil, fmt.Errorf("The config.data-source-name flag (value %q) only applies in single target mode", *dsnOverride)
-		} else {
-			c.Target.DSN = config.Secret(*dsnOverride)
 		}
+		c.Target.DSN = config.Secret(*dsnOverride)
 	}
 
 	var targets []Target

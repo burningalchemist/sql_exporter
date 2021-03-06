@@ -65,11 +65,12 @@ import (
 //
 // Using the https://github.com/vertica/vertica-sql-go driver, DSN format (passed through to the driver unchanged):
 //   vertica://user:password@host:port/dbname?param=value
+//
 func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxIdleConns int, maxConnLifetime time.Duration) (*sql.DB, error) {
 	// Extract driver name from DSN.
 	idx := strings.Index(dsn, "://")
 	if idx == -1 {
-		return nil, fmt.Errorf("missing driver in data source name. Expected format `<driver>://<dsn>`.")
+		return nil, fmt.Errorf("missing driver in data source name. Expected format `<driver>://<dsn>`")
 	}
 	driver := dsn[:idx]
 
