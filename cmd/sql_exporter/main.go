@@ -69,23 +69,22 @@ func main() {
 
 	// Expose refresh handler to reload query collections
 	if *enableReload {
-		http.HandleFunc("/reload", ReloadCollectors(exporter))
+		http.HandleFunc("/reload", reloadCollectors(exporter))
 	}
 	log.Infof("Listening on %s", *listenAddress)
 	log.Fatal(http.ListenAndServe(*listenAddress, nil))
 
 }
 
-//ReloadCollectors is blah
-func ReloadCollectors(test sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
+func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Infof("Reloading the collectors...")
-		err := test.Config().LoadCollectorFiles()
+		err := e.Config().LoadCollectorFiles()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Fatalf("Error reloading collectors - %v", err)
 		}
-		http.Error(w, "{\"status\":\"reloaded\"}", http.StatusOK)
+		http.Error(w, `Query collectors have been reloaded`, http.StatusOK)
 	}
 }
 

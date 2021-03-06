@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	docsUrl   = "https://github.com/burningalchemist/sql_exporter#readme"
+	docsURL   = "https://github.com/burningalchemist/sql_exporter#readme"
 	templates = `
     {{ define "page" -}}
       <html>
@@ -62,7 +62,7 @@ const (
 
 type tdata struct {
 	MetricsPath string
-	DocsUrl     string
+	DocsURL     string
 
 	// `/config` only
 	Config string
@@ -88,7 +88,7 @@ func HomeHandlerFunc(metricsPath string) func(http.ResponseWriter, *http.Request
 	return func(w http.ResponseWriter, r *http.Request) {
 		_ = homeTemplate.Execute(w, &tdata{
 			MetricsPath: metricsPath,
-			DocsUrl:     docsUrl,
+			DocsURL:     docsURL,
 		})
 	}
 }
@@ -103,7 +103,7 @@ func ConfigHandlerFunc(metricsPath string, exporter sql_exporter.Exporter) func(
 		}
 		_ = configTemplate.Execute(w, &tdata{
 			MetricsPath: metricsPath,
-			DocsUrl:     docsUrl,
+			DocsURL:     docsURL,
 			Config:      string(config),
 		})
 	}
@@ -115,7 +115,7 @@ func HandleError(err error, metricsPath string, w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusInternalServerError)
 	_ = errorTemplate.Execute(w, &tdata{
 		MetricsPath: metricsPath,
-		DocsUrl:     docsUrl,
+		DocsURL:     docsURL,
 		Err:         err,
 	})
 }
