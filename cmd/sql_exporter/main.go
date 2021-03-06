@@ -81,8 +81,8 @@ func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.R
 		log.Infof("Reloading the collectors...")
 		err := e.Config().LoadCollectorFiles()
 		if err != nil {
+			log.Errorf("Error reloading collectors - %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			log.Fatalf("Error reloading collectors - %v", err)
 		}
 		http.Error(w, `Query collectors have been reloaded`, http.StatusOK)
 	}
