@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/burningalchemist/sql_exporter"
+	"github.com/prometheus/common/version"
 )
 
 const (
@@ -32,7 +33,7 @@ const (
       </head>
       <body>
         <div class="navbar">
-          <div class="navbar-header"><a href="/">Prometheus SQL Exporter</a></div>
+          <div class="navbar-header"><a href="/">Prometheus SQL Exporter {{ .Version }}</a></div>
           <div><a href="{{ .MetricsPath }}">Metrics</a></div>
           <div><a href="/config">Configuration</a></div>
           <div><a href="/debug/pprof">Profiling</a></div>
@@ -44,7 +45,7 @@ const (
     {{- end }}
 
     {{ define "content.home" -}}
-      <p>This is a <a href="{{ .DocsUrl }}">Prometheus SQL Exporter</a> instance.
+      <p>This is a <a href="{{ .DocsURL }}">Prometheus SQL Exporter</a> instance.
         You are probably looking for its <a href="{{ .MetricsPath }}">metrics</a> handler.</p>
     {{- end }}
 
@@ -63,6 +64,7 @@ const (
 type tdata struct {
 	MetricsPath string
 	DocsURL     string
+	Version     string
 
 	// `/config` only
 	Config string
@@ -89,6 +91,7 @@ func HomeHandlerFunc(metricsPath string) func(http.ResponseWriter, *http.Request
 		_ = homeTemplate.Execute(w, &tdata{
 			MetricsPath: metricsPath,
 			DocsURL:     docsURL,
+			Version:     version.Version,
 		})
 	}
 }
@@ -104,6 +107,7 @@ func ConfigHandlerFunc(metricsPath string, exporter sql_exporter.Exporter) func(
 		_ = configTemplate.Execute(w, &tdata{
 			MetricsPath: metricsPath,
 			DocsURL:     docsURL,
+			Version:     version.Version,
 			Config:      string(config),
 		})
 	}
@@ -116,6 +120,7 @@ func HandleError(err error, metricsPath string, w http.ResponseWriter, r *http.R
 	_ = errorTemplate.Execute(w, &tdata{
 		MetricsPath: metricsPath,
 		DocsURL:     docsURL,
+		Version:     version.Version,
 		Err:         err,
 	})
 }
