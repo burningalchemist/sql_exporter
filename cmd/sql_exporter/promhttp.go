@@ -67,7 +67,7 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		if encoding != "" {
 			header.Set(contentEncodingHeader, encoding)
 		}
-		w.Write(buf.Bytes())
+		_, _ = w.Write(buf.Bytes())
 	})
 }
 

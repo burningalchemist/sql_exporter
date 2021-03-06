@@ -6,10 +6,11 @@ import (
 	"net/http"
 
 	"github.com/burningalchemist/sql_exporter"
+	"github.com/prometheus/common/version"
 )
 
 const (
-	docsUrl   = "https://github.com/burningalchemist/sql_exporter#readme"
+	docsURL   = "https://github.com/burningalchemist/sql_exporter#readme"
 	templates = `
     {{ define "page" -}}
       <html>
@@ -32,11 +33,11 @@ const (
       </head>
       <body>
         <div class="navbar">
-          <div class="navbar-header"><a href="/">Prometheus SQL Exporter</a></div>
+          <div class="navbar-header"><a href="/">Prometheus SQL Exporter {{ .Version }}</a></div>
           <div><a href="{{ .MetricsPath }}">Metrics</a></div>
           <div><a href="/config">Configuration</a></div>
           <div><a href="/debug/pprof">Profiling</a></div>
-          <div><a href="{{ .DocsUrl }}">Help</a></div>
+          <div><a href="{{ .DocsURL }}">Help</a></div>
         </div>
         {{template "content" .}}
       </body>
@@ -44,7 +45,7 @@ const (
     {{- end }}
 
     {{ define "content.home" -}}
-      <p>This is a <a href="{{ .DocsUrl }}">Prometheus SQL Exporter</a> instance.
+      <p>This is a <a href="{{ .DocsURL }}">Prometheus SQL Exporter</a> instance.
         You are probably looking for its <a href="{{ .MetricsPath }}">metrics</a> handler.</p>
     {{- end }}
 
@@ -62,7 +63,8 @@ const (
 
 type tdata struct {
 	MetricsPath string
-	DocsUrl     string
+	DocsURL     string
+	Version     string
 
 	// `/config` only
 	Config string
@@ -86,9 +88,10 @@ func pageTemplate(name string) *template.Template {
 // HomeHandlerFunc is the HTTP handler for the home page (`/`).
 func HomeHandlerFunc(metricsPath string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		homeTemplate.Execute(w, &tdata{
+		_ = homeTemplate.Execute(w, &tdata{
 			MetricsPath: metricsPath,
-			DocsUrl:     docsUrl,
+			DocsURL:     docsURL,
+			Version:     version.Version,
 		})
 	}
 }
@@ -101,9 +104,10 @@ func ConfigHandlerFunc(metricsPath string, exporter sql_exporter.Exporter) func(
 			HandleError(err, metricsPath, w, r)
 			return
 		}
-		configTemplate.Execute(w, &tdata{
+		_ = configTemplate.Execute(w, &tdata{
 			MetricsPath: metricsPath,
-			DocsUrl:     docsUrl,
+			DocsURL:     docsURL,
+			Version:     version.Version,
 			Config:      string(config),
 		})
 	}
@@ -113,9 +117,10 @@ func ConfigHandlerFunc(metricsPath string, exporter sql_exporter.Exporter) func(
 // anything to w before calling HandleError(), or the 500 status code won't be set (and the content might be mixed up).
 func HandleError(err error, metricsPath string, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusInternalServerError)
-	errorTemplate.Execute(w, &tdata{
+	_ = errorTemplate.Execute(w, &tdata{
 		MetricsPath: metricsPath,
-		DocsUrl:     docsUrl,
+		DocsURL:     docsURL,
+		Version:     version.Version,
 		Err:         err,
 	})
 }

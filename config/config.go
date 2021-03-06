@@ -60,7 +60,7 @@ func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	// Load any externally defined collectors.
-	if err := c.loadCollectorFiles(); err != nil {
+	if err := c.LoadCollectorFiles(); err != nil {
 		return err
 	}
 
@@ -99,8 +99,8 @@ func (c *Config) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
 }
 
-// loadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
-func (c *Config) loadCollectorFiles() error {
+// LoadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
+func (c *Config) LoadCollectorFiles() error {
 	baseDir := filepath.Dir(c.configFile)
 	for _, cfglob := range c.CollectorFiles {
 		// Resolve relative paths by joining them to the configuration file's directory.
@@ -126,6 +126,10 @@ func (c *Config) loadCollectorFiles() error {
 			err = yaml.Unmarshal(buf, &cc)
 			if err != nil {
 				return err
+			}
+
+			if len(c.Collectors) > 0 {
+				c.Collectors = c.Collectors[:0]
 			}
 			c.Collectors = append(c.Collectors, &cc)
 			log.Infof("Loaded collector %q from %s", cc.Name, cf)
@@ -203,7 +207,9 @@ func (t *TargetConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if t.DSN == "" {
 		return fmt.Errorf("missing data_source_name for target %+v", t)
 	}
-	checkCollectorRefs(t.CollectorRefs, "target")
+	if err := checkCollectorRefs(t.CollectorRefs, "target"); err != nil {
+		return err
+	}
 
 	return checkOverflow(t.XXX, "target")
 }
@@ -240,7 +246,9 @@ func (j *JobConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if j.Name == "" {
 		return fmt.Errorf("missing name for job %+v", j)
 	}
-	checkCollectorRefs(j.CollectorRefs, fmt.Sprintf("job %q", j.Name))
+	if err := checkCollectorRefs(j.CollectorRefs, fmt.Sprintf("job %q", j.Name)); err != nil {
+		return err
+	}
 
 	if len(j.StaticConfigs) == 0 {
 		return fmt.Errorf("no targets defined for job %q", j.Name)
@@ -427,7 +435,9 @@ func (m *MetricConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	// Check for duplicate key labels
 	for i, li := range m.KeyLabels {
-		checkLabel(li, "metric", m.Name)
+		if err := checkLabel(li, "metric", m.Name); err != nil {
+			return err
+		}
 		for _, lj := range m.KeyLabels[i+1:] {
 			if li == lj {
 				return fmt.Errorf("duplicate key label %q for metric %q", li, m.Name)
@@ -447,7 +457,9 @@ func (m *MetricConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		if m.ValueLabel == "" {
 			return fmt.Errorf("value_label must be defined for metric with multiple values %q", m.Name)
 		}
-		checkLabel(m.ValueLabel, "value_label for metric", m.Name)
+		if err := checkLabel(m.ValueLabel, "value_label for metric", m.Name); err != nil {
+			return err
+		}
 	}
 
 	return checkOverflow(m.XXX, "metric")
