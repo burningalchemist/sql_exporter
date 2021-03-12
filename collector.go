@@ -32,6 +32,12 @@ type collector struct {
 func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*dto.LabelPair) (Collector, errors.WithContext) {
 	logContext = fmt.Sprintf("%s, collector=%q", logContext, cc.Name)
 
+	// Leading comma appears when target name is undefined, which is a side-effect of running in single target mode.
+	// Let's trim to avoid confusions.
+	if strings.HasPrefix(logContext, ",") {
+		logContext = strings.TrimLeft(logContext, ", ")
+	}
+
 	// Maps each query to the list of metric families it populates.
 	queryMFs := make(map[*config.QueryConfig][]*MetricFamily, len(cc.Metrics))
 
