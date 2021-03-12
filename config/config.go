@@ -7,15 +7,15 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
+	"k8s.io/klog/v2"
 )
 
 // Load attempts to parse the given config file and return a Config object.
 func Load(configFile string) (*Config, error) {
-	log.Infof("Loading configuration from %s", configFile)
+	klog.Infof("Loading configuration from %s", configFile)
 	buf, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ func (c *Config) LoadCollectorFiles() error {
 				c.Collectors = c.Collectors[:0]
 			}
 			c.Collectors = append(c.Collectors, &cc)
-			log.Infof("Loaded collector %q from %s", cc.Name, cf)
+			klog.Infof("Loaded collector %q from %s", cc.Name, cf)
 		}
 	}
 

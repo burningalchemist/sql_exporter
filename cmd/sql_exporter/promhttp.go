@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/burningalchemist/sql_exporter"
-	log "github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -35,7 +35,7 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		gatherer := prometheus.Gatherers{exporter.WithContext(ctx)}
 		mfs, err := gatherer.Gather()
 		if err != nil {
-			log.Infof("Error gathering metrics: %s", err)
+			klog.Infof("Error gathering metrics: %s", err)
 			if len(mfs) == 0 {
 				http.Error(w, "No metrics gathered, "+err.Error(), http.StatusInternalServerError)
 				return
@@ -51,7 +51,7 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		for _, mf := range mfs {
 			if err := enc.Encode(mf); err != nil {
 				errs = append(errs, err)
-				log.Infof("Error encoding metric family %q: %s", mf.GetName(), err)
+				klog.Infof("Error encoding metric family %q: %s", mf.GetName(), err)
 			}
 		}
 		if closer, ok := writer.(io.Closer); ok {
@@ -78,14 +78,14 @@ func contextFor(req *http.Request, exporter sql_exporter.Exporter) (context.Cont
 	if v := req.Header.Get("X-Prometheus-Scrape-Timeout-Seconds"); v != "" {
 		timeoutSeconds, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			log.Errorf("Failed to parse timeout (`%s`) from Prometheus header: %s", v, err)
+			klog.Errorf("Failed to parse timeout (`%s`) from Prometheus header: %s", v, err)
 		} else {
 			timeout = time.Duration(timeoutSeconds * float64(time.Second))
 
 			// Subtract the timeout offset, unless the result would be negative or zero.
 			timeoutOffset := time.Duration(exporter.Config().Globals.TimeoutOffset)
 			if timeoutOffset > timeout {
-				log.Errorf("global.scrape_timeout_offset (`%s`) is greater than Prometheus' scraping timeout (`%s`), ignoring",
+				klog.Errorf("global.scrape_timeout_offset (`%s`) is greater than Prometheus' scraping timeout (`%s`), ignoring",
 					timeoutOffset, timeout)
 			} else {
 				timeout -= timeoutOffset

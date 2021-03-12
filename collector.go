@@ -9,8 +9,8 @@ import (
 
 	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/burningalchemist/sql_exporter/errors"
-	log "github.com/golang/glog"
 	dto "github.com/prometheus/client_model/go"
+	"k8s.io/klog/v2"
 )
 
 // Collector is a self-contained group of SQL queries and metric families to collect from a specific database. It is
@@ -64,7 +64,7 @@ func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*
 		logContext: logContext,
 	}
 	if c.config.MinInterval > 0 {
-		log.V(2).Infof("[%s] Non-zero min_interval (%s), using cached collector.", logContext, c.config.MinInterval)
+		klog.V(2).Infof("[%s] Non-zero min_interval (%s), using cached collector.", logContext, c.config.MinInterval)
 		return newCachingCollector(&c), nil
 	}
 	return &c, nil
@@ -121,7 +121,7 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 		// Have the lock.
 		if age := collTime.Sub(cacheTime); age > cc.minInterval {
 			// Cache contents are older than minInterval, collect fresh metrics, cache them and pipe them through.
-			log.V(2).Infof("[%s] Collecting fresh metrics: min_interval=%.3fs cache_age=%.3fs",
+			klog.V(2).Infof("[%s] Collecting fresh metrics: min_interval=%.3fs cache_age=%.3fs",
 				cc.rawColl.logContext, cc.minInterval.Seconds(), age.Seconds())
 			cacheChan := make(chan Metric, capMetricChan)
 			cc.cache = make([]Metric, 0, len(cc.cache))
@@ -135,7 +135,7 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 			}
 			cacheTime = collTime
 		} else {
-			log.V(2).Infof("[%s] Returning cached metrics: min_interval=%.3fs cache_age=%.3fs",
+			klog.V(2).Infof("[%s] Returning cached metrics: min_interval=%.3fs cache_age=%.3fs",
 				cc.rawColl.logContext, cc.minInterval.Seconds(), age.Seconds())
 			for _, metric := range cc.cache {
 				ch <- metric

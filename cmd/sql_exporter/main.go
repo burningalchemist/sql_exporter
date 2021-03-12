@@ -10,11 +10,11 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/burningalchemist/sql_exporter"
-	log "github.com/golang/glog"
 	_ "github.com/kardianos/minwinsvc"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/version"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -26,6 +26,7 @@ var (
 )
 
 func init() {
+	klog.InitFlags(nil)
 	prometheus.MustRegister(version.NewCollector("sql_exporter"))
 }
 
@@ -52,11 +53,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	log.Infof("Starting SQL exporter %s %s", version.Info(), version.BuildContext())
+	klog.Infof("Starting SQL exporter %s %s", version.Info(), version.BuildContext())
 
 	exporter, err := sql_exporter.NewExporter(*configFile)
 	if err != nil {
-		log.Fatalf("Error creating exporter: %s", err)
+		klog.Fatalf("Error creating exporter: %s", err)
 	}
 
 	// Setup and start webserver.
@@ -71,17 +72,17 @@ func main() {
 	if *enableReload {
 		http.HandleFunc("/reload", reloadCollectors(exporter))
 	}
-	log.Infof("Listening on %s", *listenAddress)
-	log.Fatal(http.ListenAndServe(*listenAddress, nil))
+	klog.Infof("Listening on %s", *listenAddress)
+	klog.Fatal(http.ListenAndServe(*listenAddress, nil))
 
 }
 
 func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Infof("Reloading the collectors...")
+		klog.Infof("Reloading the collectors...")
 		err := e.Config().LoadCollectorFiles()
 		if err != nil {
-			log.Errorf("Error reloading collectors - %v", err)
+			klog.Errorf("Error reloading collectors - %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		http.Error(w, `Query collectors have been reloaded`, http.StatusOK)
