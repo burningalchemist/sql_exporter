@@ -7,7 +7,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20200620013148-b91950f658ec
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/jackc/pgx/v4 v4.8.1
 	github.com/kardianos/minwinsvc v1.0.0
 	github.com/lib/pq v1.8.0
@@ -21,9 +20,10 @@ require (
 	github.com/stretchr/testify v1.6.2-0.20200803095430-a3bed97cf337 // indirect
 	github.com/vertica/vertica-sql-go v1.1.0
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
-	golang.org/x/sys v0.0.0-20210305230114-8fe3ee5dd75b // indirect
+	golang.org/x/sys v0.0.0-20210309074719-68d13333faf2 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.25.1-0.20200728163639-5d63473da8fb
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
+	k8s.io/klog/v2 v2.7.0
 )

@@ -7,7 +7,7 @@ import (
 
 	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/burningalchemist/sql_exporter/errors"
-	log "github.com/golang/glog"
+	"k8s.io/klog/v2"
 )
 
 // Query wraps a sql.Stmt and all the metrics populated from it. It helps extract keys and values from result rows.
@@ -131,7 +131,7 @@ func (q *Query) scanDest(rows *sql.Rows) ([]interface{}, errors.WithContext) {
 	if err != nil {
 		return nil, errors.Wrap(q.logContext, err)
 	}
-
+	klog.V(3).Infof(`returned_columns="%v"%v`, columns, q.logContext)
 	// Create the slice to scan the row into, with strings for keys and float64s for values.
 	dest := make([]interface{}, 0, len(columns))
 	have := make(map[string]bool, len(q.columnTypes))
@@ -145,9 +145,9 @@ func (q *Query) scanDest(rows *sql.Rows) ([]interface{}, errors.WithContext) {
 			have[column] = true
 		default:
 			if column == "" {
-				log.Warningf("[%s] Unnamed column %d returned by query", q.logContext, i)
+				klog.Warningf("[%s] Unnamed column %d returned by query", q.logContext, i)
 			} else {
-				log.Warningf("[%s] Extra column %q returned by query", q.logContext, column)
+				klog.Warningf("[%s] Extra column %q returned by query", q.logContext, column)
 			}
 			dest = append(dest, new(interface{}))
 		}
@@ -161,7 +161,7 @@ func (q *Query) scanDest(rows *sql.Rows) ([]interface{}, errors.WithContext) {
 				missing = append(missing, c)
 			}
 		}
-		return nil, errors.Errorf(q.logContext, "column(s) %q missing from query result", missing)
+		return nil, errors.Errorf(q.logContext, "Missing values for the requested columns: %q", missing)
 	}
 
 	return dest, nil

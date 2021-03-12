@@ -15,7 +15,7 @@ import (
 	_ "github.com/snowflakedb/gosnowflake"  // register the Snowflake driver
 	_ "github.com/vertica/vertica-sql-go"   // register the Vertica driver
 
-	log "github.com/golang/glog"
+	"k8s.io/klog/v2"
 )
 
 // OpenConnection extracts the driver name from the DSN (expected as the URI scheme), adjusts it where necessary (e.g.
@@ -70,7 +70,7 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 	// Extract driver name from DSN.
 	idx := strings.Index(dsn, "://")
 	if idx == -1 {
-		return nil, fmt.Errorf("missing driver in data source name. Expected format `<driver>://<dsn>`")
+		return nil, fmt.Errorf("Missing driver in data source name. Expected format `<driver>://<dsn>`")
 	}
 	driver := dsn[:idx]
 
@@ -109,11 +109,11 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 	conn.SetMaxOpenConns(maxConns)
 	conn.SetConnMaxLifetime(maxConnLifetime)
 
-	if log.V(1) {
+	if klog.V(1).Enabled() {
 		if len(logContext) > 0 {
 			logContext = fmt.Sprintf("[%s] ", logContext)
 		}
-		log.Infof("%sDatabase handle successfully opened with driver %s.", logContext, driver)
+		klog.Infof("%sDatabase handle successfully opened with '%s' driver", logContext, driver)
 	}
 	return conn, nil
 }
