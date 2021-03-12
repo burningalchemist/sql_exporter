@@ -60,7 +60,7 @@ func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	// Load any externally defined collectors.
-	if err := c.LoadCollectorFiles(); err != nil {
+	if err := c.loadCollectorFiles(); err != nil {
 		return err
 	}
 
@@ -99,8 +99,20 @@ func (c *Config) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
 }
 
+// ReloadCollectorFiles blah
+func (c *Config) ReloadCollectorFiles() error {
+	if len(c.Collectors) > 0 {
+		c.Collectors = c.Collectors[:0]
+	}
+	err := c.loadCollectorFiles()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // LoadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
-func (c *Config) LoadCollectorFiles() error {
+func (c *Config) loadCollectorFiles() error {
 	baseDir := filepath.Dir(c.configFile)
 	for _, cfglob := range c.CollectorFiles {
 		// Resolve relative paths by joining them to the configuration file's directory.
@@ -128,9 +140,6 @@ func (c *Config) LoadCollectorFiles() error {
 				return err
 			}
 
-			if len(c.Collectors) > 0 {
-				c.Collectors = c.Collectors[:0]
-			}
 			c.Collectors = append(c.Collectors, &cc)
 			klog.Infof("Loaded collector %q from %s", cc.Name, cf)
 		}

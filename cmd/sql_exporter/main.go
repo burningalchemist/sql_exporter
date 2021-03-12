@@ -80,7 +80,7 @@ func main() {
 func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		klog.Infof("Reloading the collectors...")
-		err := e.Config().LoadCollectorFiles()
+		err := e.Config().ReloadCollectorFiles()
 		if err != nil {
 			klog.Errorf("Error reloading collectors - %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
