@@ -48,6 +48,20 @@ tarball: promu
 	@echo ">> building release tarball"
 	@$(PROMU) tarball --prefix $(PREFIX) $(BIN_DIR)
 
+crossbuild: promu
+	@echo ">> building crossbuild release"
+	@$(PROMU) crossbuild
+
+crossbuild-tarballs: promu
+	@echo ">> building crossbuild release tarballs"
+	@$(PROMU) crossbuild tarballs
+
+crossbuild-checksum: promu
+	@echo ">> calculating checksums for released tarballs"
+	@$(PROMU) checksum .tarballs
+
+crossbuild-release: promu crossbuild crossbuild-tarballs crossbuild-checksum
+
 docker:
 	@echo ">> building docker image"
 	@docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
