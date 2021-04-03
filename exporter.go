@@ -22,6 +22,7 @@ type Exporter interface {
 	WithContext(context.Context) Exporter
 	// Config returns the Exporter's underlying Config object.
 	Config() *config.Config
+	UpdateTarget([]Target)
 }
 
 type exporter struct {
@@ -41,7 +42,7 @@ func NewExporter(configFile string) (Exporter, error) {
 	// Override the DSN if requested (and in single target mode).
 	if *dsnOverride != "" {
 		if len(c.Jobs) > 0 {
-			return nil, fmt.Errorf("The config.data-source-name flag (value %q) only applies in single target mode", *dsnOverride)
+			return nil, fmt.Errorf("the config.data-source-name flag (value %q) only applies in single target mode", *dsnOverride)
 		}
 		c.Target.DSN = config.Secret(*dsnOverride)
 	}
@@ -146,4 +147,8 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 // Config implements Exporter.
 func (e *exporter) Config() *config.Config {
 	return e.config
+}
+
+func (e *exporter) UpdateTarget(target []Target) {
+	e.targets = target
 }

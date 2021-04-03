@@ -70,7 +70,7 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 	// Extract driver name from DSN.
 	idx := strings.Index(dsn, "://")
 	if idx == -1 {
-		return nil, fmt.Errorf("Missing driver in data source name. Expected format `<driver>://<dsn>`")
+		return nil, fmt.Errorf("missing driver in data source name. Expected format `<driver>://<dsn>`")
 	}
 	driver := dsn[:idx]
 
