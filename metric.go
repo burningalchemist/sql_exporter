@@ -43,6 +43,9 @@ func NewMetricFamily(logContext string, mc *config.MetricConfig, constLabels []*
 	if len(mc.Values) > 1 && mc.ValueLabel == "" {
 		return nil, errors.New(logContext, "multiple values but no value label")
 	}
+	if len(mc.KeyLabels) > config.MaxInt32 {
+		return nil, errors.New(logContext, "key_labels list is too large")
+	}
 
 	labels := make([]string, 0, len(mc.KeyLabels)+1)
 	labels = append(labels, mc.KeyLabels...)

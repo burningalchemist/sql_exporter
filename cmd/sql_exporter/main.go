@@ -18,11 +18,11 @@ import (
 )
 
 var (
-	showVersion   = flag.Bool("version", false, "Print version information.")
-	listenAddress = flag.String("web.listen-address", ":9399", "Address to listen on for web interface and telemetry.")
-	metricsPath   = flag.String("web.metrics-path", "/metrics", "Path under which to expose metrics.")
-	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler.")
-	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file name.")
+	showVersion   = flag.Bool("version", false, "Print version information")
+	listenAddress = flag.String("web.listen-address", ":9399", "Address to listen on for web interface and telemetry")
+	metricsPath   = flag.String("web.metrics-path", "/metrics", "Path under which to expose metrics")
+	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
+	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration filename")
 )
 
 func init() {
@@ -80,12 +80,21 @@ func main() {
 func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		klog.Infof("Reloading the collectors...")
-		err := e.Config().ReloadCollectorFiles()
-		if err != nil {
-			klog.Errorf("Error reloading collectors - %v", err)
+		config := e.Config()
+		if err := config.ReloadCollectorFiles(); err != nil {
+			klog.Errorf("Error reloading collector configs - %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		http.Error(w, `Query collectors have been reloaded`, http.StatusOK)
+
+		// FIXME: Should be t.Collectors() instead of config.Collectors
+		target, err := sql_exporter.NewTarget("", "", string(config.Target.DSN), config.Collectors, nil, config.Globals)
+		if err != nil {
+			klog.Errorf("Error creating a new target - %v", err)
+		}
+		e.UpdateTarget([]sql_exporter.Target{target})
+
+		klog.Infof("Query collectors have been successfuly reloaded")
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
