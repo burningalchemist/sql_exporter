@@ -13,6 +13,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const MaxInt32 int = 1<<31 - 1
+
 // Load attempts to parse the given config file and return a Config object.
 func Load(configFile string) (*Config, error) {
 	klog.Infof("Loading configuration from %s", configFile)
@@ -266,6 +268,7 @@ func (j *JobConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return checkOverflow(j.XXX, "job")
 }
 
+//lint:ignore U1000 - it's unused so far
 // checkLabelCollisions checks for label collisions between StaticConfig labels and Metric labels.
 func (j *JobConfig) checkLabelCollisions() error {
 	sclabels := make(map[string]interface{})

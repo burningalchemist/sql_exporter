@@ -2,6 +2,7 @@ package sql_exporter
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"sync"
@@ -55,6 +56,9 @@ func NewExporter(configFile string) (Exporter, error) {
 		}
 		targets = []Target{target}
 	} else {
+		if len(c.Jobs) > (config.MaxInt32 / 3) {
+			return nil, errors.New("'jobs' list is too large")
+		}
 		targets = make([]Target, 0, len(c.Jobs)*3)
 		for _, jc := range c.Jobs {
 			job, err := NewJob(jc, c.Globals)
