@@ -13,6 +13,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+// MaxInt32 defines the maximum value of allowed integers
+// and serves to help us avoid overflow/wraparound issues.
 const MaxInt32 int = 1<<31 - 1
 
 // Load attempts to parse the given config file and return a Config object.
