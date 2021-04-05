@@ -93,7 +93,7 @@ func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.R
 		}
 		e.UpdateTarget([]sql_exporter.Target{target})
 
-		klog.Infof("Query collectors have been successfuly reloaded")
+		klog.Infof("Query collectors have been successfully reloaded")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
