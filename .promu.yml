@@ -25,5 +25,5 @@ crossbuild:
         - linux/amd64
         - darwin/amd64
         - windows/amd64
-        - linux/arm
+        - linux/armv7
         - linux/arm64
