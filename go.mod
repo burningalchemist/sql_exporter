@@ -5,8 +5,6 @@ go 1.14
 require (
 	github.com/ClickHouse/clickhouse-go v1.4.3
 	github.com/apache/arrow/go/arrow v0.0.0-20210404094439-beb1c1b35be1 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.1.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.4.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/go-sql-driver/mysql v1.6.0
@@ -24,7 +22,7 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.20.0
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/snowflakedb/gosnowflake v1.4.2
+	github.com/snowflakedb/gosnowflake v1.4.3
 	github.com/stretchr/testify v1.6.2-0.20200803095430-a3bed97cf337 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
 	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c // indirect
