@@ -11,7 +11,7 @@ require (
 	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/flatbuffers v1.12.0 // indirect
+	github.com/google/flatbuffers v1.12.1 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/jackc/pgx/v4 v4.11.0
