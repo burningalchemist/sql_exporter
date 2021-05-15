@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"flag"
 	"fmt"
 	"sort"
 	"sync"
@@ -15,6 +16,8 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"google.golang.org/protobuf/proto"
 )
+
+var enablePing = flag.Bool("config.enable-ping", true, "Enable ping for targets")
 
 const (
 	// Capacity for the channel to collect metrics.
@@ -146,7 +149,9 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 	}
 
 	// If we have a handle and the context is not closed, test whether the database is up.
-	if t.conn != nil && ctx.Err() == nil {
+	// FIXME: we ping the database during each request even with cacheCollector. It leads
+	// to additional charges for paid database services.
+	if t.conn != nil && ctx.Err() == nil && *enablePing {
 		var err error
 		// Ping up to max_connections + 1 times as long as the returned error is driver.ErrBadConn, to purge the connection
 		// pool of bad connections. This might happen if the previous scrape timed out and in-flight queries got canceled.
