@@ -25,9 +25,8 @@ require (
 	github.com/snowflakedb/gosnowflake v1.4.3
 	github.com/stretchr/testify v1.6.2-0.20200803095430-a3bed97cf337 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
-	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c // indirect
-	golang.org/x/sys v0.0.0-20210403161142-5e06dd20ab57 // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/net v0.0.0-20210510120150-4163338589ed // indirect
+	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 // indirect
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
