@@ -22,7 +22,7 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.30.0
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/snowflakedb/gosnowflake v1.5.1
+	github.com/snowflakedb/gosnowflake v1.6.0
 	github.com/stretchr/testify v1.6.2-0.20200803095430-a3bed97cf337 // indirect
 	github.com/vertica/vertica-sql-go v1.1.1
 	google.golang.org/protobuf v1.27.1
