@@ -6,3 +6,5 @@ updates:
       interval: "monthly"
     labels:
     - "dependencies"
+    commit-message:
+      prefix: "deps"
