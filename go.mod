@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.5.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/denisenkom/go-mssqldb v0.10.0
+	github.com/denisenkom/go-mssqldb v0.11.0
 	github.com/form3tech-oss/jwt-go v3.2.5+incompatible // indirect
 	github.com/go-logr/logr v1.1.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
