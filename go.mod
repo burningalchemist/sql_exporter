@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/Azure/azure-storage-blob-go v0.14.0 // indirect
-	github.com/ClickHouse/clickhouse-go v1.4.7
+	github.com/ClickHouse/clickhouse-go v1.4.8
 	github.com/apache/arrow/go/arrow v0.0.0-20210904202525-882e8b489ff1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.5.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
