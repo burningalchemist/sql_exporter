@@ -17,6 +17,11 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	envConfigFile = "SQLEXPORTER_CONFIG"
+	envDebug      = "SQLEXPORTER_DEBUG"
+)
+
 var (
 	showVersion   = flag.Bool("version", false, "Print version information")
 	listenAddress = flag.String("web.listen-address", ":9399", "Address to listen on for web interface and telemetry")
@@ -31,7 +36,7 @@ func init() {
 }
 
 func main() {
-	if os.Getenv("DEBUG") != "" {
+	if os.Getenv(envDebug) != "" {
 		runtime.SetBlockProfileRate(1)
 		runtime.SetMutexProfileFraction(1)
 	}
@@ -43,9 +48,15 @@ func main() {
 	}
 	// Override the config.file default with the CONFIG environment variable, if set. If the flag is explicitly set, it
 	// will end up overriding either.
+	// Deprecated: "CONFIG" variable will be replaced by "SQLEXPORTER_CONFIG" in the next release
 	if envConfigFile := os.Getenv("CONFIG"); envConfigFile != "" {
 		*configFile = envConfigFile
 	}
+
+	if val, ok := os.LookupEnv(envConfigFile); ok {
+		*configFile = val
+	}
+
 	flag.Parse()
 
 	if *showVersion {
