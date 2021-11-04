@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/burningalchemist/sql_exporter/config"
@@ -12,6 +13,8 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"google.golang.org/protobuf/proto"
 )
+
+const envDsnOverride = "SQLEXPORTER_TARGET_DSN"
 
 var dsnOverride = flag.String("config.data-source-name", "", "Data source name to override the value in the configuration file with.")
 
@@ -40,6 +43,9 @@ func NewExporter(configFile string) (Exporter, error) {
 		return nil, err
 	}
 
+	if val, ok := os.LookupEnv(envDsnOverride); ok {
+		*dsnOverride = val
+	}
 	// Override the DSN if requested (and in single target mode).
 	if *dsnOverride != "" {
 		if len(c.Jobs) > 0 {
