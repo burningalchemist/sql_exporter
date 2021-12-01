@@ -10,7 +10,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denisenkom/go-mssqldb v0.11.0
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/jackc/pgx/v4 v4.13.0
+	github.com/jackc/pgx/v4 v4.14.1
 	github.com/kardianos/minwinsvc v1.0.0
 	github.com/klauspost/compress v1.13.5 // indirect
 	github.com/lib/pq v1.10.3
