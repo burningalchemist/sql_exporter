@@ -21,7 +21,7 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.32.1
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/snowflakedb/gosnowflake v1.6.3
+	github.com/snowflakedb/gosnowflake v1.6.4
 	github.com/vertica/vertica-sql-go v1.2.0
 	golang.org/x/net v0.0.0-20210903162142-ad29c8ab022f // indirect
 	golang.org/x/sys v0.0.0-20210903071746-97244b99971b // indirect
