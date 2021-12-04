@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/kardianos/minwinsvc v1.0.0
 	github.com/klauspost/compress v1.13.5 // indirect
-	github.com/lib/pq v1.10.3
+	github.com/lib/pq v1.10.4
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/pkg/browser v0.0.0-20210904010418-6d279e18f982 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
