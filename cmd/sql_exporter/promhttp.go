@@ -76,9 +76,10 @@ func contextFor(req *http.Request, exporter sql_exporter.Exporter) (context.Cont
 	configTimeout := time.Duration(exporter.Config().Globals.ScrapeTimeout)
 	// If a timeout is provided in the Prometheus header, use it.
 	if v := req.Header.Get("X-Prometheus-Scrape-Timeout-Seconds"); v != "" {
-		timeoutSeconds, err := strconv.ParseFloat(v, 64)
+		userInput := stringSanitizer(v)
+		timeoutSeconds, err := strconv.ParseFloat(userInput, 64)
 		if err != nil {
-			klog.Errorf("Failed to parse timeout (`%s`) from Prometheus header: %s", v, err)
+			klog.Errorf("Failed to parse timeout (`%s`) from Prometheus header: %s", userInput, err)
 		} else {
 			timeout = time.Duration(timeoutSeconds * float64(time.Second))
 
@@ -132,4 +133,21 @@ func decorateWriter(request *http.Request, writer io.Writer) (w io.Writer, encod
 		}
 	}
 	return writer, ""
+}
+
+var linebreaker = strings.NewReplacer(
+	"\r\n", "",
+	"\r", "",
+	"\n", "",
+	"\v", "",
+	"\f", "",
+	"\u0085", "",
+	"\u2028", "",
+	"\u2029", "",
+)
+
+// stringSanitizer replaces any line breaks in the given string to address
+// CWE-117 (https://cwe.mitre.org/data/definitions/117)
+func stringSanitizer(s string) string {
+	return linebreaker.Replace(s)
 }
