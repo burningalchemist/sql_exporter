@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -75,11 +76,20 @@ func contextFor(req *http.Request, exporter sql_exporter.Exporter) (context.Cont
 	timeout := time.Duration(0)
 	configTimeout := time.Duration(exporter.Config().Globals.ScrapeTimeout)
 	// If a timeout is provided in the Prometheus header, use it.
-	sanitizedHeader := stringSanitizer(req.Header.Get("X-Prometheus-Scrape-Timeout-Seconds"))
-	if v := sanitizedHeader; v != "" {
+	if v := req.Header.Get("X-Prometheus-Scrape-Timeout-Seconds"); v != "" {
 		timeoutSeconds, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			klog.Errorf("Failed to parse timeout (`%s`) from Prometheus header: %s", v, err)
+			parseError := errors.Unwrap(err)
+			switch {
+			case errors.Is(parseError, strconv.ErrSyntax):
+				{
+					klog.Errorf("Failed to parse timeout from Prometheus header: unsupported value")
+				}
+			case errors.Is(parseError, strconv.ErrRange):
+				{
+					klog.Errorf("Failed to parse timeout from Prometheus header: value is out of range")
+				}
+			}
 		} else {
 			timeout = time.Duration(timeoutSeconds * float64(time.Second))
 
@@ -133,21 +143,4 @@ func decorateWriter(request *http.Request, writer io.Writer) (w io.Writer, encod
 		}
 	}
 	return writer, ""
-}
-
-var linebreaker = strings.NewReplacer(
-	"\r\n", "",
-	"\r", "",
-	"\n", "",
-	"\v", "",
-	"\f", "",
-	"\u0085", "",
-	"\u2028", "",
-	"\u2029", "",
-)
-
-// stringSanitizer replaces any line breaks in the given string to address
-// CWE-117 (https://cwe.mitre.org/data/definitions/117)
-func stringSanitizer(s string) string {
-	return linebreaker.Replace(s)
 }
