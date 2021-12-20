@@ -75,11 +75,11 @@ func contextFor(req *http.Request, exporter sql_exporter.Exporter) (context.Cont
 	timeout := time.Duration(0)
 	configTimeout := time.Duration(exporter.Config().Globals.ScrapeTimeout)
 	// If a timeout is provided in the Prometheus header, use it.
-	if v := req.Header.Get("X-Prometheus-Scrape-Timeout-Seconds"); v != "" {
-		userInput := stringSanitizer(v)
-		timeoutSeconds, err := strconv.ParseFloat(userInput, 64)
+	sanitizedHeader := stringSanitizer(req.Header.Get("X-Prometheus-Scrape-Timeout-Seconds"))
+	if v := sanitizedHeader; v != "" {
+		timeoutSeconds, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			klog.Errorf("Failed to parse timeout (`%s`) from Prometheus header: %s", userInput, err)
+			klog.Errorf("Failed to parse timeout (`%s`) from Prometheus header: %s", v, err)
 		} else {
 			timeout = time.Duration(timeoutSeconds * float64(time.Second))
 
