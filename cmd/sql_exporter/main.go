@@ -46,13 +46,7 @@ func main() {
 		alsoLogToStderr.DefValue = "true"
 		_ = alsoLogToStderr.Value.Set("true")
 	}
-	// Override the config.file default with the CONFIG environment variable, if set. If the flag is explicitly set, it
-	// will end up overriding either.
-	// Deprecated: "CONFIG" variable will be replaced by "SQLEXPORTER_CONFIG" in the next release
-	if envConfigFile := os.Getenv("CONFIG"); envConfigFile != "" {
-		*configFile = envConfigFile
-	}
-
+	// Override the config.file default with the SQLEXPORTER_CONFIG environment variable if set.
 	if val, ok := os.LookupEnv(envConfigFile); ok {
 		*configFile = val
 	}
