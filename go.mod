@@ -6,7 +6,7 @@ require (
 	github.com/ClickHouse/clickhouse-go v1.5.3
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/denisenkom/go-mssqldb v0.11.0
+	github.com/denisenkom/go-mssqldb v0.12.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/kardianos/minwinsvc v1.0.0
@@ -21,6 +21,5 @@ require (
 	github.com/vertica/vertica-sql-go v1.2.1
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	k8s.io/klog/v2 v2.40.1
 )
