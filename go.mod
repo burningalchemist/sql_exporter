@@ -3,7 +3,7 @@ module github.com/burningalchemist/sql_exporter
 go 1.16
 
 require (
-	github.com/ClickHouse/clickhouse-go v1.5.3
+	github.com/ClickHouse/clickhouse-go v1.5.4
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denisenkom/go-mssqldb v0.12.0
 	github.com/go-sql-driver/mysql v1.6.0
