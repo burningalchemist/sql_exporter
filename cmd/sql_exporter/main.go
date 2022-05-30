@@ -69,9 +69,9 @@ func main() {
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { http.Error(w, "OK", http.StatusOK) })
 	http.HandleFunc("/", HomeHandlerFunc(*metricsPath))
 	http.HandleFunc("/config", ConfigHandlerFunc(*metricsPath, exporter))
-	http.Handle(*metricsPath, ExporterHandlerFor(exporter))
+	http.Handle(*metricsPath, promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, ExporterHandlerFor(exporter)))
 	// Expose exporter metrics separately, for debugging purposes.
-	http.Handle("/sql_exporter_metrics", promhttp.Handler())
+	http.Handle("/sql_exporter_metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 
 	// Expose refresh handler to reload query collections
 	if *enableReload {
