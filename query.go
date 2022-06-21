@@ -74,13 +74,17 @@ func setColumnType(logContext, columnName string, ctype columnType, columnTypes 
 // Collect is the equivalent of prometheus.Collector.Collect() but takes a context to run in and a database to run on.
 func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 	if ctx.Err() != nil {
-		ch <- NewInvalidMetric(errors.Wrap(q.logContext, ctx.Err()))
+		if !q.config.IgnoreErrors {
+			ch <- NewInvalidMetric(errors.Wrap(q.logContext, ctx.Err()))
+		}
 		return
 	}
 	rows, err := q.run(ctx, conn)
 	if err != nil {
 		// TODO: increment an error counter
-		ch <- NewInvalidMetric(err)
+		if !q.config.IgnoreErrors {
+			ch <- NewInvalidMetric(err)
+		}
 		return
 	}
 	defer rows.Close()
@@ -88,13 +92,17 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 	dest, err := q.scanDest(rows)
 	if err != nil {
 		// TODO: increment an error counter
-		ch <- NewInvalidMetric(err)
+		if !q.config.IgnoreErrors {
+			ch <- NewInvalidMetric(err)
+		}
 		return
 	}
 	for rows.Next() {
 		row, err := q.scanRow(rows, dest)
 		if err != nil {
-			ch <- NewInvalidMetric(err)
+			if !q.config.IgnoreErrors {
+				ch <- NewInvalidMetric(err)
+			}
 			continue
 		}
 		for _, mf := range q.metricFamilies {
@@ -102,7 +110,10 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 		}
 	}
 	if err1 := rows.Err(); err1 != nil {
-		ch <- NewInvalidMetric(errors.Wrap(q.logContext, err1))
+		if !q.config.IgnoreErrors {
+			ch <- NewInvalidMetric(errors.Wrap(q.logContext, err1))
+		}
+
 	}
 }
 

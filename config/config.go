@@ -378,8 +378,9 @@ func (c *CollectorConfig) UnmarshalYAML(unmarshal func(interface{}) error) error
 		} else {
 			// For literal queries generate a QueryConfig with a name based off collector and metric name.
 			metric.query = &QueryConfig{
-				Name:  metric.Name,
-				Query: metric.QueryLiteral,
+				Name:         metric.Name,
+				Query:        metric.QueryLiteral,
+				IgnoreErrors: metric.QueryLiteralIgnoreErrors,
 			}
 		}
 	}
@@ -390,15 +391,16 @@ func (c *CollectorConfig) UnmarshalYAML(unmarshal func(interface{}) error) error
 // MetricConfig defines a Prometheus metric, the SQL query to populate it and the mapping of columns to metric
 // keys/values.
 type MetricConfig struct {
-	Name         string            `yaml:"metric_name"`             // the Prometheus metric name
-	TypeString   string            `yaml:"type"`                    // the Prometheus metric type
-	Help         string            `yaml:"help"`                    // the Prometheus metric help text
-	KeyLabels    []string          `yaml:"key_labels,omitempty"`    // expose these columns as labels from SQL
-	StaticLabels map[string]string `yaml:"static_labels,omitempty"` // fixed key/value pairs as static labels
-	ValueLabel   string            `yaml:"value_label,omitempty"`   // with multiple value columns, map their names under this label
-	Values       []string          `yaml:"values"`                  // expose each of these columns as a value, keyed by column name
-	QueryLiteral string            `yaml:"query,omitempty"`         // a literal query
-	QueryRef     string            `yaml:"query_ref,omitempty"`     // references a query in the query map
+	Name                     string            `yaml:"metric_name"`                   // the Prometheus metric name
+	TypeString               string            `yaml:"type"`                          // the Prometheus metric type
+	Help                     string            `yaml:"help"`                          // the Prometheus metric help text
+	KeyLabels                []string          `yaml:"key_labels,omitempty"`          // expose these columns as labels from SQL
+	StaticLabels             map[string]string `yaml:"static_labels,omitempty"`       // fixed key/value pairs as static labels
+	ValueLabel               string            `yaml:"value_label,omitempty"`         // with multiple value columns, map their names under this label
+	Values                   []string          `yaml:"values"`                        // expose each of these columns as a value, keyed by column name
+	QueryLiteral             string            `yaml:"query,omitempty"`               // a literal query
+	QueryLiteralIgnoreErrors bool              `yaml:"query_ignore_errors,omitempty"` // ignore errors if query fails due to a syntax error
+	QueryRef                 string            `yaml:"query_ref,omitempty"`           // references a query in the query map
 
 	valueType prometheus.ValueType // TypeString converted to prometheus.ValueType
 	query     *QueryConfig         // QueryConfig resolved from QueryRef or generated from Query
@@ -436,6 +438,10 @@ func (m *MetricConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	if (m.QueryLiteral == "") == (m.QueryRef == "") {
 		return fmt.Errorf("exactly one of query and query_ref must be specified for metric %q", m.Name)
+	}
+
+	if m.QueryLiteralIgnoreErrors && m.QueryLiteral == "" {
+		return fmt.Errorf("query needs to be defined in order to use query_ignore_errors %q", m.Name)
 	}
 
 	switch strings.ToLower(m.TypeString) {
@@ -481,8 +487,9 @@ func (m *MetricConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // QueryConfig defines a named query, to be referenced by one or multiple metrics.
 type QueryConfig struct {
-	Name  string `yaml:"query_name"` // the query name, to be referenced via `query_ref`
-	Query string `yaml:"query"`      // the named query
+	Name         string `yaml:"query_name"`                    // the query name, to be referenced via `query_ref`
+	Query        string `yaml:"query"`                         // the named query
+	IgnoreErrors bool   `yaml:"query_ignore_errors,omitempty"` // ignore errors if query fails due to a syntax error
 
 	metrics []*MetricConfig // metrics referencing this query
 
