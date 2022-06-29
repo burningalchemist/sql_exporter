@@ -13,7 +13,9 @@ import (
 	_ "github.com/kardianos/minwinsvc"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/exporter-toolkit/web"
 	"k8s.io/klog/v2"
 )
 
@@ -28,6 +30,7 @@ var (
 	metricsPath   = flag.String("web.metrics-path", "/metrics", "Path under which to expose metrics")
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration filename")
+	webcfgFile    = flag.String("web.config", "", "Path to config yaml file that can enable TLS or authentication.")
 )
 
 func init() {
@@ -77,8 +80,14 @@ func main() {
 	if *enableReload {
 		http.HandleFunc("/reload", reloadCollectors(exporter))
 	}
-	klog.Infof("Listening on %s", *listenAddress)
-	klog.Fatal(http.ListenAndServe(*listenAddress, nil))
+
+	promlogConfig := &promlog.Config{}
+	logger := promlog.New(promlogConfig)
+	klog.Info("Listening on", *listenAddress)
+	server := &http.Server{Addr: *listenAddress}
+	if err := web.Listen(server, *webcfgFile, logger); err != nil {
+		klog.Fatal(err)
+	}
 
 }
 
