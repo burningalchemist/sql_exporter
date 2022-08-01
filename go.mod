@@ -6,6 +6,8 @@ require (
 	github.com/ClickHouse/clickhouse-go v1.5.4
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/denisenkom/go-mssqldb v0.12.2
+	github.com/go-kit/kit v0.9.0
+	github.com/go-kit/log v0.2.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/kardianos/minwinsvc v1.0.0
