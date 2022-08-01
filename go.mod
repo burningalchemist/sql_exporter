@@ -17,7 +17,7 @@ require (
 	github.com/prometheus/common v0.35.0
 	github.com/snowflakedb/gosnowflake v1.6.11
 	github.com/vertica/vertica-sql-go v1.2.2
-	google.golang.org/protobuf v1.28.0
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/klog/v2 v2.70.1
 )
