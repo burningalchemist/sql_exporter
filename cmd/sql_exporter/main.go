@@ -29,12 +29,11 @@ var (
 	listenAddress = flag.String("web.listen-address", ":9399", "Address to listen on for web interface and telemetry")
 	metricsPath   = flag.String("web.metrics-path", "/metrics", "Path under which to expose metrics")
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
+	tlsConfigFile = flag.String("web.config.file", "", "Path to config yaml file that can enable TLS or basic authentication")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration filename")
-	webcfgFile    = flag.String("web.config", "", "Path to config yaml file that can enable TLS or authentication.")
 )
 
 func init() {
-	klog.InitFlags(nil)
 	prometheus.MustRegister(version.NewCollector("sql_exporter"))
 }
 
@@ -43,6 +42,13 @@ func main() {
 		runtime.SetBlockProfileRate(1)
 		runtime.SetMutexProfileFraction(1)
 	}
+
+	promlogConfig := &promlog.Config{}
+
+	// Overriding the default klog with our go-kit klog implementation.
+	// Thus we need to pass it our go-kit logger object.
+	logger := promlog.New(promlogConfig)
+	klog.SetLogger(logger)
 
 	// Override --alsologtostderr default value.
 	if alsoLogToStderr := flag.Lookup("alsologtostderr"); alsoLogToStderr != nil {
@@ -81,11 +87,9 @@ func main() {
 		http.HandleFunc("/reload", reloadCollectors(exporter))
 	}
 
-	promlogConfig := &promlog.Config{}
-	logger := promlog.New(promlogConfig)
-	klog.Info("Listening on", *listenAddress)
+	klog.Info("Listening on ", *listenAddress)
 	server := &http.Server{Addr: *listenAddress}
-	if err := web.Listen(server, *webcfgFile, logger); err != nil {
+	if err := web.ListenAndServe(server, *tlsConfigFile, logger); err != nil {
 		klog.Fatal(err)
 	}
 
