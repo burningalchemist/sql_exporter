@@ -171,12 +171,12 @@ Snowflake  | ` snowflake://user:pass@account/dbname?role=rolename&warehouse=ware
 Vertica | `vertica://user:passw@host:port/dbname` | *unchanged*
 
 
-## TLS and basic authentication
+## TLS and Basic Authentication
 
-SQL Exporter supports TLS and basic authentication. This enables better control of the various HTTP endpoints.
+SQL Exporter supports TLS and Basic Authentication. This enables better control of the various HTTP endpoints.
 
-To use TLS and/or basic authentication, you need to pass a configuration file using the `--web.config` parameter. The format of the file is described
-[in the exporter-toolkit repository](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
+To use TLS and/or Basic Authentication, you need to pass a configuration file using the `--web.config.file` parameter. The format of the file is described in the
+[exporter-toolkit](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md) repository.
 
 ## Why It Exists
 

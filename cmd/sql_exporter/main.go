@@ -29,8 +29,8 @@ var (
 	listenAddress = flag.String("web.listen-address", ":9399", "Address to listen on for web interface and telemetry")
 	metricsPath   = flag.String("web.metrics-path", "/metrics", "Path under which to expose metrics")
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
-	tlsConfigFile = flag.String("web.config.file", "", "Path to config yaml file that can enable TLS or basic authentication")
-	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration filename")
+	tlsConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
+	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
 )
 
 func init() {
