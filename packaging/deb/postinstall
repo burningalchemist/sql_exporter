@@ -1,0 +1,60 @@
+#!/bin/sh
+
+set -e
+
+[ -f /etc/default/sql_exporter ] && . /etc/default/sql_exporter
+
+IS_UPGRADE=false
+
+case "$1" in
+	configure)
+	[ -z "$SQL_EXPORTER_USER" ] && SQL_EXPORTER_USER="sql_exporter"
+	[ -z "$SQL_EXPORTER_GROUP" ] && SQL_EXPORTER_GROUP="sql_exporter"
+	if ! getent group "$SQL_EXPORTER_GROUP" > /dev/null 2>&1 ; then
+	    addgroup --system "$SQL_EXPORTER_GROUP" --quiet
+	fi
+	if ! id $SQL_EXPORTER_USER > /dev/null 2>&1 ; then
+	    adduser --system --home /usr/share/sql_exporter \
+		--ingroup "$SQL_EXPORTER_GROUP" --disabled-password --shell /bin/false \
+		"$SQL_EXPORTER_USER"
+	fi
+
+  # copy user config files
+	  if [ ! -f $CONF_FILE ]; then
+            CONF_PATH=$(dirname "$CONF_FILE")
+	    cp /usr/share/sql_exporter/sql_exporter.yml $CONF_FILE
+            cp /usr/share/sql_exporter/mssql_example.collector.yml $CONF_PATH
+          fi
+
+	# configuration files should not be modifiable by sql_exporter user, as this can be a security issue
+	chown -Rh root:$SQL_EXPORTER_GROUP /etc/sql_exporter/
+	chmod 755 /etc/sql_exporter
+	find /etc/sql_exporter -type f -exec chmod 640 {} ';'
+	find /etc/sql_exporter -type d -exec chmod 755 {} ';'
+
+  # If $1=configure and $2 is set, this is an upgrade
+  if [ "$2" != "" ]; then
+    IS_UPGRADE=true
+  fi
+
+  if [ "x$IS_UPGRADE" != "xtrue" ]; then
+    if command -v systemctl >/dev/null; then
+      echo "### NOT starting on installation, please execute the following statements to configure sql_exporter to start automatically using systemd"
+      echo " sudo /bin/systemctl daemon-reload"
+      echo " sudo /bin/systemctl enable sql_exporter"
+      echo "### You can start sql_exporter by executing"
+      echo " sudo /bin/systemctl start sql_exporter"
+    fi
+  elif [ "$RESTART_ON_UPGRADE" = "true" ]; then
+
+    echo -n "Restarting sql_exporter service..."
+
+    if command -v systemctl >/dev/null; then
+      systemctl daemon-reload
+      systemctl restart sql_exporter || true
+    fi
+    echo " OK"
+
+	fi
+	;;
+esac

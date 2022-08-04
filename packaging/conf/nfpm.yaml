@@ -1,0 +1,49 @@
+name: "prometheus-sql-exporter"
+arch: "amd64"
+platform: "linux"
+version: "${VERSION}"
+section: "default"
+priority: "extra"
+replaces:
+- prometheus-sql-exporter
+maintainer: "Sergei Zyubin <oss@szyubin.me>"
+description: |
+  SQL Exporter for Prometheus
+homepage: "https://github.com/burningalchemist/sql_exporter"
+license: "MIT"
+contents:
+- src: ./sql_exporter
+  dst: /usr/local/bin/sql_exporter
+
+- src: ./examples/sql_exporter.yml
+  dst: /usr/share/sql_exporter/sql_exporter.yml
+  type: config
+- src: ./examples/mssql_standard.collector.yml
+  dst: /usr/share/sql_exporter/mssql_example.collector.yml
+  type: config
+
+- src: ./packaging/conf/sql_exporter.default
+  dst: /etc/default/sql_exporter
+  type: config
+  packager: deb
+- src: ./packaging/deb/sql_exporter.service
+  dst: /usr/lib/systemd/system/sql_exporter.service
+  type: config
+  packager: deb
+
+- src: ./packaging/conf/sql_exporter.default
+  dst: /etc/sysconfig/sql_exporter
+  type: config
+  packager: rpm
+- src: ./packaging/rpm/sql_exporter.service
+  dst: /usr/lib/systemd/system/sql_exporter.service
+  type: config
+  packager: rpm
+
+overrides:
+  deb:
+    scripts:
+      postinstall: ./packaging/deb/postinstall
+  rpm:
+    scripts:
+      postinstall: ./packaging/rpm/postinstall

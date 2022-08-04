@@ -1,0 +1,8 @@
+CONF_FILE=/etc/sql_exporter/sql_exporter.yml
+LISTEN_ADDRESS=0.0.0.0:9399
+LOG_JSON=false
+LOG_LEVEL=debug
+ENABLE_RELOAD=false
+METRICS_PATH=/metrics
+WEB_CONFIG_FILE=
+RESTART_ON_UPGRADE=true
