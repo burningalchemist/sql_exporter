@@ -31,6 +31,8 @@ var (
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
 	webConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
+	logFormatJson = flag.Bool("log.json", false, "Set log output format to JSON")
+	logLevel      = flag.String("log.level", "debug", "Set log level")
 )
 
 func init() {
@@ -43,7 +45,16 @@ func main() {
 		runtime.SetMutexProfileFraction(1)
 	}
 
+	flag.Parse()
+
 	promlogConfig := &promlog.Config{}
+	promlogConfig.Level = &promlog.AllowedLevel{}
+	promlogConfig.Level.Set(*logLevel)
+
+	if *logFormatJson {
+		promlogConfig.Format = &promlog.AllowedFormat{}
+		promlogConfig.Format.Set("json")
+	}
 
 	// Overriding the default klog with our go-kit klog implementation.
 	// Thus we need to pass it our go-kit logger object.
@@ -59,8 +70,6 @@ func main() {
 	if val, ok := os.LookupEnv(envConfigFile); ok {
 		*configFile = val
 	}
-
-	flag.Parse()
 
 	if *showVersion {
 		fmt.Println(version.Print("sql_exporter"))
