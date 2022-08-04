@@ -145,7 +145,7 @@ func (c *Config) loadCollectorFiles() error {
 			}
 
 			c.Collectors = append(c.Collectors, &cc)
-			klog.Infof("Loaded collector %q from %s", cc.Name, cf)
+			klog.Infof("Loaded collector '%s' from %s", cc.Name, cf)
 		}
 	}
 

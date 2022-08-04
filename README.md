@@ -170,6 +170,14 @@ Clickhouse | `clickhouse://host:port?username=user&password=passw&database=dbnam
 Snowflake  | ` snowflake://user:pass@account/dbname?role=rolename&warehouse=warehousename` | `user:pass@account/dbname?role=rolename&warehouse=warehousename`
 Vertica | `vertica://user:passw@host:port/dbname` | *unchanged*
 
+
+## TLS and Basic Authentication
+
+SQL Exporter supports TLS and Basic Authentication. This enables better control of the various HTTP endpoints.
+
+To use TLS and/or Basic Authentication, you need to pass a configuration file using the `--web.config.file` parameter. The format of the file is described in the
+[exporter-toolkit](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md) repository.
+
 ## Why It Exists
 
 SQL Exporter started off as an exporter for Microsoft SQL Server, for which no reliable exporters exist. But what is

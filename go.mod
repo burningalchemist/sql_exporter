@@ -15,9 +15,12 @@ require (
 	github.com/prometheus/client_golang v1.12.2
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.37.0
+	github.com/prometheus/exporter-toolkit v0.7.1
 	github.com/snowflakedb/gosnowflake v1.6.12
 	github.com/vertica/vertica-sql-go v1.2.2
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/klog/v2 v2.70.1
 )
+
+replace k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.1.0
