@@ -29,7 +29,7 @@ var (
 	listenAddress = flag.String("web.listen-address", ":9399", "Address to listen on for web interface and telemetry")
 	metricsPath   = flag.String("web.metrics-path", "/metrics", "Path under which to expose metrics")
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
-	tlsConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
+	webConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
 )
 
@@ -89,7 +89,7 @@ func main() {
 
 	klog.Info("Listening on ", *listenAddress)
 	server := &http.Server{Addr: *listenAddress}
-	if err := web.ListenAndServe(server, *tlsConfigFile, logger); err != nil {
+	if err := web.ListenAndServe(server, *webConfigFile, logger); err != nil {
 		klog.Fatal(err)
 	}
 
