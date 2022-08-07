@@ -57,7 +57,7 @@ crossbuild-tarballs: promu
 	@$(PROMU) crossbuild tarballs
 
 crossbuild-checksum: promu
-	@echo ">> calculating checksums for released tarballs"
+	@echo ">> calculating checksums for released packages"
 	@$(PROMU) checksum .tarballs
 
 crossbuild-release: promu crossbuild crossbuild-tarballs crossbuild-checksum
