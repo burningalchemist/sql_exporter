@@ -1,15 +1,19 @@
-name: Test
+name: Publish a deb package
 
 on:
   workflow_dispatch:
   push:
     branches:
     - packaging
+    tags:
+    - '*.*.*'
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ github.ref_name }}
     steps:
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
@@ -18,18 +22,27 @@ jobs:
       id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
-    - name: Style
-      run: make style
-    - name: Vet
-      run: make vet
-    - name: Test
-      run: make test
     - name: Build
       run: make build
-    - name: nfpm action
-      uses: burningalchemist/nfpm-action@master
+
+    - name: Create a deb package
+      id: nfpm-deb
+      uses: burningalchemist/action-gh-nfpm@v1
       with:
         packager: deb
         config: packaging/conf/nfpm.yaml
-      env:
-          VERSION: 0.8.8
+    - name: Create a rpm package
+      id: nfpm-rpm
+      uses: burningalchemist/action-gh-nfpm@v1
+      with:
+        packager: rpm
+        config: packaging/conf/nfpm.yaml
+
+    - run: ls
+      shell: bash
+#    - name: Upload deb|rpm packages
+#      uses: softprops/action-gh-release@v1
+#      with:
+#        files: |
+#          ${{ steps.nfpm-deb.outputs.package }}
+#          ${{ steps.nfpm-rpm.outputs.package }}
