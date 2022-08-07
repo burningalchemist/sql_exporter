@@ -1,18 +1,18 @@
-name: "prometheus-sql-exporter"
+name: "sql_exporter"
 arch: "amd64"
 platform: "linux"
 version: "${VERSION}"
 section: "default"
 priority: "extra"
 replaces:
-- prometheus-sql-exporter
+- sql_exporter
 maintainer: "Sergei Zyubin <oss@szyubin.me>"
 description: |
   SQL Exporter for Prometheus
 homepage: "https://github.com/burningalchemist/sql_exporter"
 license: "MIT"
 contents:
-- src: ./sql_exporter
+- src: .build/linux-amd64/sql_exporter
   dst: /usr/local/bin/sql_exporter
 
 - src: ./examples/sql_exporter.yml

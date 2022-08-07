@@ -1,16 +1,14 @@
-name: Publish a deb package
+name: Publish artifacts (linux distro)
 
 on:
   workflow_dispatch:
   push:
-    branches:
-    - packaging
     tags:
     - '*.*.*'
 
 jobs:
   build:
-    name: Build
+    name: Build and upload artifacts
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ github.ref_name }}
@@ -19,9 +17,9 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: ^1.17
-      id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
+
     - name: Build
       run: make build
 
@@ -38,11 +36,9 @@ jobs:
         packager: rpm
         config: packaging/conf/nfpm.yaml
 
-    - run: ls
-      shell: bash
-#    - name: Upload deb|rpm packages
-#      uses: softprops/action-gh-release@v1
-#      with:
-#        files: |
-#          ${{ steps.nfpm-deb.outputs.package }}
-#          ${{ steps.nfpm-rpm.outputs.package }}
+    - name: Upload deb|rpm packages
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ${{ steps.nfpm-deb.outputs.package }}
+          ${{ steps.nfpm-rpm.outputs.package }}
