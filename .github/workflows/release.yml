@@ -1,0 +1,49 @@
+name: Build and Publish artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+    - '*.*.*'
+
+jobs:
+  build:
+    name: Build and upload artifacts
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ github.ref_name }}
+    steps:
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.17
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Promu - Crossbuild
+      run: make crossbuild
+
+    - name: Promu - Prepare packages
+      run: make crossbuild-tarballs
+
+    - name: Create deb package
+      uses: burningalchemist/action-gh-nfpm@v1
+      with:
+        packager: deb
+        config: packaging/conf/nfpm.yaml
+        target: .tarballs/
+    - name: Create rpm package
+      uses: burningalchemist/action-gh-nfpm@v1
+      with:
+        packager: rpm
+        config: packaging/conf/nfpm.yaml
+        target: .tarballs/
+
+    - name: Calculate checksums
+      run: make crossbuild-checksum
+
+    - name: Upload artifacts
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          .tarballs/*
