@@ -14,21 +14,24 @@ import (
 // (this is actually prevented by `database/sql` implementation), sets connection limits and returns the handle.
 func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxIdleConns int, maxConnLifetime time.Duration) (*sql.DB, error) {
 
-	url, parseErr := dburl.Parse(dsn)
-	if parseErr != nil {
-		return nil, parseErr
-	}
-
-	// Open the DB handle in a separate goroutine so we can terminate early if the context closes.
 	var (
+		url  *dburl.URL
 		conn *sql.DB
 		err  error
 		ch   = make(chan error)
 	)
+
+	url, err = dburl.Parse(dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Open the DB handle in a separate goroutine so we can terminate early if the context closes.
 	go func() {
 		conn, err = sql.Open(url.Driver, url.DSN)
 		close(ch)
 	}()
+
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
