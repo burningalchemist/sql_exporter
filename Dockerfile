@@ -8,9 +8,10 @@ WORKDIR /go/src/github.com/burningalchemist/sql_exporter
 RUN make
 
 # Make image and copy build sql_exporter
-FROM        quay.io/prometheus/busybox:glibc
+FROM        gcr.io/distroless/static:nonroot
 MAINTAINER  The Prometheus Authors <prometheus-developers@googlegroups.com>
 COPY        --from=builder /go/src/github.com/burningalchemist/sql_exporter/sql_exporter  /bin/sql_exporter
 
+USER        65534
 EXPOSE      9399
 ENTRYPOINT  [ "/bin/sql_exporter" ]
