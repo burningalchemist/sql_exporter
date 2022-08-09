@@ -6,7 +6,8 @@ import (
 
 // WithContext is an error associated with a logging context string (e.g. `job="foo", instance="bar"`). It is formatted
 // as:
-//   fmt.Sprintf("[%s] %s", Context(), RawError())
+//
+//	fmt.Sprintf("[%s] %s", Context(), RawError())
 type WithContext interface {
 	error
 

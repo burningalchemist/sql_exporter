@@ -270,8 +270,9 @@ func (j *JobConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return checkOverflow(j.XXX, "job")
 }
 
-//lint:ignore U1000 - it's unused so far
 // checkLabelCollisions checks for label collisions between StaticConfig labels and Metric labels.
+//
+//lint:ignore U1000 - it's unused so far
 func (j *JobConfig) checkLabelCollisions() error {
 	sclabels := make(map[string]interface{})
 	for _, s := range j.StaticConfigs {
