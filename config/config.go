@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -20,7 +20,7 @@ const MaxInt32 int = 1<<31 - 1
 // Load attempts to parse the given config file and return a Config object.
 func Load(configFile string) (*Config, error) {
 	klog.Infof("Loading configuration from %s", configFile)
-	buf, err := ioutil.ReadFile(configFile)
+	buf, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (c *Config) loadCollectorFiles() error {
 
 		// And load the CollectorConfig defined in each file.
 		for _, cf := range cfs {
-			buf, err := ioutil.ReadFile(cf)
+			buf, err := os.ReadFile(cf)
 			if err != nil {
 				return err
 			}
