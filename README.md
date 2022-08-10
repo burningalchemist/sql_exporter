@@ -30,17 +30,7 @@ metrics when queried more frequently than the configured interval.
 ## Usage
 
 Get Prometheus SQL Exporter, either as a [packaged release](https://github.com/burningalchemist/sql_exporter/releases/latest),
-as a [Docker image](https://hub.docker.com/r/burningalchemist/sql_exporter) or build it yourself:
-
-```shell
-go install github.com/burningalchemist/sql_exporter/cmd/sql_exporter
-```
-
-then run it from the command line:
-
-```shell
-sql_exporter
-```
+as a [Docker image](https://hub.docker.com/r/burningalchemist/sql_exporter).
 
 Use the `-help` flag to get help information.
 
@@ -54,6 +44,26 @@ Usage of ./sql_exporter:
   -web.metrics-path string
       Path under which to expose metrics. (default "/metrics")
   [...]
+```
+
+## Build
+
+Prerequisites:
+
+- Go Compiler
+- GNU Make
+
+By default we produce a binary with all the supported drivers with the following command:
+
+```shell
+make build
+```
+
+It's also possible to reduce the size of the binary by only including essential drivers like Postgres, MySQL and MSSQL.
+To prepare such a binary we need to run:
+
+```shell
+make build-minimal
 ```
 
 ## Run as a Windows service
@@ -166,7 +176,7 @@ To keep things simple and yet allow fully configurable database connections, SQL
 
 ---
 
-**UPDATE:** Since v0.9.0 `sql_exporter` adopted `github.com/xo/dburl` package for parsing Data Source Names (DSN).
+**UPDATE:** Since v0.9.0 `sql_exporter` relies on `github.com/xo/dburl` package for parsing Data Source Names (DSN).
 This can potentially affect your connection to certain databases like MySQL, so you might want to adjust your connection
 string accordingly:
 
