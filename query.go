@@ -81,7 +81,6 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 	}
 	rows, err := q.run(ctx, conn)
 	if err != nil {
-		// TODO: increment an error counter
 		ch <- NewInvalidMetric(err)
 		return
 	}
@@ -89,7 +88,6 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 
 	dest, err := q.scanDest(rows)
 	if err != nil {
-		// TODO: increment an error counter
 		ch <- NewInvalidMetric(err)
 		return
 	}
