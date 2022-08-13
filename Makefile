@@ -44,6 +44,10 @@ build: promu
 	@echo ">> building binaries"
 	@$(PROMU) build --prefix $(PREFIX)
 
+build-minimal: promu
+	@echo ">> building binaries"
+	@$(PROMU) build --prefix $(PREFIX) --config=.promu_minimal.yml
+
 tarball: promu
 	@echo ">> building release tarball"
 	@$(PROMU) tarball --prefix $(PREFIX) $(BIN_DIR)
