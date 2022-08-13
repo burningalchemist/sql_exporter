@@ -103,7 +103,7 @@ func (c *Config) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
 }
 
-// ReloadCollectorFiles blah
+// ReloadCollectorFiles reloads previously loaded collector files
 func (c *Config) ReloadCollectorFiles() error {
 	if len(c.Collectors) > 0 {
 		c.Collectors = c.Collectors[:0]
