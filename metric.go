@@ -133,7 +133,8 @@ type automaticMetricDesc struct {
 
 // NewAutomaticMetricDesc creates a MetricDesc for automatically generated metrics.
 func NewAutomaticMetricDesc(
-	logContext, name, help string, valueType prometheus.ValueType, constLabels []*dto.LabelPair, labels ...string) MetricDesc {
+	logContext, name, help string, valueType prometheus.ValueType, constLabels []*dto.LabelPair, labels ...string,
+) MetricDesc {
 	return &automaticMetricDesc{
 		name:        name,
 		help:        help,

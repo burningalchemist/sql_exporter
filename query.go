@@ -22,8 +22,10 @@ type Query struct {
 	stmt *sql.Stmt
 }
 
-type columnType int
-type columnTypeMap map[string]columnType
+type (
+	columnType    int
+	columnTypeMap map[string]columnType
+)
 
 const (
 	columnTypeKey   = 1
