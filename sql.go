@@ -3,7 +3,9 @@ package sql_exporter
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/xo/dburl"
@@ -21,7 +23,7 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 		ch   = make(chan error)
 	)
 
-	url, err = dburl.Parse(dsn)
+	url, err = safeParse(dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -73,4 +75,18 @@ func PingDB(ctx context.Context, conn *sql.DB) error {
 	case err := <-ch:
 		return err
 	}
+}
+
+// safeParse wraps dburl.Parse method in order to prevent leaking credentials
+// if underlying url parse failed. By default it returns a raw url string in error message,
+// which most likely contains a password. It's undesired here.
+func safeParse(rawURL string) (*dburl.URL, error) {
+	parsed, err := dburl.Parse(rawURL)
+	if err != nil {
+		if uerr := new(url.Error); errors.As(err, &uerr) {
+			return nil, uerr.Err
+		}
+		return nil, errors.New("invalid URL")
+	}
+	return parsed, nil
 }
