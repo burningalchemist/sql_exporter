@@ -21,7 +21,7 @@ import (
 const (
 	envConfigFile         = "SQLEXPORTER_CONFIG"
 	envDebug              = "SQLEXPORTER_DEBUG"
-	httpReadHeaderTimeout = time.Duration(60)
+        httpReadHeaderTimeout = time.Duration(time.Second * 60)
 )
 
 var (
