@@ -153,7 +153,6 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 
 	case <-ctx.Done():
 		// Context closed, record an error and return
-		// TODO: increment an error counter
 		ch <- NewInvalidMetric(errors.Wrap(cc.rawColl.logContext, ctx.Err()))
 	}
 }

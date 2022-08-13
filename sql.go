@@ -15,7 +15,6 @@ import (
 // OpenConnection parses a provided DSN, and opens a DB handle ensuring early termination if the context is closed
 // (this is actually prevented by `database/sql` implementation), sets connection limits and returns the handle.
 func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxIdleConns int, maxConnLifetime time.Duration) (*sql.DB, error) {
-
 	var (
 		url  *dburl.URL
 		conn *sql.DB

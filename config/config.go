@@ -103,7 +103,7 @@ func (c *Config) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
 }
 
-// ReloadCollectorFiles blah
+// ReloadCollectorFiles reloads previously loaded collector files
 func (c *Config) ReloadCollectorFiles() error {
 	if len(c.Collectors) > 0 {
 		c.Collectors = c.Collectors[:0]
@@ -128,7 +128,7 @@ func (c *Config) loadCollectorFiles() error {
 		cfs, err := filepath.Glob(cfglob)
 		if err != nil {
 			// The only error can be a bad pattern.
-			return fmt.Errorf("error resolving collector files for %s: %s", cfglob, err)
+			return fmt.Errorf("error resolving collector files for %s: %w", cfglob, err)
 		}
 
 		// And load the CollectorConfig defined in each file.
@@ -527,6 +527,7 @@ func (s Secret) MarshalYAML() (interface{}, error) {
 	}
 	return nil, nil
 }
+
 func checkCollectorRefs(collectorRefs []string, ctx string) error {
 	// At least one collector, no duplicates
 	if len(collectorRefs) == 0 {
@@ -543,7 +544,8 @@ func checkCollectorRefs(collectorRefs []string, ctx string) error {
 }
 
 func resolveCollectorRefs(
-	collectorRefs []string, collectors map[string]*CollectorConfig, ctx string) ([]*CollectorConfig, error) {
+	collectorRefs []string, collectors map[string]*CollectorConfig, ctx string,
+) ([]*CollectorConfig, error) {
 	resolved := make([]*CollectorConfig, 0, len(collectorRefs))
 	for _, cref := range collectorRefs {
 		c, found := collectors[cref]

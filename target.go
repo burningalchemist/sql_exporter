@@ -54,8 +54,8 @@ type target struct {
 // An empty target name means the exporter is running in single target mode: no synthetic metrics will be exported.
 func NewTarget(
 	logContext, name, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig) (
-	Target, errors.WithContext) {
-
+	Target, errors.WithContext,
+) {
 	if name != "" {
 		logContext = fmt.Sprintf("%s, target=%q", logContext, name)
 	}
@@ -79,8 +79,7 @@ func NewTarget(
 	}
 
 	upDesc := NewAutomaticMetricDesc(logContext, upMetricName, upMetricHelp, prometheus.GaugeValue, constLabelPairs)
-	scrapeDurationDesc :=
-		NewAutomaticMetricDesc(logContext, scrapeDurationName, scrapeDurationHelp, prometheus.GaugeValue, constLabelPairs)
+	scrapeDurationDesc := NewAutomaticMetricDesc(logContext, scrapeDurationName, scrapeDurationHelp, prometheus.GaugeValue, constLabelPairs)
 	t := target{
 		name:               name,
 		dsn:                dsn,

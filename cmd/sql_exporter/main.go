@@ -6,8 +6,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-
-	_ "net/http/pprof"
+	"time"
 
 	"github.com/burningalchemist/sql_exporter"
 	_ "github.com/kardianos/minwinsvc"
@@ -20,8 +19,9 @@ import (
 )
 
 const (
-	envConfigFile = "SQLEXPORTER_CONFIG"
-	envDebug      = "SQLEXPORTER_DEBUG"
+	envConfigFile         = "SQLEXPORTER_CONFIG"
+	envDebug              = "SQLEXPORTER_DEBUG"
+	httpReadHeaderTimeout = time.Duration(time.Second * 60)
 )
 
 var (
@@ -31,7 +31,7 @@ var (
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
 	webConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
-	logFormatJson = flag.Bool("log.json", false, "Set log output format to JSON")
+	logFormatJSON = flag.Bool("log.json", false, "Set log output format to JSON")
 	logLevel      = flag.String("log.level", "info", "Set log level")
 )
 
@@ -49,11 +49,10 @@ func main() {
 
 	promlogConfig := &promlog.Config{}
 	promlogConfig.Level = &promlog.AllowedLevel{}
-	promlogConfig.Level.Set(*logLevel)
-
-	if *logFormatJson {
+	_ = promlogConfig.Level.Set(*logLevel)
+	if *logFormatJSON {
 		promlogConfig.Format = &promlog.AllowedFormat{}
-		promlogConfig.Format.Set("json")
+		_ = promlogConfig.Format.Set("json")
 	}
 
 	// Overriding the default klog with our go-kit klog implementation.
@@ -97,11 +96,10 @@ func main() {
 	}
 
 	klog.Warning("Listening on ", *listenAddress)
-	server := &http.Server{Addr: *listenAddress}
+	server := &http.Server{Addr: *listenAddress, ReadHeaderTimeout: httpReadHeaderTimeout}
 	if err := web.ListenAndServe(server, *webConfigFile, logger); err != nil {
 		klog.Fatal(err)
 	}
-
 }
 
 func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
