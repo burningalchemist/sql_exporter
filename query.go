@@ -117,6 +117,7 @@ func (q *Query) run(ctx context.Context, conn *sql.DB) (*sql.Rows, errors.WithCo
 		if err != nil {
 			return nil, errors.Wrapf(q.logContext, err, "prepare query failed")
 		}
+		defer stmt.Close()
 		q.conn = conn
 		q.stmt = stmt
 	}
