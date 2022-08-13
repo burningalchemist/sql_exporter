@@ -32,7 +32,7 @@ var (
 	webConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
 	logFormatJson = flag.Bool("log.json", false, "Set log output format to JSON")
-	logLevel      = flag.String("log.level", "debug", "Set log level")
+	logLevel      = flag.String("log.level", "info", "Set log level")
 )
 
 func init() {
@@ -76,7 +76,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	klog.Infof("Starting SQL exporter %s %s", version.Info(), version.BuildContext())
+	klog.Warningf("Starting SQL exporter %s %s", version.Info(), version.BuildContext())
 
 	exporter, err := sql_exporter.NewExporter(*configFile)
 	if err != nil {
@@ -96,7 +96,7 @@ func main() {
 		http.HandleFunc("/reload", reloadCollectors(exporter))
 	}
 
-	klog.Info("Listening on ", *listenAddress)
+	klog.Warning("Listening on ", *listenAddress)
 	server := &http.Server{Addr: *listenAddress}
 	if err := web.ListenAndServe(server, *webConfigFile, logger); err != nil {
 		klog.Fatal(err)
