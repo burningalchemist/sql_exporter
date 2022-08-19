@@ -59,12 +59,18 @@ By default we produce a binary with all the supported drivers with the following
 make build
 ```
 
-It's also possible to reduce the size of the binary by only including essential drivers like Postgres, MySQL and MSSQL.
-To prepare such a binary we need to run:
+It's also possible to reduce the size of the binary by only including specific set of drivers like Postgres, MySQL and MSSQL. In this case we need to update `drivers.go`. To avoid manual manipulation there is a helper code generator available, so we can run the following commands:
 
 ```shell
-make build-minimal
+make drivers-minimal
+make build
 ```
+
+The first command will regenerate `drivers.go` file with a minimal set of imported drivers using `drivers_gen.go`.
+
+Running `make drivers-all` will regenerate driver set back to the current defaults.
+
+Feel free to revisit and add more drivers as required. There's also the `custom` list that allows managing a separate list of drivers for special needs.
 
 ## Run as a Windows service
 

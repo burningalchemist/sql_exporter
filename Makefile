@@ -44,9 +44,12 @@ build: promu
 	@echo ">> building binaries"
 	@$(PROMU) build --prefix $(PREFIX)
 
-build-minimal: promu
-	@echo ">> building binaries"
-	@$(PROMU) build --prefix $(PREFIX) --config=.promu_minimal.yml
+drivers-%:
+	@echo ">> generating drivers.go with selected drivers"
+	@$(GO) get github.com/dave/jennifer/jen
+	@$(GO) run drivers_gen.go -- $*
+	@$(GO) get ./...
+	@$(GO) mod tidy
 
 tarball: promu
 	@echo ">> building release tarball"
