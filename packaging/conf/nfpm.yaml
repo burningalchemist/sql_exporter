@@ -13,7 +13,7 @@ homepage: "https://github.com/burningalchemist/sql_exporter"
 license: "MIT"
 contents:
 - src: .build/linux-amd64/sql_exporter
-  dst: /usr/local/bin/sql_exporter
+  dst: /usr/bin/sql_exporter
 
 - src: ./examples/sql_exporter.yml
   dst: /usr/share/sql_exporter/sql_exporter.yml
