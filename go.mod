@@ -10,7 +10,7 @@ require (
 	github.com/kardianos/minwinsvc v1.0.0
 	github.com/lib/pq v1.10.6
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
-	github.com/microsoft/go-mssqldb v0.16.0
+	github.com/microsoft/go-mssqldb v0.17.0
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.13.0
 	github.com/prometheus/client_model v0.2.0
