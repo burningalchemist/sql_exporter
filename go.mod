@@ -18,7 +18,7 @@ require (
 	github.com/prometheus/exporter-toolkit v0.7.1
 	github.com/snowflakedb/gosnowflake v1.6.13
 	github.com/vertica/vertica-sql-go v1.2.2
-	github.com/xo/dburl v0.12.0
+	github.com/xo/dburl v0.12.2
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/klog/v2 v2.70.1
