@@ -31,6 +31,11 @@ jobs:
         # a pull request then we can checkout the head.
         fetch-depth: 2
 
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.18
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
