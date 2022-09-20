@@ -1,6 +1,6 @@
 module github.com/burningalchemist/sql_exporter
 
-go 1.16
+go 1.18
 
 require (
 	github.com/ClickHouse/clickhouse-go v1.5.4
