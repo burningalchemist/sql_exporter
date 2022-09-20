@@ -18,7 +18,7 @@ var driverList = map[string][]string{
 	"minimal": {
 		"github.com/go-sql-driver/mysql",
 		"github.com/lib/pq",
-		"github.com/microsoft/go-mssqldb",
+		"github.com/microsoft/go-mssqldb/azuread",
 	},
 	"extra": {
 		"github.com/ClickHouse/clickhouse-go",
