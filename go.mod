@@ -74,10 +74,10 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
+	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0 // indirect
+	golang.org/x/net v0.0.0-20220920203100-d0c6ba3f52d9 // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
