@@ -96,10 +96,16 @@ func main() {
 	}
 
 	klog.Warning("Listening on ", *listenAddress)
+
 	server := &http.Server{Addr: *listenAddress, ReadHeaderTimeout: httpReadHeaderTimeout}
-	if err := web.ListenAndServe(server, *webConfigFile, logger); err != nil {
+	if err := web.ListenAndServe(server, &web.FlagConfig{WebListenAddresses: &([]string{*listenAddress}), WebConfigFile: webConfigFile, WebSystemdSocket: OfBool(false)}, logger); err != nil {
 		klog.Fatal(err)
 	}
+}
+
+// OfBool returns bool address.
+func OfBool(i bool) *bool {
+	return &i
 }
 
 func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
