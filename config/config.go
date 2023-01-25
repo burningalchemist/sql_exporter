@@ -31,6 +31,10 @@ func Load(configFile string) (*Config, error) {
 		return nil, err
 	}
 
+	if c.Globals == nil {
+		return nil, fmt.Errorf("empty or no configuration provided")
+	}
+
 	return &c, nil
 }
 
