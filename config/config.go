@@ -31,6 +31,10 @@ func Load(configFile string) (*Config, error) {
 		return nil, err
 	}
 
+	if c.Globals == nil {
+		return nil, fmt.Errorf("empty or no configuration provided")
+	}
+
 	return &c, nil
 }
 
@@ -40,7 +44,7 @@ func Load(configFile string) (*Config, error) {
 
 // Config is a collection of jobs and collectors.
 type Config struct {
-	Globals        *GlobalConfig      `yaml:"global"`
+	Globals        *GlobalConfig      `yaml:"global,omitempty"`
 	CollectorFiles []string           `yaml:"collector_files,omitempty"`
 	Target         *TargetConfig      `yaml:"target,omitempty"`
 	Jobs           []*JobConfig       `yaml:"jobs,omitempty"`
@@ -57,6 +61,14 @@ func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type plain Config
 	if err := unmarshal((*plain)(c)); err != nil {
 		return err
+	}
+
+	if c.Globals == nil {
+		c.Globals = &GlobalConfig{}
+		// Force a dummy unmarshall to populate global defaults
+		if err := c.Globals.UnmarshalYAML(func(interface{}) error { return nil }); err != nil {
+			return err
+		}
 	}
 
 	if (len(c.Jobs) == 0) == (c.Target == nil) {
