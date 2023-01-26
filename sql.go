@@ -27,6 +27,14 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 		return nil, err
 	}
 
+	// FIXME: currently `dburl` handles `azuresql` scheme as `sqlserver` alias and assigns it as a driver name.
+	// To use Azure AD the upstream driver expects strictly `azuresql` as a driver name. We detect `fedauth`
+	// in a query string, and set the expected driver name.
+	// This might be fixed later in the upstream dependency and removed here.
+	if url.Driver == "sqlserver" && url.Query().Has("fedauth") {
+		url.Driver = "azuresql"
+	}
+
 	// Open the DB handle in a separate goroutine so we can terminate early if the context closes.
 	go func() {
 		conn, err = sql.Open(url.Driver, url.DSN)
