@@ -74,6 +74,9 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: burningalchemist/sql_exporter
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
