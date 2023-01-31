@@ -21,8 +21,10 @@ target:
   data_source_name: 'sqlserver://prom_user:prom_password@dbserver1.example.com:1433'
 
   # Collectors (referenced by name) to execute on the target.
-  collectors: [mssql_standard]
+  # Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
+  collectors: [mssql_*]
 
 # Collector files specifies a list of globs. One collector definition is read from each matching file.
+# Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
 collector_files: 
   - "*.collector.yml"

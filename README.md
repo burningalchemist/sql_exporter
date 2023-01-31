@@ -137,12 +137,17 @@ target:
   data_source_name: 'sqlserver://prom_user:prom_password@dbserver1.example.com:1433'
 
   # Collectors (referenced by name) to execute on the target.
-  collectors: [pricing_data_freshness]
+  # Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
+  collectors: [pricing_data_freshness, pricing_*]
 
 # Collector definition files.
+# Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
 collector_files:
   - "*.collector.yml"
 ```
+
+**NOTE:** The `collectors` and `collector_files` configurations support [Glob pattern matching](https://pkg.go.dev/path/filepath#Match).
+To match names with literal pattern terms in them, e.g. `collector_*1*`, these must be escaped: `collector_\*1\*`.
 
 ### Collectors
 
