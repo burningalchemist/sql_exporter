@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/ClickHouse/clickhouse-go v1.5.4
 	github.com/go-sql-driver/mysql v1.7.0
-	github.com/jackc/pgx/v4 v4.18.0
+	github.com/jackc/pgx/v4 v4.18.1
 	github.com/kardianos/minwinsvc v1.0.2
 	github.com/lib/pq v1.10.7
 	github.com/microsoft/go-mssqldb v0.20.0
