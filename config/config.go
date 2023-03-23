@@ -566,7 +566,7 @@ func resolveCollectorRefs(
 				return nil, fmt.Errorf("bad collector %q referenced in %s: %w", cref, ctx, err)
 			}
 			if !matched {
-				return nil, fmt.Errorf("unknown collector %q referenced in %s", cref, ctx)
+				continue
 			}
 			found[c] = true
 		}
@@ -574,6 +574,9 @@ func resolveCollectorRefs(
 	resolved := make([]*CollectorConfig, 0, len(found))
 	for k := range found {
 		resolved = append(resolved, k)
+	}
+	if len(resolved) == 0 {
+		return nil, fmt.Errorf("no matching collectors referenced in %s", ctx)
 	}
 	return resolved, nil
 }
