@@ -1,0 +1,153 @@
+# A collector defining wait metrics for Microsoft SQL Server (Managed Instance).
+#
+# It is required that the SQL Server user has the following permissions:
+#
+#   GRANT VIEW ANY DEFINITION TO
+#   GRANT VIEW SERVER STATE TO
+#
+collector_name: mssqlmi_wait
+
+# Similar to global.min_interval, but applies to the queries defined by this collector only.
+#min_interval: 0s
+
+metrics:
+  #
+  # Collected from sys.dm_os_wait_stats
+  #
+  - metric_name: mssqlmi_wait_time_seconds
+    type: gauge
+    help: 'Wait Time in Seconds'
+    key_labels:
+      - wait_type
+      - wait_category
+    values: [wait_time_seconds]
+    query_ref: mssqlmi_wait
+  - metric_name: mssqlmi_signal_wait_time_seconds
+    type: gauge
+    help: 'Signal Wait Time in Seconds'
+    key_labels:
+      - wait_type
+      - wait_category
+    values: [signal_wait_time_seconds]
+    query_ref: mssqlmi_wait
+  - metric_name: mssqlmi_waiting_tasks_count
+    type: gauge
+    help: 'Wait Tasks Count'
+    key_labels:
+      - wait_type
+      - wait_category
+    values: [waiting_tasks_count]
+    query_ref: mssqlmi_wait
+
+queries:
+  - query_name: mssqlmi_wait
+    query: |
+      IF SERVERPROPERTY('EngineEdition') <> 8 BEGIN /*not Azure Managed Instance*/
+        DECLARE @ErrorMessage AS nvarchar(500) = 'sql_exporter - Connection string Server:'+ @@SERVERNAME + ',Database:' + DB_NAME() +' is not an Azure Managed Instance.';
+        RAISERROR (@ErrorMessage,11,1)
+        RETURN
+      END
+      SELECT
+        ws.[wait_type]
+        ,CAST([wait_time_ms] / 1000.0 AS FLOAT(10)) AS [wait_time_seconds]
+        --,[wait_time_ms] - [signal_wait_time_ms] AS [resource_wait_ms]
+        ,CAST([signal_wait_time_ms] / 1000.0 AS FLOAT(10)) AS [signal_wait_time_seconds]
+        -- ,[max_wait_time_ms]
+        ,[waiting_tasks_count]
+        ,CASE
+        WHEN ws.[wait_type] LIKE 'SOS_SCHEDULER_YIELD' then 'CPU'
+        WHEN ws.[wait_type] = 'THREADPOOL' THEN 'Worker Thread'
+        WHEN ws.[wait_type] LIKE 'LCK[_]%' THEN 'Lock'
+        WHEN ws.[wait_type] LIKE 'LATCH[_]%' THEN 'Latch'
+        WHEN ws.[wait_type] LIKE 'PAGELATCH[_]%' THEN 'Buffer Latch'
+        WHEN ws.[wait_type] LIKE 'PAGEIOLATCH[_]%' THEN 'Buffer IO'
+        WHEN ws.[wait_type] LIKE 'RESOURCE_SEMAPHORE_QUERY_COMPILE%' THEN 'Compilation'
+        WHEN ws.[wait_type] LIKE 'CLR[_]%' or ws.[wait_type] like 'SQLCLR%' THEN 'SQL CLR'
+        WHEN ws.[wait_type] LIKE 'DBMIRROR_%' THEN 'Mirroring'
+        WHEN ws.[wait_type] LIKE 'DTC[_]%' or ws.[wait_type] LIKE 'DTCNEW%' or ws.[wait_type] LIKE 'TRAN_%'
+             or ws.[wait_type] LIKE 'XACT%' or ws.[wait_type] like 'MSQL_XACT%' THEN 'Transaction'
+        WHEN ws.[wait_type] LIKE 'SLEEP[_]%'
+            or ws.[wait_type] IN (
+                'LAZYWRITER_SLEEP', 'SQLTRACE_BUFFER_FLUSH', 'SQLTRACE_INCREMENTAL_FLUSH_SLEEP',
+                'SQLTRACE_WAIT_ENTRIES', 'FT_IFTS_SCHEDULER_IDLE_WAIT', 'XE_DISPATCHER_WAIT',
+                'REQUEST_FOR_DEADLOCK_SEARCH', 'LOGMGR_QUEUE', 'ONDEMAND_TASK_QUEUE',
+                'CHECKPOINT_QUEUE', 'XE_TIMER_EVENT') THEN 'Idle'
+        WHEN ws.[wait_type] IN(
+            'ASYNC_IO_COMPLETION','BACKUPIO','CHKPT','WRITE_COMPLETION',
+            'IO_QUEUE_LIMIT', 'IO_RETRY') THEN 'Other Disk IO'
+        WHEN ws.[wait_type] LIKE 'PREEMPTIVE_%' THEN 'Preemptive'
+        WHEN ws.[wait_type] LIKE 'BROKER[_]%' THEN 'Service Broker'
+        WHEN ws.[wait_type] IN (
+            'WRITELOG','LOGBUFFER','LOGMGR_RESERVE_APPEND',
+            'LOGMGR_FLUSH', 'LOGMGR_PMM_LOG')  THEN 'Tran Log IO'
+        WHEN ws.[wait_type] LIKE 'LOG_RATE%' then 'Log Rate Governor'
+        WHEN ws.[wait_type] LIKE 'HADR_THROTTLE[_]%'
+            or ws.[wait_type] = 'THROTTLE_LOG_RATE_LOG_STORAGE' THEN 'HADR Log Rate Governor'
+        WHEN ws.[wait_type] LIKE 'RBIO_RG%' or ws.[wait_type] like 'WAIT_RBIO_RG%' then 'VLDB Log Rate Governor'
+        WHEN ws.[wait_type] LIKE 'RBIO[_]%' or ws.[wait_type] like 'WAIT_RBIO[_]%' then 'VLDB RBIO'
+        WHEN ws.[wait_type] IN(
+            'ASYNC_NETWORK_IO','EXTERNAL_SCRIPT_NETWORK_IOF',
+            'NET_WAITFOR_PACKET','PROXY_NETWORK_IO') THEN 'Network IO'
+        WHEN ws.[wait_type] IN ( 'CXPACKET', 'CXCONSUMER')
+            or ws.[wait_type] like 'HT%' or ws.[wait_type] like 'BMP%'
+            or ws.[wait_type] like 'BP%' THEN 'Parallelism'
+        WHEN ws.[wait_type] IN(
+            'CMEMTHREAD','CMEMPARTITIONED','EE_PMOLOCK','EXCHANGE',
+            'RESOURCE_SEMAPHORE','MEMORY_ALLOCATION_EXT',
+            'RESERVED_MEMORY_ALLOCATION_EXT', 'MEMORY_GRANT_UPDATE')  THEN 'Memory'
+        WHEN ws.[wait_type] IN ('WAITFOR','WAIT_FOR_RESULTS')  THEN 'User Wait'
+        WHEN ws.[wait_type] LIKE 'HADR[_]%' or ws.[wait_type] LIKE 'PWAIT_HADR%'
+            or ws.[wait_type] LIKE 'REPLICA[_]%' or ws.[wait_type] LIKE 'REPL_%'
+            or ws.[wait_type] LIKE 'SE_REPL[_]%'
+            or ws.[wait_type] LIKE 'FCB_REPLICA%' THEN 'Replication'
+        WHEN ws.[wait_type] LIKE 'SQLTRACE[_]%'
+            or ws.[wait_type] IN (
+                'TRACEWRITE', 'SQLTRACE_LOCK', 'SQLTRACE_FILE_BUFFER', 'SQLTRACE_FILE_WRITE_IO_COMPLETION',
+                'SQLTRACE_FILE_READ_IO_COMPLETION', 'SQLTRACE_PENDING_BUFFER_WRITERS', 'SQLTRACE_SHUTDOWN',
+                'QUERY_TRACEOUT', 'TRACE_EVTNOTIF') THEN 'Tracing'
+        WHEN ws.[wait_type] IN (
+            'FT_RESTART_CRAWL', 'FULLTEXT GATHERER', 'MSSEARCH', 'FT_METADATA_MUTEX',
+              'FT_IFTSHC_MUTEX', 'FT_IFTSISM_MUTEX', 'FT_IFTS_RWLOCK', 'FT_COMPROWSET_RWLOCK',
+              'FT_MASTER_MERGE', 'FT_PROPERTYLIST_CACHE', 'FT_MASTER_MERGE_COORDINATOR',
+              'PWAIT_RESOURCE_SEMAPHORE_FT_PARALLEL_QUERY_SYNC') THEN 'Full Text Search'
+         ELSE 'Other'
+        END as [wait_category]
+          FROM sys.dm_os_wait_stats AS ws WITH (NOLOCK)
+          WHERE
+        ws.[wait_type] NOT IN (
+            N'BROKER_EVENTHANDLER', N'BROKER_RECEIVE_WAITFOR', N'BROKER_TASK_STOP',
+            N'BROKER_TO_FLUSH', N'BROKER_TRANSMITTER', N'CHECKPOINT_QUEUE',
+            N'CHKPT', N'CLR_AUTO_EVENT', N'CLR_MANUAL_EVENT', N'CLR_SEMAPHORE',
+            N'DBMIRROR_DBM_EVENT', N'DBMIRROR_EVENTS_QUEUE', N'DBMIRROR_QUEUE',
+            N'DBMIRRORING_CMD', N'DIRTY_PAGE_POLL', N'DISPATCHER_QUEUE_SEMAPHORE',
+            N'EXECSYNC', N'FSAGENT', N'FT_IFTS_SCHEDULER_IDLE_WAIT', N'FT_IFTSHC_MUTEX',
+            N'HADR_CLUSAPI_CALL', N'HADR_FILESTREAM_IOMGR_IOCOMPLETION', N'HADR_LOGCAPTURE_WAIT',
+            N'HADR_NOTIFICATION_DEQUEUE', N'HADR_TIMER_TASK', N'HADR_WORK_QUEUE',
+            N'KSOURCE_WAKEUP', N'LAZYWRITER_SLEEP', N'LOGMGR_QUEUE',
+            N'MEMORY_ALLOCATION_EXT', N'ONDEMAND_TASK_QUEUE',
+            N'PARALLEL_REDO_WORKER_WAIT_WORK',
+            N'PREEMPTIVE_HADR_LEASE_MECHANISM', N'PREEMPTIVE_SP_SERVER_DIAGNOSTICS',
+            N'PREEMPTIVE_OS_LIBRARYOPS', N'PREEMPTIVE_OS_COMOPS', N'PREEMPTIVE_OS_CRYPTOPS',
+            N'PREEMPTIVE_OS_PIPEOPS','PREEMPTIVE_OS_GENERICOPS', N'PREEMPTIVE_OS_VERIFYTRUST',
+            N'PREEMPTIVE_OS_DEVICEOPS',
+            N'PREEMPTIVE_XE_CALLBACKEXECUTE', N'PREEMPTIVE_XE_DISPATCHER',
+            N'PREEMPTIVE_XE_GETTARGETSTATE', N'PREEMPTIVE_XE_SESSIONCOMMIT',
+            N'PREEMPTIVE_XE_TARGETINIT', N'PREEMPTIVE_XE_TARGETFINALIZE',
+            N'PWAIT_ALL_COMPONENTS_INITIALIZED', N'PWAIT_DIRECTLOGCONSUMER_GETNEXT',
+            N'QDS_PERSIST_TASK_MAIN_LOOP_SLEEP',
+            N'QDS_ASYNC_QUEUE',
+            N'QDS_CLEANUP_STALE_QUERIES_TASK_MAIN_LOOP_SLEEP', N'REQUEST_FOR_DEADLOCK_SEARCH',
+            N'RESOURCE_QUEUE', N'SERVER_IDLE_CHECK', N'SLEEP_BPOOL_FLUSH', N'SLEEP_DBSTARTUP',
+            N'SLEEP_DCOMSTARTUP', N'SLEEP_MASTERDBREADY', N'SLEEP_MASTERMDREADY',
+            N'SLEEP_MASTERUPGRADED', N'SLEEP_MSDBSTARTUP', N'SLEEP_SYSTEMTASK', N'SLEEP_TASK',
+            N'SLEEP_TEMPDBSTARTUP', N'SNI_HTTP_ACCEPT', N'SP_SERVER_DIAGNOSTICS_SLEEP',
+            N'SQLTRACE_BUFFER_FLUSH', N'SQLTRACE_INCREMENTAL_FLUSH_SLEEP',
+            N'SQLTRACE_WAIT_ENTRIES',
+            N'WAIT_FOR_RESULTS', N'WAITFOR', N'WAITFOR_TASKSHUTDOWN', N'WAIT_XTP_HOST_WAIT',
+            N'WAIT_XTP_OFFLINE_CKPT_NEW_LOG', N'WAIT_XTP_CKPT_CLOSE',
+            N'XE_BUFFERMGR_ALLPROCESSED_EVENT', N'XE_DISPATCHER_JOIN',
+            N'XE_DISPATCHER_WAIT', N'XE_LIVE_TARGET_TVF', N'XE_TIMER_EVENT',
+            N'SOS_WORK_DISPATCHER','RESERVED_MEMORY_ALLOCATION_EXT','SQLTRACE_WAIT_ENTRIES',
+            N'RBIO_COMM_RETRY')
+          AND [waiting_tasks_count] > 10
+          AND [wait_time_ms] > 100;

@@ -1,0 +1,226 @@
+# A collector defining performance metrics for Microsoft SQL Server (Managed Instance).
+#
+# It is required that the SQL Server user has the following permissions:
+#
+#   GRANT VIEW ANY DEFINITION TO
+#   GRANT VIEW SERVER STATE TO
+#
+collector_name: mssqlmi_perf
+
+# Similar to global.min_interval, but applies to the queries defined by this collector only.
+#min_interval: 0s
+
+metrics:
+  #
+  # Collected from sys.dm_os_performance_counters
+  #
+  - metric_name: mssqlmi_perf_counter
+    type: counter
+    help: 'Performance counters'
+    key_labels:
+      - db
+      - object
+      - counter
+    values: [counter_value]
+    query_ref: mssqlmi_performance_counters
+  
+  - metric_name: mssqlmi_perf_gauge
+    type: gauge
+    help: 'Performance gauges'
+    key_labels:
+      - db
+      - object
+      - gauge
+    values: [counter_value]
+    query_ref: mssqlmi_performance_gauges
+  
+queries:
+  - query_name: mssqlmi_performance_counters
+    query: |
+      SET DEADLOCK_PRIORITY -10;
+      IF SERVERPROPERTY('EngineEdition') <> 8 BEGIN /*not Azure Managed Instance*/
+          DECLARE @ErrorMessage AS nvarchar(500) = 'sql_exporter - Connection string Server:'+ @@SERVERNAME + ',Database:' + DB_NAME() +' is not an Azure Managed Instance.';
+          RAISERROR (@ErrorMessage,11,1)
+          RETURN
+      END
+      DECLARE @PCounters TABLE
+      (
+          [object_name] nvarchar(128),
+          [counter_name] nvarchar(128),
+          [instance_name] nvarchar(128),
+          [cntr_value] bigint,
+          [cntr_type] INT ,
+          Primary Key([object_name],[counter_name],[instance_name])
+      );
+      WITH PerfCounters AS (
+          SELECT DISTINCT
+           RTrim(spi.[object_name]) [object_name]
+          ,RTrim(spi.[counter_name]) [counter_name]
+          ,CASE WHEN (
+                 RTRIM(spi.[object_name]) LIKE '%:Databases'
+              OR RTRIM(spi.[object_name]) LIKE '%:Database Replica'
+              OR RTRIM(spi.[object_name]) LIKE '%:Catalog Metadata'
+              OR RTRIM(spi.[object_name]) LIKE '%:Query Store'
+              OR RTRIM(spi.[object_name]) LIKE '%:Columnstore'
+              OR RTRIM(spi.[object_name]) LIKE '%:Advanced Analytics')
+              AND TRY_CONVERT([uniqueidentifier], spi.[instance_name]) IS NOT NULL -- for cloud only
+                  THEN ISNULL(d.[name],RTRIM(spi.instance_name)) -- Elastic Pools counters exist for all databases but sys.databases only has current DB value
+              WHEN
+                  RTRIM([object_name]) LIKE '%:Availability Replica'
+                  AND TRY_CONVERT([uniqueidentifier], spi.[instance_name]) IS NOT NULL -- for cloud only
+                      THEN ISNULL(d.[name],RTRIM(spi.[instance_name])) + RTRIM(SUBSTRING(spi.[instance_name], 37, LEN(spi.[instance_name])))
+              ELSE RTRIM(spi.instance_name)
+          END AS [instance_name]
+          ,CAST(spi.[cntr_value] AS BIGINT) AS [cntr_value]
+          ,spi.[cntr_type]
+          FROM sys.dm_os_performance_counters AS spi
+          LEFT JOIN sys.databases AS d
+              ON LEFT(spi.[instance_name], 36) -- some instance_name values have an additional identifier appended after the GUID
+              = CASE
+                  /*in SQL DB standalone, physical_database_name for master is the GUID of the user database*/
+                  WHEN d.[name] = 'master' AND TRY_CONVERT([uniqueidentifier], d.[physical_database_name]) IS NOT NULL
+                      THEN d.[name]
+                  ELSE d.[physical_database_name]
+              END
+          WHERE
+              counter_name IN (
+                  -- following are all counters
+                  -- from Databases object
+                  'Transactions/sec'
+                  ,'Log Bytes Flushed/sec'
+                  ,'Log Flushes/sec'
+                  -- from SQL Statistics object
+                  ,'Batch Requests/sec'
+                  ,'SQL Compilations/sec'
+                  ,'SQL Re-Compilations/sec'
+                  -- from Access Methods object
+                  ,'Forwarded Records/sec'
+                  ,'Full Scans/sec'
+                  ,'Index Searches/sec'
+                  ,'Page Splits/sec'
+                  ,'Table Lock Escalations/sec'
+                  ,'Workfiles Created/sec'
+                  ,'Worktables Created/sec'
+                  -- from General Statistics
+                  ,'Active Temp Tables'
+                  ,'Logins/sec'
+                  ,'Logouts/sec'
+                  ,'Logical Connections'
+                  ,'Processes blocked'
+                  ,'Temp Tables Creation Rate'
+                  ,'Temp Tables For Destruction'
+                  ,'User Connections'
+                  -- from Buffer Manager
+                  ,'Background writer pages/sec'
+                  ,'Free list stalls/sec'
+                  ,'Lazy writes/sec'
+                  ,'Page lookups/sec'
+                  ,'Page reads/sec'
+                  ,'Page writes/sec'
+                  ,'Readahead pages/sec'
+              )
+      )
+      INSERT INTO @PCounters select * from PerfCounters
+      SELECT
+          pc.[object_name] AS [object]
+          ,pc.[counter_name] AS [counter]
+          ,CASE pc.[instance_name]
+              WHEN '_Total' THEN 'Total'
+              ELSE ISNULL(pc.[instance_name],'')
+          END AS [db]
+          ,pc.[cntr_value] AS [counter_value]
+      from @PCounters pc
+      OPTION (RECOMPILE);
+
+  - query_name: mssqlmi_performance_gauges
+    query: |
+      SET DEADLOCK_PRIORITY -10;
+      IF SERVERPROPERTY('EngineEdition') <> 8 BEGIN /*not Azure Managed Instance*/
+          DECLARE @ErrorMessage AS nvarchar(500) = 'sql_exporter - Connection string Server:'+ @@SERVERNAME + ',Database:' + DB_NAME() +' is not an Azure Managed Instance.';
+          RAISERROR (@ErrorMessage,11,1)
+          RETURN
+      END
+      DECLARE @PCounters TABLE
+      (
+          [object_name] nvarchar(128),
+          [counter_name] nvarchar(128),
+          [instance_name] nvarchar(128),
+          [cntr_value] bigint,
+          [cntr_type] INT ,
+          Primary Key([object_name],[counter_name],[instance_name])
+      );
+      WITH PerfCounters AS (
+          SELECT DISTINCT
+           RTrim(spi.[object_name]) [object_name]
+          ,RTrim(spi.[counter_name]) [counter_name]
+          ,CASE WHEN (
+                 RTRIM(spi.[object_name]) LIKE '%:Databases'
+              OR RTRIM(spi.[object_name]) LIKE '%:Database Replica'
+              OR RTRIM(spi.[object_name]) LIKE '%:Buffer Manager'
+              OR RTRIM(spi.[object_name]) LIKE '%:Buffer Node'
+              OR RTRIM(spi.[object_name]) LIKE '%:Catalog Metadata'
+              OR RTRIM(spi.[object_name]) LIKE '%:Query Store'
+              OR RTRIM(spi.[object_name]) LIKE '%:Columnstore'
+              OR RTRIM(spi.[object_name]) LIKE '%:Advanced Analytics')
+              AND TRY_CONVERT([uniqueidentifier], spi.[instance_name]) IS NOT NULL -- for cloud only
+                  THEN ISNULL(d.[name],RTRIM(spi.instance_name)) -- Elastic Pools counters exist for all databases but sys.databases only has current DB value
+              WHEN
+                  RTRIM([object_name]) LIKE '%:Availability Replica'
+                  AND TRY_CONVERT([uniqueidentifier], spi.[instance_name]) IS NOT NULL -- for cloud only
+                      THEN ISNULL(d.[name],RTRIM(spi.[instance_name])) + RTRIM(SUBSTRING(spi.[instance_name], 37, LEN(spi.[instance_name])))
+              ELSE RTRIM(spi.instance_name)
+          END AS [instance_name]
+          ,CAST(spi.[cntr_value] AS BIGINT) AS [cntr_value]
+          ,spi.[cntr_type]
+          FROM sys.dm_os_performance_counters AS spi
+          LEFT JOIN sys.databases AS d
+              ON LEFT(spi.[instance_name], 36) -- some instance_name values have an additional identifier appended after the GUID
+              = CASE
+                  /*in SQL DB standalone, physical_database_name for master is the GUID of the user database*/
+                  WHEN d.[name] = 'master' AND TRY_CONVERT([uniqueidentifier], d.[physical_database_name]) IS NOT NULL
+                      THEN d.[name]
+                  ELSE d.[physical_database_name]
+              END
+          WHERE
+              counter_name IN (
+                  -- following are all gauges
+                  -- from Resource Pool Stats/Workload Group Stats objects
+                  'CPU usage %'
+                  ,'CPU usage % base'
+                  -- from Memory Manager object
+                  --,'Memory Grants Outstanding'
+                  --,'Memory Grants Pending'
+                  ,'Target Server Memory (KB)'
+                  ,'Total Server Memory (KB)'
+                  -- from General Statistics
+                  --,'Active Temp Tables'
+                  --,'Logical Connections'
+                  --,'Processes blocked'
+                  --,'Temp Tables Creation Rate'
+                  --,'Temp Tables For Destruction'
+                  --,'User Connections'
+                  -- from Buffer Manager
+                  ,'Page life expectancy'
+              )
+      )
+      INSERT INTO @PCounters select * from PerfCounters
+      SELECT
+          pc.[object_name] AS [object]
+          ,pc.[counter_name] AS [gauge]
+          ,CASE pc.[instance_name]
+              WHEN '_Total' THEN 'Total'
+              ELSE ISNULL(pc.[instance_name],'')
+          END AS [db]
+          ,CAST(CASE WHEN pc.[cntr_type] = 537003264 AND pc1.[cntr_value] > 0 THEN (pc.[cntr_value] * 1.0) / (pc1.[cntr_value] * 1.0) * 100 ELSE pc.[cntr_value] END AS float(10)) AS [counter_value]
+      from @PCounters pc
+      LEFT OUTER JOIN @PCounters AS pc1
+          ON (
+              pc.[counter_name] = REPLACE(pc1.[counter_name],' base','')
+              OR pc.[counter_name] = REPLACE(pc1.[counter_name],' base',' (ms)')
+          )
+          AND pc.[object_name] = pc1.[object_name]
+          AND pc.[instance_name] = pc1.[instance_name]
+          AND pc1.[counter_name] LIKE '%base'
+      WHERE
+          pc.[counter_name] NOT LIKE '% base'
+      OPTION (RECOMPILE);

@@ -1,0 +1,74 @@
+# A collector defining standard metrics for Microsoft SQL Server (Managed Instance).
+#
+# It is required that the SQL Server user has the following permissions:
+#
+#   GRANT VIEW ANY DEFINITION TO
+#   GRANT VIEW SERVER STATE TO
+#
+collector_name: mssqlmi_properties
+
+# Similar to global.min_interval, but applies to the queries defined by this collector only.
+#min_interval: 0s
+
+metrics:
+  #
+  # Collected from sys.server_resource_stats
+  #
+  - metric_name: mssqlmi_cpu_count
+    type: gauge
+    help: 'Virtual Cores'
+    values: [cpu_count]
+    query_ref: mssqlmi_properties
+
+  - metric_name: mssqlmi_server_memory_bytes
+    type: gauge
+    help: 'Server Memory in bytes'
+    values: [server_memory]
+    query_ref: mssqlmi_properties
+
+  - metric_name: mssqlmi_total_storage_bytes
+    type: gauge
+    help: 'Total Storage in bytes'
+    key_labels:
+      # populated from sku column
+      - sku
+      - hardware_type
+    values: [total_storage]
+    query_ref: mssqlmi_properties
+
+  - metric_name: mssqlmi_available_storage_bytes
+    type: gauge
+    help: 'Available Storage in bytes'
+    values: [available_storage]
+    query_ref: mssqlmi_properties
+
+  - metric_name: mssqlmi_db_online
+    type: gauge
+    help: '# of Online Databases'
+    values: [db_online]
+    query_ref: mssqlmi_properties
+
+queries:
+  - query_name: mssqlmi_properties
+    query: |
+      IF SERVERPROPERTY('EngineEdition') <> 8 BEGIN /*not Azure Managed Instance*/
+              DECLARE @ErrorMessage AS nvarchar(500) = 'sql_exporter - Connection string Server:'+ @@SERVERNAME + ',Database:' + DB_NAME() +' is not an Azure Managed Instance.';
+              RAISERROR (@ErrorMessage,11,1)
+              RETURN
+      END
+      SELECT TOP 1 
+                [virtual_core_count] AS [cpu_count]
+                ,(SELECT [process_memory_limit_mb]*1000000 FROM sys.dm_os_job_object) AS [server_memory]
+                ,[sku]
+                ,[hardware_generation] AS [hardware_type]
+                ,cast([reserved_storage_mb]*1000000 as bigint) AS [total_storage]
+                ,cast(([reserved_storage_mb] - [storage_space_used_mb])*1000000 as bigint) AS [available_storage]
+                ,[db_online]
+        FROM sys.server_resource_stats
+        CROSS APPLY     (
+                SELECT  
+                         SUM( CASE WHEN [state] = 0 THEN 1 ELSE 0 END ) AS [db_online]
+                FROM sys.databases
+        ) AS dbs        
+        ORDER BY 
+                [start_time] DESC;
