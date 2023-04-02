@@ -1,0 +1,49 @@
+# A collector defining database size metrics for Microsoft SQL Server (Managed Instance).
+#
+# It is required that the SQL Server user has the following permissions:
+#
+#   GRANT VIEW ANY DEFINITION TO
+#   GRANT VIEW SERVER STATE TO
+#
+collector_name: mssqlmi_size
+
+# Similar to global.min_interval, but applies to the queries defined by this collector only.
+#min_interval: 0s
+
+metrics:
+  #
+  # Collected from sys.dm_io_virtual_file_stats
+  #
+  - metric_name: mssqlmi_database_size_bytes
+    type: gauge
+    help: 'Database Size in Bytes'
+    key_labels:
+      - database
+      - file_type
+    values: [size_on_disk_bytes]
+    query_ref: mssqlmi_size
+
+queries:
+  - query_name: mssqlmi_size
+    query: |
+      IF SERVERPROPERTY('EngineEdition') <> 8 BEGIN /*not Azure Managed Instance*/
+              DECLARE @ErrorMessage AS nvarchar(500) = 'sql_exporter - Connection string Server:'+ @@SERVERNAME + ',Database:' + DB_NAME() +' is not an Azure Managed Instance.';
+              RAISERROR (@ErrorMessage,11,1)
+              RETURN
+      END
+      SELECT
+          DB_NAME(mf.database_id) AS [database]
+          -- ,name AS 'File Logical Name'
+          ,'file_type' = CASE WHEN type_desc = 'LOG' THEN 'Log File' WHEN type_desc = 'ROWS' THEN 'Data File' ELSE type_desc END
+          -- ,mf.physical_name AS 'File Physical Name'
+          ,size_on_disk_bytes
+          -- ,size_on_disk_bytes/ 1024 AS 'Size(KB)'
+          -- size_on_disk_bytes/ 1024 / 1024 AS 'Size(MB)',
+          -- size_on_disk_bytes/ 1024 / 1024 / 1024 AS 'Size(GB)'
+      FROM 
+          sys.dm_io_virtual_file_stats(NULL, NULL) AS divfs 
+          JOIN sys.master_files AS mf 
+              ON mf.database_id = divfs.database_id 
+                  AND mf.file_id = divfs.file_id
+      WHERE DB_NAME(mf.database_id) NOT IN ('master', 'model','tempdb', 'msdb')
+      -- ORDER BY size_on_disk_bytes DESC

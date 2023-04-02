@@ -1,0 +1,36 @@
+# A collector defining memory clerk metrics for Microsoft SQL Server (Managed Instance).
+#
+# It is required that the SQL Server user has the following permissions:
+#
+#   GRANT VIEW ANY DEFINITION TO
+#   GRANT VIEW SERVER STATE TO
+#
+collector_name: mssqlmi_clerk
+
+# Similar to global.min_interval, but applies to the queries defined by this collector only.
+#min_interval: 0s
+
+metrics:
+  #
+  # Collected from sys.dm_os_memory_clerks
+  #
+  - metric_name: mssqlmi_clerk_size_kilobytes
+    type: gauge
+    help: 'Memory Clerk'
+    key_labels:
+      - clerk_type
+    values: [size_kb]
+    query_ref: mssqlmi_clerk
+
+queries:
+  - query_name: mssqlmi_clerk
+    query: |
+      SELECT
+              mc.[type] AS [clerk_type]
+              ,SUM(mc.[pages_kb]) AS [size_kb]
+      FROM sys.[dm_os_memory_clerks] AS mc WITH (NOLOCK)
+      GROUP BY
+               mc.[type]
+      HAVING
+              SUM(mc.[pages_kb]) >= 1024
+      OPTION(RECOMPILE);
