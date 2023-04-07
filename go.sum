@@ -375,8 +375,8 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/vertica/vertica-sql-go v1.3.1 h1:qjkJzkFmLG+z2koRC6inT+yFr23TyBkNXUP4vf92rSQ=
-github.com/vertica/vertica-sql-go v1.3.1/go.mod h1:jnn2GFuv+O2Jcjktb7zyc4Utlbu9YVqpHH/lx63+1M4=
+github.com/vertica/vertica-sql-go v1.3.2 h1:QclPnkuozQyNl6lbrTdeuFSx2/lcSRZc1XL8zWNSjdA=
+github.com/vertica/vertica-sql-go v1.3.2/go.mod h1:jnn2GFuv+O2Jcjktb7zyc4Utlbu9YVqpHH/lx63+1M4=
 github.com/xo/dburl v0.13.0 h1:kq+oD1j/m8DnJ/p6G/LQXRosVchs8q5/AszEUKkvYfo=
 github.com/xo/dburl v0.13.0/go.mod h1:K6rSPgbVqP3ZFT0RHkdg/M3M5KhLeV2MaS/ZqaLd1kA=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
