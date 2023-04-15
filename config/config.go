@@ -558,25 +558,24 @@ func checkCollectorRefs(collectorRefs []string, ctx string) error {
 func resolveCollectorRefs(
 	collectorRefs []string, collectors map[string]*CollectorConfig, ctx string,
 ) ([]*CollectorConfig, error) {
+	resolved := make([]*CollectorConfig, 0, len(collectorRefs))
 	found := make(map[*CollectorConfig]bool)
 	for _, cref := range collectorRefs {
+		cref_resolved := false
 		for k, c := range collectors {
 			matched, err := filepath.Match(cref, k)
 			if err != nil {
 				return nil, fmt.Errorf("bad collector %q referenced in %s: %w", cref, ctx, err)
 			}
-			if !matched {
-				continue
+			if matched && !found[c] {
+				resolved = append(resolved, c)
+				found[c] = true
+				cref_resolved = true
 			}
-			found[c] = true
 		}
-	}
-	resolved := make([]*CollectorConfig, 0, len(found))
-	for k := range found {
-		resolved = append(resolved, k)
-	}
-	if len(resolved) == 0 {
-		return nil, fmt.Errorf("no matching collectors referenced in %s", ctx)
+		if !cref_resolved {
+			return nil, fmt.Errorf("unknown collector %q referenced in %s", cref, ctx)
+		}
 	}
 	return resolved, nil
 }
