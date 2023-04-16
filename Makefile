@@ -76,7 +76,7 @@ docker:
 promu:
 	@GOOS=$(shell uname -s | tr A-Z a-z) \
 		GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
-		$(GO) install github.com/prometheus/promu@v0.13.0
+		$(GO) install github.com/prometheus/promu@v0.14.0
 
 
 .PHONY: all style format build test vet tarball docker promu
