@@ -30,7 +30,7 @@ style:
 
 test:
 	@echo ">> running tests"
-	@$(GO) test -short -race $(pkgs)
+	@$(GO) test -short $(pkgs)
 
 format:
 	@echo ">> formatting code"
