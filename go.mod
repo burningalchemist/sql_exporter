@@ -7,7 +7,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/kardianos/minwinsvc v1.0.2
-	github.com/lib/pq v1.10.7
+	github.com/lib/pq v1.10.8
 	github.com/microsoft/go-mssqldb v0.21.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/client_model v0.3.0
