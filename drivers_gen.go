@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	packageName = "sql_exporter"
-	filename    = "drivers.go"
+	packageName string = "sql_exporter"
+	filename    string = "drivers.go"
 )
 
 var driverList = map[string][]string{
