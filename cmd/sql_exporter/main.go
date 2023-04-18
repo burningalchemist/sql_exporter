@@ -22,6 +22,7 @@ const (
 	envConfigFile         = "SQLEXPORTER_CONFIG"
 	envDebug              = "SQLEXPORTER_DEBUG"
 	httpReadHeaderTimeout = time.Duration(time.Second * 60)
+	debugMaxLevel         = 3
 )
 
 var (
@@ -59,6 +60,7 @@ func main() {
 	// Thus we need to pass it our go-kit logger object.
 	logger := promlog.New(promlogConfig)
 	klog.SetLogger(logger)
+	klog.ClampLevel(debugMaxLevel)
 
 	// Override --alsologtostderr default value.
 	if alsoLogToStderr := flag.Lookup("alsologtostderr"); alsoLogToStderr != nil {
