@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	envConfigFile         = "SQLEXPORTER_CONFIG"
-	envDebug              = "SQLEXPORTER_DEBUG"
-	httpReadHeaderTimeout = time.Duration(time.Second * 60)
-	debugMaxLevel         = 3
+	envConfigFile         string        = "SQLEXPORTER_CONFIG"
+	envDebug              string        = "SQLEXPORTER_DEBUG"
+	httpReadHeaderTimeout time.Duration = time.Duration(time.Second * 60)
+	debugMaxLevel         klog.Level    = 3
 )
 
 var (

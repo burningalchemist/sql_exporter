@@ -20,10 +20,10 @@ import (
 )
 
 const (
-	contentTypeHeader     = "Content-Type"
-	contentLengthHeader   = "Content-Length"
-	contentEncodingHeader = "Content-Encoding"
-	acceptEncodingHeader  = "Accept-Encoding"
+	contentTypeHeader     string = "Content-Type"
+	contentLengthHeader   string = "Content-Length"
+	contentEncodingHeader string = "Content-Encoding"
+	acceptEncodingHeader  string = "Accept-Encoding"
 )
 
 // ExporterHandlerFor returns an http.Handler for the provided Exporter.

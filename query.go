@@ -28,8 +28,8 @@ type (
 )
 
 const (
-	columnTypeKey   = 1
-	columnTypeValue = 2
+	columnTypeKey   columnType = 1
+	columnTypeValue columnType = 2
 )
 
 // NewQuery returns a new Query that will populate the given metric families.
