@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/xo/dburl"
@@ -25,6 +26,14 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 	url, err = safeParse(dsn)
 	if err != nil {
 		return nil, err
+	}
+
+	// FIXME: upstream go-ase driver doesn't support URL DSN out of the box (seems to be a bug), so we have to provide so called Simple DSN with key/value pairs instead
+	// The issue has been created - https://github.com/SAP/go-ase/issues/237
+	if url.Driver == "ase" {
+		pass, _ := url.User.Password()
+		url.DSN = fmt.Sprintf("username=%s password=%s host=%s port=%s database=%s", url.User.Username(), pass, url.Hostname(), url.Port(), strings.Trim(url.Path, "/"))
+		klog.V(3).InfoS(url.DSN)
 	}
 
 	// Open the DB handle in a separate goroutine so we can terminate early if the context closes.

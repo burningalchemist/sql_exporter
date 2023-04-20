@@ -2,12 +2,4 @@
 
 package sql_exporter
 
-import (
-	_ "github.com/ClickHouse/clickhouse-go"
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/jackc/pgx/v4/stdlib"
-	_ "github.com/lib/pq"
-	_ "github.com/microsoft/go-mssqldb/azuread"
-	_ "github.com/snowflakedb/gosnowflake"
-	_ "github.com/vertica/vertica-sql-go"
-)
+import _ "github.com/SAP/go-ase"

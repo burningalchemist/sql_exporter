@@ -27,7 +27,7 @@ var driverList = map[string][]string{
 		"github.com/vertica/vertica-sql-go",
 	},
 	"custom": {
-		"github.com/mithrandie/csvq-driver",
+		"github.com/SAP/go-ase",
 	},
 }
 
