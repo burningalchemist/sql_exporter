@@ -7,30 +7,31 @@ set -e
 IS_UPGRADE=false
 
 case "$1" in
-	configure)
-	[ -z "$SQL_EXPORTER_USER" ] && SQL_EXPORTER_USER="sql_exporter"
-	[ -z "$SQL_EXPORTER_GROUP" ] && SQL_EXPORTER_GROUP="sql_exporter"
-	if ! getent group "$SQL_EXPORTER_GROUP" > /dev/null 2>&1 ; then
-	    groupadd -r "$SQL_EXPORTER_GROUP"
-	fi
-	if ! getent passwd $SQL_EXPORTER_USER > /dev/null 2>&1 ; then
-	    useradd -r -d /usr/share/sql_exporter \
-		-g "$SQL_EXPORTER_GROUP" -s /sbin/nologin \
-		"$SQL_EXPORTER_USER"
-	fi
+configure)
+  [ -z "$SQL_EXPORTER_USER" ] && SQL_EXPORTER_USER="sql_exporter"
+  [ -z "$SQL_EXPORTER_GROUP" ] && SQL_EXPORTER_GROUP="sql_exporter"
+  if ! getent group "$SQL_EXPORTER_GROUP" >/dev/null 2>&1; then
+    groupadd -r "$SQL_EXPORTER_GROUP"
+  fi
+  if ! getent passwd $SQL_EXPORTER_USER >/dev/null 2>&1; then
+    useradd -r -d /usr/share/sql_exporter \
+      -g "$SQL_EXPORTER_GROUP" -s /sbin/nologin \
+      "$SQL_EXPORTER_USER"
+  fi
 
   # copy user config files
-	  if [ ! -f $CONF_FILE ]; then
-            CONF_PATH=$(dirname "$CONF_FILE")
-	    cp /usr/share/sql_exporter/sql_exporter.yml "$CONF_FILE"
-            cp /usr/share/sql_exporter/mssql_example.collector.yml "$CONF_PATH"
-          fi
+  if [ ! -f $CONF_FILE ]; then
+    CONF_PATH=$(dirname "$CONF_FILE")
+    mkdir -p $CONF_PATH
+    cp /usr/share/sql_exporter/sql_exporter.yml "$CONF_FILE"
+    cp /usr/share/sql_exporter/mssql_example.collector.yml "$CONF_PATH"
+  fi
 
-	# configuration files should not be modifiable by sql_exporter user, as this can be a security issue
-	chown -Rh root:$SQL_EXPORTER_GROUP /etc/sql_exporter/
-	chmod 755 /etc/sql_exporter
-	find /etc/sql_exporter -type f -exec chmod 640 {} ';'
-	find /etc/sql_exporter -type d -exec chmod 755 {} ';'
+  # configuration files should not be modifiable by sql_exporter user, as this can be a security issue
+  chown -Rh root:$SQL_EXPORTER_GROUP /etc/sql_exporter/
+  chmod 755 /etc/sql_exporter
+  find /etc/sql_exporter -type f -exec chmod 640 {} ';'
+  find /etc/sql_exporter -type d -exec chmod 755 {} ';'
 
   # If $1=configure and $2 is set, this is an upgrade
   if [ "$2" != "" ]; then
@@ -55,6 +56,6 @@ case "$1" in
     fi
     echo " OK"
 
-	fi
-	;;
+  fi
+  ;;
 esac
