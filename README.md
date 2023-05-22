@@ -185,9 +185,7 @@ metrics:
 To keep things simple and yet allow fully configurable database connections, SQL Exporter uses DSNs (like
 `sqlserver://prom_user:prom_password@dbserver1.example.com:1433`) to refer to database instances.
 
----
-
-**UPDATE:** Since v0.9.0 `sql_exporter` relies on `github.com/xo/dburl` package for parsing Data Source Names (DSN).
+Since v0.9.0 `sql_exporter` relies on `github.com/xo/dburl` package for parsing Data Source Names (DSN).
 This can potentially affect your connection to certain databases like MySQL, so you might want to adjust your connection
 string accordingly:
 
@@ -196,9 +194,13 @@ mysql://user:pass@localhost/dbname - for TCP connection
 mysql:/var/run/mysqld/mysqld.sock - for Unix socket connection
 ```
 
+If your DSN contains special characters in any part of your connection string (including passwords), you might need to apply
+[URL encoding](https://en.wikipedia.org/wiki/URL_encoding#Reserved_characters) (percent-encoding) to them. 
+For example, `p@$$w0rd#abc` then becomes `p%40%24%24w0rd%23abc`.
+
 For additional details please refer to [xo/dburl](https://github.com/xo/dburl) documentation.
 
-## TLS and Basic Authentication
+### TLS and Basic Authentication
 
 SQL Exporter supports TLS and Basic Authentication. This enables better control of the various HTTP endpoints.
 
