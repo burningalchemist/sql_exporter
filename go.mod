@@ -9,7 +9,7 @@ require (
 	github.com/kardianos/minwinsvc v1.0.2
 	github.com/lib/pq v1.10.9
 	github.com/microsoft/go-mssqldb v0.21.0
-	github.com/prometheus/client_golang v1.15.0
+	github.com/prometheus/client_golang v1.15.1
 	github.com/prometheus/client_model v0.3.0
 	github.com/prometheus/common v0.42.0
 	github.com/prometheus/exporter-toolkit v0.10.0
