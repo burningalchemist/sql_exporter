@@ -1,12 +1,18 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v3"
@@ -208,6 +214,7 @@ func (g *GlobalConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 // TargetConfig defines a DSN and a set of collectors to be executed on it.
 type TargetConfig struct {
 	DSN           Secret   `yaml:"data_source_name"` // data source name to connect to
+	AwsSecretName string   `yaml:"aws_secret_name"`  // AWS secret name
 	CollectorRefs []string `yaml:"collectors"`       // names of collectors to execute on the target
 
 	collectors []*CollectorConfig // resolved collector references
@@ -228,6 +235,10 @@ func (t *TargetConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 
+	if t.AwsSecretName != "" {
+		t.DSN = readDSNFromAwsSecretManager(t.AwsSecretName)
+	}
+
 	// Check required fields
 	if t.DSN == "" {
 		return fmt.Errorf("missing data_source_name for target %+v", t)
@@ -237,6 +248,45 @@ func (t *TargetConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 
 	return checkOverflow(t.XXX, "target")
+}
+
+// AWS Secret
+type AwsSecret struct {
+	DSN Secret `json:"data_source_name"`
+}
+
+func readDSNFromAwsSecretManager(secretName string) Secret {
+	config, err := awsConfig.LoadDefaultConfig(context.TODO(), awsConfig.WithEC2IMDSRegion())
+	if err != nil {
+		klog.Fatal(err)
+	}
+
+	// Create Secrets Manager client
+	svc := secretsmanager.NewFromConfig(config)
+
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId:     aws.String(secretName),
+		VersionStage: aws.String("AWSCURRENT"), // VersionStage defaults to AWSCURRENT if unspecified
+	}
+
+	klog.Infof("reading AWS Secret: %s", secretName)
+	result, err := svc.GetSecretValue(context.TODO(), input)
+	if err != nil {
+		// For a list of exceptions thrown, see
+		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+		klog.Fatal(err.Error())
+	}
+
+	// Decrypts secret using the associated KMS key.
+	var secretString string = *result.SecretString
+
+	var awsSecret AwsSecret
+	jsonErr := json.Unmarshal([]byte(secretString), &awsSecret)
+
+	if jsonErr != nil {
+		klog.Fatal(jsonErr)
+	}
+	return Secret(awsSecret.DSN)
 }
 
 //

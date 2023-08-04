@@ -199,6 +199,40 @@ If your DSN contains special characters in any part of your connection string (i
 For example, `p@$$w0rd#abc` then becomes `p%40%24%24w0rd%23abc`.
 
 For additional details please refer to [xo/dburl](https://github.com/xo/dburl) documentation.
+#### Using AWS Secrets Manager
+
+If the database runs on AWS EC2 instance, this is a secure option to store the `Data source name` without having it in the configuration file.
+To use this option:
+- Create a [secret](https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_create-basic-secret.html) in key/value pairs format, specify Key `data_source_name` and then for Value enter the DSN value.
+  For the secret name, enter a name for your secret, and pass that name in the configuration file as a value for `aws_secret_name` item under `target`. Secret json example:
+
+```
+{
+  "data_source_name": "sqlserver://prom_user:prom_password@dbserver1.example.com:1433"
+}
+```
+
+- Configuration file Example
+```
+...
+target:
+  aws_secret_name: '<AWS_SECRET_NAME>'
+...
+```
+- Allow read-only access from EC2 IAM role to the secret by attaching a [resource-based policy](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html) to the secret. Policy Example:
+```
+{
+  "Version" : "2012-10-17",
+  "Statement" : [
+    {
+      "Effect": "Allow",
+      "Principal": {"AWS": "arn:aws:iam::123456789012:role/EC2RoleToAccessSecrets"},
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "*",
+    }
+  ]
+}
+```
 
 ### TLS and Basic Authentication
 
