@@ -1,4 +1,5 @@
 # Prometheus SQL Exporter
+
 [![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo)
 [![Go Report Card](https://goreportcard.com/badge/github.com/burningalchemist/sql_exporter)](https://goreportcard.com/report/github.com/burningalchemist/sql_exporter)
 [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter)
@@ -188,7 +189,7 @@ metrics:
       GROUP BY Market
 ```
 
-### Data Source Names
+### Data Source Names (DSN)
 
 To keep things simple and yet allow fully configurable database connections, SQL Exporter uses DSNs (like
 `sqlserver://prom_user:prom_password@dbserver1.example.com:1433`) to refer to database instances.
@@ -207,33 +208,37 @@ apply [URL encoding](https://en.wikipedia.org/wiki/URL_encoding#Reserved_charact
 For example, `p@$$w0rd#abc` then becomes `p%40%24%24w0rd%23abc`.
 
 For additional details please refer to [xo/dburl](https://github.com/xo/dburl) documentation.
+
 #### Using AWS Secrets Manager
 
-If the database runs on AWS EC2 instance, this is a secure option to store the `Data source name` without having it in
-the configuration file.
-To use this option:
+If the database runs on AWS EC2 instance, this is a secure option to store the DSN without having it in
+the configuration file. To use this option:
+
 - Create a [secret](https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_create-basic-secret.html) in
   key/value pairs format, specify Key `data_source_name` and then for Value enter the DSN value.
   For the secret name, enter a name for your secret, and pass that name in the configuration file as a value for
   `aws_secret_name` item under `target`. Secret json example:
 
-```
+```json
 {
   "data_source_name": "sqlserver://prom_user:prom_password@dbserver1.example.com:1433"
 }
 ```
 
-- Configuration file Example
-```
+- Configuration file example:
+
+```yaml
 ...
 target:
   aws_secret_name: '<AWS_SECRET_NAME>'
 ...
 ```
+
 - Allow read-only access from EC2 IAM role to the secret by attaching a [resource-based
 policy](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html) to
-the secret. Policy Example:
-```
+the secret. Policy example:
+
+```json
 {
   "Version" : "2012-10-17",
   "Statement" : [
@@ -246,6 +251,27 @@ the secret. Policy Example:
   ]
 }
 ```
+
+Currently, AWS Secret Manager integration is only available for a single target configuration.
+
+### Multiple database connections
+
+It is possible to run a single exporter instance against multiple database connections. In this case we need to
+configure `jobs` list instead of the `target` section as in the following example:
+
+```yaml
+jobs:
+  - job_name: db_targets
+    collectors: [pricing_data_freshness, pricing_*]
+    static_configs:
+        - targets:
+            pg1: 'pg://db1@127.0.0.1:25432/postgres?sslmode=disable'
+            pg2: 'pg://db2@127.0.0.1:25432/testdb?sslmode=disable'
+```
+
+, where DSN strings are assigned to the arbitrary instance names (i.e. pg1 and pg2).
+
+We can also define multiple jobs to run different collectors against different target sets.
 
 ### TLS and Basic Authentication
 
