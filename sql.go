@@ -27,9 +27,14 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 		return nil, err
 	}
 
+	driver := url.Driver
+	if url.GoDriver != "" {
+		driver = url.GoDriver
+	}
+
 	// Open the DB handle in a separate goroutine so we can terminate early if the context closes.
 	go func() {
-		conn, err = sql.Open(url.Driver, url.DSN)
+		conn, err = sql.Open(driver, url.DSN)
 		close(ch)
 	}()
 
@@ -50,7 +55,7 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 		if len(logContext) > 0 {
 			logContext = fmt.Sprintf("[%s] ", logContext)
 		}
-		klog.Infof("%sDatabase handle successfully opened with '%s' driver", logContext, url.Driver)
+		klog.Infof("%sDatabase handle successfully opened with '%s' driver", logContext, driver)
 	}
 	return conn, nil
 }
