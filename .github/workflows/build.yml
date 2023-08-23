@@ -10,6 +10,7 @@ on:
 
 jobs:
   build:
+    if: ${{ !startsWith(github.event.head_commit.message, 'docs:') }}
     name: Build
     runs-on: ubuntu-latest
     steps:
