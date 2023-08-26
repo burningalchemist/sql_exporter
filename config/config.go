@@ -121,7 +121,7 @@ func (c *Config) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
 }
 
-// LoadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
+// loadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
 func (c *Config) loadCollectorFiles() error {
 	baseDir := filepath.Dir(c.configFile)
 	for _, cfglob := range c.CollectorFiles {
