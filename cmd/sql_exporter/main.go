@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/burningalchemist/sql_exporter"
+	cfg "github.com/burningalchemist/sql_exporter/config"
 	_ "github.com/kardianos/minwinsvc"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -112,22 +113,73 @@ func OfBool(i bool) *bool {
 
 func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		klog.Infof("Reloading the collectors...")
-		config := e.Config()
-		if err := config.ReloadCollectorFiles(); err != nil {
-			klog.Errorf("Error reloading collector configs - %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		// FIXME: Should be t.Collectors() instead of config.Collectors
-		target, err := sql_exporter.NewTarget("", "", string(config.Target.DSN), config.Collectors, nil, config.Globals)
+		klog.Warning("Reloading collectors has started...")
+		exporterNewConfig, err := cfg.Load(*configFile)
 		if err != nil {
-			klog.Errorf("Error creating a new target - %v", err)
+			klog.Errorf("Error reading config file - %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		e.UpdateTarget([]sql_exporter.Target{target})
+		currentConfig := e.Config()
+		klog.Infof("Collectors size: %v", len(currentConfig.Collectors))
 
-		klog.Infof("Query collectors have been successfully reloaded")
-		w.WriteHeader(http.StatusNoContent)
+		if len(currentConfig.Collectors) > 0 {
+			currentConfig.Collectors = currentConfig.Collectors[:0]
+		}
+		currentConfig.Collectors = exporterNewConfig.Collectors
+
+		// Reload Collectors for a single target if there is one
+		if currentConfig.Target != nil {
+			klog.Warning("Reloading target collectors...")
+			// FIXME: Should be t.Collectors() instead of config.Collectors
+			target, err := sql_exporter.NewTarget("", "", string(currentConfig.Target.DSN),
+				currentConfig.Collectors, nil, currentConfig.Globals)
+			if err != nil {
+				klog.Errorf("Error recreating a target - %v", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			e.UpdateTarget([]sql_exporter.Target{target})
+			klog.Warning("Collectors have been successfully reloaded for target")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		// Reload Collectors for Jobs if there are any
+		if len(currentConfig.Jobs) > 0 {
+			klog.Warning("Recreating jobs...")
+
+			// We want to preserve `static_configs`` from the previous config revision to avoid any connection changes
+			for _, currentJob := range currentConfig.Jobs {
+				for _, newJob := range exporterNewConfig.Jobs {
+					newJob.StaticConfigs = currentJob.StaticConfigs
+				}
+			}
+			currentConfig.Jobs = exporterNewConfig.Jobs
+			klog.Infof("Preserved existing static_configs")
+
+			var updateErr error
+			for _, jobConfigItem := range currentConfig.Jobs {
+				job, err := sql_exporter.NewJob(jobConfigItem, currentConfig.Globals)
+				if err != nil {
+					updateErr = err
+					break
+				}
+				e.UpdateTarget(job.Targets())
+				klog.Infof("Recreated Job name: %v", jobConfigItem.Name)
+			}
+			if updateErr != nil {
+				klog.Errorf("Error recreating jobs - %v", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			klog.Warning("Query collectors have been successfully reloaded for jobs")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		klog.Warning("No target or jobs have been found - nothing to reload")
+		http.Error(w, "", http.StatusInternalServerError)
 	}
 }
 

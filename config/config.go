@@ -121,18 +121,6 @@ func (c *Config) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
 }
 
-// ReloadCollectorFiles reloads previously loaded collector files
-func (c *Config) ReloadCollectorFiles() error {
-	if len(c.Collectors) > 0 {
-		c.Collectors = c.Collectors[:0]
-	}
-	err := c.loadCollectorFiles()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // LoadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
 func (c *Config) loadCollectorFiles() error {
 	baseDir := filepath.Dir(c.configFile)
@@ -144,6 +132,7 @@ func (c *Config) loadCollectorFiles() error {
 
 		// Resolve the glob to actual filenames.
 		cfs, err := filepath.Glob(cfglob)
+		klog.Infof("Collector files found: %v", cfs)
 		if err != nil {
 			// The only error can be a bad pattern.
 			return fmt.Errorf("error resolving collector files for %s: %w", cfglob, err)
