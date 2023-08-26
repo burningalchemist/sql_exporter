@@ -98,10 +98,9 @@ func main() {
 		http.HandleFunc("/reload", reloadCollectors(exporter))
 	}
 
-	klog.Warning("Listening on ", *listenAddress)
-
 	server := &http.Server{Addr: *listenAddress, ReadHeaderTimeout: httpReadHeaderTimeout}
-	if err := web.ListenAndServe(server, &web.FlagConfig{WebListenAddresses: &([]string{*listenAddress}), WebConfigFile: webConfigFile, WebSystemdSocket: OfBool(false)}, logger); err != nil {
+	if err := web.ListenAndServe(server, &web.FlagConfig{WebListenAddresses: &([]string{*listenAddress}),
+		WebConfigFile: webConfigFile, WebSystemdSocket: OfBool(false)}, logger); err != nil {
 		klog.Fatal(err)
 	}
 }
@@ -185,9 +184,9 @@ func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.R
 
 // LogFunc is an adapter to allow the use of any function as a promhttp.Logger. If f is a function, LogFunc(f) is a
 // promhttp.Logger that calls f.
-type LogFunc func(args ...interface{})
+type LogFunc func(args ...any)
 
 // Println implements promhttp.Logger.
-func (log LogFunc) Println(args ...interface{}) {
+func (log LogFunc) Println(args ...any) {
 	log(args)
 }

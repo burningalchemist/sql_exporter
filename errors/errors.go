@@ -27,7 +27,7 @@ func New(context, err string) WithContext {
 }
 
 // Errorf formats according to a format specifier and returns a new WithContext.
-func Errorf(context, format string, a ...interface{}) WithContext {
+func Errorf(context, format string, a ...any) WithContext {
 	return &withContext{context, fmt.Sprintf(format, a...)}
 }
 
@@ -46,7 +46,7 @@ func Wrap(context string, err error) WithContext {
 // Wrapf returns a WithContext that prepends a formatted message to err.Error(). If err is nil, it returns nil. If err
 // is a WithContext, the returned WithContext will have the message prepended but the same context as err (presumed to
 // be more specific).
-func Wrapf(context string, err error, format string, a ...interface{}) WithContext {
+func Wrapf(context string, err error, format string, a ...any) WithContext {
 	if err == nil {
 		return nil
 	}

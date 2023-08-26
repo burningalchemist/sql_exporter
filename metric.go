@@ -73,7 +73,7 @@ func NewMetricFamily(logContext string, mc *config.MetricConfig, constLabels []*
 }
 
 // Collect is the equivalent of prometheus.Collector.Collect() but takes a Query output map to populate values from.
-func (mf MetricFamily) Collect(row map[string]interface{}, ch chan<- Metric) {
+func (mf MetricFamily) Collect(row map[string]any, ch chan<- Metric) {
 	labelValues := make([]string, len(mf.labels))
 	for i, label := range mf.config.KeyLabels {
 		labelValues[i] = row[label].(string)
