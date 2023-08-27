@@ -1,4 +1,5 @@
 /.project
 /.settings
+/.vscode
 /sql_exporter
 /sql_exporter.yml
