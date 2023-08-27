@@ -113,6 +113,7 @@ func OfBool(i bool) *bool {
 func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		klog.Warning("Reloading collectors has started...")
+		klog.Warning("DSNs will not be updated upon the restart of the exporter.")
 		exporterNewConfig, err := cfg.Load(*configFile)
 		if err != nil {
 			klog.Errorf("Error reading config file - %v", err)
@@ -140,7 +141,7 @@ func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.R
 			}
 			e.UpdateTarget([]sql_exporter.Target{target})
 			klog.Warning("Collectors have been successfully reloaded for target")
-			w.WriteHeader(http.StatusNoContent)
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
@@ -151,30 +152,35 @@ func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.R
 			// We want to preserve `static_configs`` from the previous config revision to avoid any connection changes
 			for _, currentJob := range currentConfig.Jobs {
 				for _, newJob := range exporterNewConfig.Jobs {
-					newJob.StaticConfigs = currentJob.StaticConfigs
+					if newJob.Name == currentJob.Name {
+						newJob.StaticConfigs = currentJob.StaticConfigs
+					}
 				}
 			}
 			currentConfig.Jobs = exporterNewConfig.Jobs
-			klog.Infof("Preserved existing static_configs")
 
 			var updateErr error
+			targets := make([]sql_exporter.Target, 0, len(currentConfig.Jobs))
+
 			for _, jobConfigItem := range currentConfig.Jobs {
 				job, err := sql_exporter.NewJob(jobConfigItem, currentConfig.Globals)
 				if err != nil {
 					updateErr = err
 					break
 				}
-				e.UpdateTarget(job.Targets())
-				klog.Infof("Recreated Job name: %v", jobConfigItem.Name)
+				targets = append(targets, job.Targets()...)
+				klog.Infof("Recreated Job: %s", jobConfigItem.Name)
 			}
+
 			if updateErr != nil {
 				klog.Errorf("Error recreating jobs - %v", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
+			e.UpdateTarget(targets)
 			klog.Warning("Query collectors have been successfully reloaded for jobs")
-			w.WriteHeader(http.StatusNoContent)
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 		klog.Warning("No target or jobs have been found - nothing to reload")
