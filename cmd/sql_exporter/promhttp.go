@@ -36,7 +36,7 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		gatherer := prometheus.Gatherers{exporter.WithContext(ctx)}
 		mfs, err := gatherer.Gather()
 		if err != nil {
-			klog.Infof("Error gathering metrics: %s", err)
+			klog.Errorf("Error gathering metrics: %s", err)
 			if len(mfs) == 0 {
 				http.Error(w, "No metrics gathered, "+err.Error(), http.StatusInternalServerError)
 				return
@@ -52,7 +52,7 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		for _, mf := range mfs {
 			if err := enc.Encode(mf); err != nil {
 				errs = append(errs, err)
-				klog.Infof("Error encoding metric family %q: %s", mf.GetName(), err)
+				klog.Errorf("Error encoding metric family %q: %s", mf.GetName(), err)
 			}
 		}
 		if closer, ok := writer.(io.Closer); ok {
