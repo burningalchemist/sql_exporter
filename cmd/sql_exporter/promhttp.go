@@ -36,11 +36,19 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		gatherer := prometheus.Gatherers{exporter.WithContext(ctx)}
 		mfs, err := gatherer.Gather()
 		if err != nil {
-			klog.Errorf("Error gathering metrics: %s", err)
+			if errors.Is(err, context.DeadlineExceeded) {
+				klog.Errorf("Timeout collecting metrics from target: %s", err)
+				http.Error(w, "Timeout collecting metrics from target, "+err.Error(), http.StatusInternalServerError)
+				return
+			}
 			if len(mfs) == 0 {
+				klog.Errorf("No metrics gathered: %s", err)
 				http.Error(w, "No metrics gathered, "+err.Error(), http.StatusInternalServerError)
 				return
 			}
+			klog.Errorf("Error gathering metrics: %s", err)
+			http.Error(w, "Error gathering metrics, "+err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		contentType := expfmt.Negotiate(req.Header)
