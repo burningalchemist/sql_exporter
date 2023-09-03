@@ -25,7 +25,7 @@ func NewJob(jc *config.JobConfig, gc *config.GlobalConfig) (Job, errors.WithCont
 	j := job{
 		config:     jc,
 		targets:    make([]Target, 0, 10),
-		logContext: fmt.Sprintf("job=%q", jc.Name),
+		logContext: fmt.Sprintf(`job=%s`, jc.Name),
 	}
 
 	if jc.EnablePing == nil {

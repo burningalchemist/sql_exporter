@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	appName               string        = "sql_exporter"
 	envConfigFile         string        = "SQLEXPORTER_CONFIG"
 	envDebug              string        = "SQLEXPORTER_DEBUG"
 	httpReadHeaderTimeout time.Duration = time.Duration(time.Second * 60)
@@ -76,7 +77,7 @@ func main() {
 	}
 
 	if *showVersion {
-		fmt.Println(version.Print("sql_exporter"))
+		fmt.Println(version.Print(appName))
 		os.Exit(0)
 	}
 
@@ -105,11 +106,6 @@ func main() {
 		WebConfigFile: webConfigFile, WebSystemdSocket: OfBool(false)}, logger); err != nil {
 		klog.Fatal(err)
 	}
-}
-
-// OfBool returns bool address.
-func OfBool(i bool) *bool {
-	return &i
 }
 
 func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
@@ -189,13 +185,4 @@ func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.R
 		klog.Warning("No target or jobs have been found - nothing to reload")
 		http.Error(w, "", http.StatusInternalServerError)
 	}
-}
-
-// LogFunc is an adapter to allow the use of any function as a promhttp.Logger. If f is a function, LogFunc(f) is a
-// promhttp.Logger that calls f.
-type LogFunc func(args ...any)
-
-// Println implements promhttp.Logger.
-func (log LogFunc) Println(args ...any) {
-	log(args)
 }
