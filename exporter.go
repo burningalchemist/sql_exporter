@@ -56,7 +56,7 @@ func NewExporter(configFile string) (Exporter, error) {
 
 	var targets []Target
 	if c.Target != nil {
-		target, err := NewTarget("", "", string(c.Target.DSN), c.Target.Collectors(), nil, c.Globals)
+		target, err := NewTarget("", c.Target.Name, string(c.Target.DSN), c.Target.Collectors(), nil, c.Globals)
 		if err != nil {
 			return nil, err
 		}
