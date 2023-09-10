@@ -113,7 +113,7 @@ func OfBool(i bool) *bool {
 func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		klog.Warning("Reloading collectors has started...")
-		klog.Warning("DSNs will not be updated upon the restart of the exporter.")
+		klog.Warning("Connections will not be changed upon the restart of the exporter")
 		exporterNewConfig, err := cfg.Load(*configFile)
 		if err != nil {
 			klog.Errorf("Error reading config file - %v", err)
@@ -121,7 +121,8 @@ func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.R
 			return
 		}
 		currentConfig := e.Config()
-		klog.Infof("Collectors size: %v", len(currentConfig.Collectors))
+		klog.Infof("Total collector size change: %v -> %v", len(currentConfig.Collectors),
+			len(exporterNewConfig.Collectors))
 
 		if len(currentConfig.Collectors) > 0 {
 			currentConfig.Collectors = currentConfig.Collectors[:0]

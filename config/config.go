@@ -621,6 +621,7 @@ func resolveCollectorRefs(
 			return nil, fmt.Errorf("unknown collector %q referenced in %s", cref, ctx)
 		}
 	}
+	klog.Infof("Resolved collectors for %s: %v", ctx, len(resolved))
 	return resolved, nil
 }
 
