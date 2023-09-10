@@ -202,6 +202,7 @@ func (g *GlobalConfig) UnmarshalYAML(unmarshal func(any) error) error {
 
 // TargetConfig defines a DSN and a set of collectors to be executed on it.
 type TargetConfig struct {
+	Name          string   `yaml:"name,omitempty"`   // name of the target
 	DSN           Secret   `yaml:"data_source_name"` // data source name to connect to
 	AwsSecretName string   `yaml:"aws_secret_name"`  // AWS secret name
 	CollectorRefs []string `yaml:"collectors"`       // names of collectors to execute on the target
