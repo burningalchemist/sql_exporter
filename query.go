@@ -131,14 +131,14 @@ func (q *Query) run(ctx context.Context, conn *sql.DB) (*sql.Rows, errors.WithCo
 
 // scanDest creates a slice to scan the provided rows into, with strings for keys, float64s for values and interface{}
 // for any extra columns.
-func (q *Query) scanDest(rows *sql.Rows) ([]interface{}, errors.WithContext) {
+func (q *Query) scanDest(rows *sql.Rows) ([]any, errors.WithContext) {
 	columns, err := rows.Columns()
 	if err != nil {
 		return nil, errors.Wrap(q.logContext, err)
 	}
 	klog.V(3).Infof(`returned_columns="%v"%v`, columns, q.logContext)
 	// Create the slice to scan the row into, with strings for keys and float64s for values.
-	dest := make([]interface{}, 0, len(columns))
+	dest := make([]any, 0, len(columns))
 	have := make(map[string]bool, len(q.columnTypes))
 	for i, column := range columns {
 		switch q.columnTypes[column] {
@@ -154,7 +154,7 @@ func (q *Query) scanDest(rows *sql.Rows) ([]interface{}, errors.WithContext) {
 			} else {
 				klog.Warningf("[%s] Extra column %q returned by query", q.logContext, column)
 			}
-			dest = append(dest, new(interface{}))
+			dest = append(dest, new(any))
 		}
 	}
 
@@ -174,7 +174,7 @@ func (q *Query) scanDest(rows *sql.Rows) ([]interface{}, errors.WithContext) {
 
 // scanRow scans the current row into a map of column name to value, with string values for key columns and float64
 // values for value columns, using dest as a buffer.
-func (q *Query) scanRow(rows *sql.Rows, dest []interface{}) (map[string]interface{}, errors.WithContext) {
+func (q *Query) scanRow(rows *sql.Rows, dest []any) (map[string]any, errors.WithContext) {
 	columns, err := rows.Columns()
 	if err != nil {
 		return nil, errors.Wrap(q.logContext, err)
@@ -186,7 +186,7 @@ func (q *Query) scanRow(rows *sql.Rows, dest []interface{}) (map[string]interfac
 	}
 
 	// Pick all values we're interested in into a map.
-	result := make(map[string]interface{}, len(q.columnTypes))
+	result := make(map[string]any, len(q.columnTypes))
 	for i, column := range columns {
 		switch q.columnTypes[column] {
 		case columnTypeKey:

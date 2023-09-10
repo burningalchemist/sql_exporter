@@ -59,11 +59,11 @@ type Config struct {
 	configFile string
 
 	// Catches all undefined fields and must be empty after parsing.
-	XXX map[string]interface{} `yaml:",inline" json:"-"`
+	XXX map[string]any `yaml:",inline" json:"-"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for Config.
-func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 	type plain Config
 	if err := unmarshal((*plain)(c)); err != nil {
 		return err
@@ -72,7 +72,7 @@ func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if c.Globals == nil {
 		c.Globals = &GlobalConfig{}
 		// Force a dummy unmarshall to populate global defaults
-		if err := c.Globals.UnmarshalYAML(func(interface{}) error { return nil }); err != nil {
+		if err := c.Globals.UnmarshalYAML(func(any) error { return nil }); err != nil {
 			return err
 		}
 	}
@@ -121,19 +121,7 @@ func (c *Config) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
 }
 
-// ReloadCollectorFiles reloads previously loaded collector files
-func (c *Config) ReloadCollectorFiles() error {
-	if len(c.Collectors) > 0 {
-		c.Collectors = c.Collectors[:0]
-	}
-	err := c.loadCollectorFiles()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// LoadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
+// loadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
 func (c *Config) loadCollectorFiles() error {
 	baseDir := filepath.Dir(c.configFile)
 	for _, cfglob := range c.CollectorFiles {
@@ -144,6 +132,7 @@ func (c *Config) loadCollectorFiles() error {
 
 		// Resolve the glob to actual filenames.
 		cfs, err := filepath.Glob(cfglob)
+		klog.Infof("Collector files found: %v", cfs)
 		if err != nil {
 			// The only error can be a bad pattern.
 			return fmt.Errorf("error resolving collector files for %s: %w", cfglob, err)
@@ -180,11 +169,11 @@ type GlobalConfig struct {
 	MaxIdleConns    int            `yaml:"max_idle_connections"`    // maximum number of idle connections to any one target
 
 	// Catches all undefined fields and must be empty after parsing.
-	XXX map[string]interface{} `yaml:",inline" json:"-"`
+	XXX map[string]any `yaml:",inline" json:"-"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for GlobalConfig.
-func (g *GlobalConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (g *GlobalConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	// Default to running the queries on every scrape.
 	g.MinInterval = model.Duration(0)
 	// Default to 10 seconds, since Prometheus has a 10 second scrape timeout default.
@@ -220,7 +209,7 @@ type TargetConfig struct {
 	collectors []*CollectorConfig // resolved collector references
 
 	// Catches all undefined fields and must be empty after parsing.
-	XXX map[string]interface{} `yaml:",inline" json:"-"`
+	XXX map[string]any `yaml:",inline" json:"-"`
 }
 
 // Collectors returns the collectors referenced by the target, resolved.
@@ -229,7 +218,7 @@ func (t *TargetConfig) Collectors() []*CollectorConfig {
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for TargetConfig.
-func (t *TargetConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (t *TargetConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	type plain TargetConfig
 	if err := unmarshal((*plain)(t)); err != nil {
 		return err
@@ -302,7 +291,7 @@ type JobConfig struct {
 	collectors []*CollectorConfig // resolved collector references
 
 	// Catches all undefined fields and must be empty after parsing.
-	XXX map[string]interface{} `yaml:",inline" json:"-"`
+	XXX map[string]any `yaml:",inline" json:"-"`
 }
 
 // Collectors returns the collectors referenced by the job, resolved.
@@ -311,7 +300,7 @@ func (j *JobConfig) Collectors() []*CollectorConfig {
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for JobConfig.
-func (j *JobConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (j *JobConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	type plain JobConfig
 	if err := unmarshal((*plain)(j)); err != nil {
 		return err
@@ -336,7 +325,7 @@ func (j *JobConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 //
 //lint:ignore U1000 - it's unused so far
 func (j *JobConfig) checkLabelCollisions() error {
-	sclabels := make(map[string]interface{})
+	sclabels := make(map[string]any)
 	for _, s := range j.StaticConfigs {
 		for _, l := range s.Labels {
 			sclabels[l] = nil
@@ -363,19 +352,19 @@ type StaticConfig struct {
 	Labels  map[string]string `yaml:"labels,omitempty"` // labels to apply to all metrics collected from the targets
 
 	// Catches all undefined fields and must be empty after parsing.
-	XXX map[string]interface{} `yaml:",inline" json:"-"`
+	XXX map[string]any `yaml:",inline" json:"-"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for StaticConfig.
-func (s *StaticConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (s *StaticConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	type plain StaticConfig
 	if err := unmarshal((*plain)(s)); err != nil {
 		return err
 	}
 
 	// Check for empty/duplicate target names/data source names
-	tnames := make(map[string]interface{})
-	dsns := make(map[string]interface{})
+	tnames := make(map[string]any)
+	dsns := make(map[string]any)
 	for tname, dsn := range s.Targets {
 		if tname == "" {
 			return fmt.Errorf("empty target name in static config %+v", s)
@@ -408,11 +397,11 @@ type CollectorConfig struct {
 	Queries     []*QueryConfig  `yaml:"queries,omitempty"`      // named queries defined by this collector
 
 	// Catches all undefined fields and must be empty after parsing.
-	XXX map[string]interface{} `yaml:",inline" json:"-"`
+	XXX map[string]any `yaml:",inline" json:"-"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for CollectorConfig.
-func (c *CollectorConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *CollectorConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	// Default to undefined (a negative value) so it can be overridden by the global default when not explicitly set.
 	c.MinInterval = -1
 
@@ -470,7 +459,7 @@ type MetricConfig struct {
 	query     *QueryConfig         // QueryConfig resolved from QueryRef or generated from Query
 
 	// Catches all undefined fields and must be empty after parsing.
-	XXX map[string]interface{} `yaml:",inline" json:"-"`
+	XXX map[string]any `yaml:",inline" json:"-"`
 }
 
 // ValueType returns the metric type, converted to a prometheus.ValueType.
@@ -484,7 +473,7 @@ func (m *MetricConfig) Query() *QueryConfig {
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for MetricConfig.
-func (m *MetricConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (m *MetricConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	type plain MetricConfig
 	if err := unmarshal((*plain)(m)); err != nil {
 		return err
@@ -555,11 +544,11 @@ type QueryConfig struct {
 	metrics []*MetricConfig // metrics referencing this query
 
 	// Catches all undefined fields and must be empty after parsing.
-	XXX map[string]interface{} `yaml:",inline" json:"-"`
+	XXX map[string]any `yaml:",inline" json:"-"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for QueryConfig.
-func (q *QueryConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (q *QueryConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	type plain QueryConfig
 	if err := unmarshal((*plain)(q)); err != nil {
 		return err
@@ -582,13 +571,13 @@ func (q *QueryConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type Secret string
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for Secrets.
-func (s *Secret) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (s *Secret) UnmarshalYAML(unmarshal func(any) error) error {
 	type plain Secret
 	return unmarshal((*plain)(s))
 }
 
 // MarshalYAML implements the yaml.Marshaler interface for Secrets.
-func (s Secret) MarshalYAML() (interface{}, error) {
+func (s Secret) MarshalYAML() (any, error) {
 	if s != "" {
 		return "<secret>", nil
 	}
@@ -632,6 +621,7 @@ func resolveCollectorRefs(
 			return nil, fmt.Errorf("unknown collector %q referenced in %s", cref, ctx)
 		}
 	}
+	klog.Infof("Resolved collectors for %s: %v", ctx, len(resolved))
 	return resolved, nil
 }
 
@@ -645,7 +635,7 @@ func checkLabel(label string, ctx ...string) error {
 	return nil
 }
 
-func checkOverflow(m map[string]interface{}, ctx string) error {
+func checkOverflow(m map[string]any, ctx string) error {
 	if len(m) > 0 {
 		var keys []string
 		for k := range m {
