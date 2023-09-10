@@ -133,7 +133,7 @@ func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.R
 			klog.Warning("Reloading target collectors...")
 			// FIXME: Should be t.Collectors() instead of config.Collectors
 			target, err := sql_exporter.NewTarget("", "", string(currentConfig.Target.DSN),
-				currentConfig.Collectors, nil, currentConfig.Globals)
+				exporterNewConfig.Target.Collectors(), nil, currentConfig.Globals)
 			if err != nil {
 				klog.Errorf("Error recreating a target - %v", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
