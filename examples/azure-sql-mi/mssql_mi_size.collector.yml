@@ -46,4 +46,5 @@ queries:
               ON mf.database_id = divfs.database_id 
                   AND mf.file_id = divfs.file_id
       WHERE DB_NAME(mf.database_id) NOT IN ('master', 'model','tempdb', 'msdb')
+        AND name in ('data_0', 'log')
       -- ORDER BY size_on_disk_bytes DESC
