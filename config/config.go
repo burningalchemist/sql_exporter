@@ -297,7 +297,7 @@ type JobConfig struct {
 
 	collectors []*CollectorConfig // resolved collector references
 
-	EnablePing bool `yaml:"enable_ping,omitempty"` // ping the target before executing the collectors
+	EnablePing *bool `yaml:"enable_ping,omitempty"` // ping the target before executing the collectors
 
 	// Catches all undefined fields and must be empty after parsing.
 	XXX map[string]any `yaml:",inline" json:"-"`

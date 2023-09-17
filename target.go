@@ -148,11 +148,6 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 		}
 	}
 
-	// If enablePing is nil, set it to true
-	if t.enablePing == nil {
-		t.enablePing = OfBool(true)
-	}
-
 	// If we have a handle and the context is not closed, test whether the database is up.
 	// FIXME: we ping the database during each request even with cacheCollector. It leads
 	// to additional charges for paid database services.
