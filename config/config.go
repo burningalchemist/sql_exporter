@@ -132,7 +132,7 @@ func (c *Config) loadCollectorFiles() error {
 
 		// Resolve the glob to actual filenames.
 		cfs, err := filepath.Glob(cfglob)
-		klog.Infof("Collector files found: %v", cfs)
+		klog.Infof("External collector files found: %v", len(cfs))
 		if err != nil {
 			// The only error can be a bad pattern.
 			return fmt.Errorf("error resolving collector files for %s: %w", cfglob, err)
