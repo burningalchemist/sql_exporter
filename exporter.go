@@ -3,7 +3,6 @@ package sql_exporter
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"os"
 	"sync"
@@ -15,8 +14,6 @@ import (
 )
 
 const envDsnOverride = "SQLEXPORTER_TARGET_DSN"
-
-var dsnOverride = flag.String("config.data-source-name", "", "Data source name to override the value in the configuration file with.")
 
 // Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the default registry.
 type Exporter interface {
@@ -44,19 +41,23 @@ func NewExporter(configFile string) (Exporter, error) {
 	}
 
 	if val, ok := os.LookupEnv(envDsnOverride); ok {
-		*dsnOverride = val
+		config.DsnOverride = val
 	}
 	// Override the DSN if requested (and in single target mode).
-	if *dsnOverride != "" {
+	if config.DsnOverride != "" {
 		if len(c.Jobs) > 0 {
-			return nil, fmt.Errorf("the config.data-source-name flag (value %q) only applies in single target mode", *dsnOverride)
+			return nil, fmt.Errorf("the config.data-source-name flag (value %q) only applies in single target mode", config.DsnOverride)
 		}
-		c.Target.DSN = config.Secret(*dsnOverride)
+		c.Target.DSN = config.Secret(config.DsnOverride)
+	}
+
+	if c.Target.EnablePing == nil {
+		c.Target.EnablePing = &config.EnablePing
 	}
 
 	var targets []Target
 	if c.Target != nil {
-		target, err := NewTarget("", c.Target.Name, string(c.Target.DSN), c.Target.Collectors(), nil, c.Globals)
+		target, err := NewTarget("", c.Target.Name, string(c.Target.DSN), c.Target.Collectors(), nil, c.Globals, c.Target.EnablePing)
 		if err != nil {
 			return nil, err
 		}

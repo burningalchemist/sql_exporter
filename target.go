@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"flag"
 	"fmt"
 	"sort"
 	"sync"
@@ -16,8 +15,6 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"google.golang.org/protobuf/proto"
 )
-
-var enablePing = flag.Bool("config.enable-ping", true, "Enable ping for targets")
 
 const (
 	// Capacity for the channel to collect metrics.
@@ -46,6 +43,7 @@ type target struct {
 	upDesc             MetricDesc
 	scrapeDurationDesc MetricDesc
 	logContext         string
+	enablePing         *bool
 
 	conn *sql.DB
 }
@@ -53,9 +51,10 @@ type target struct {
 // NewTarget returns a new Target with the given instance name, data source name, collectors and constant labels.
 // An empty target name means the exporter is running in single target mode: no synthetic metrics will be exported.
 func NewTarget(
-	logContext, name, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig) (
+	logContext, name, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig, ep *bool) (
 	Target, errors.WithContext,
 ) {
+
 	if name != "" {
 		logContext = fmt.Sprintf("%s, target=%q", logContext, name)
 		constLabels = prometheus.Labels{"instance": name}
@@ -90,6 +89,7 @@ func NewTarget(
 		upDesc:             upDesc,
 		scrapeDurationDesc: scrapeDurationDesc,
 		logContext:         logContext,
+		enablePing:         ep,
 	}
 	return &t, nil
 }
@@ -148,10 +148,15 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 		}
 	}
 
+	// If enablePing is nil, set it to true
+	if t.enablePing == nil {
+		t.enablePing = OfBool(true)
+	}
+
 	// If we have a handle and the context is not closed, test whether the database is up.
 	// FIXME: we ping the database during each request even with cacheCollector. It leads
 	// to additional charges for paid database services.
-	if t.conn != nil && ctx.Err() == nil && *enablePing {
+	if t.conn != nil && ctx.Err() == nil && *t.enablePing {
 		var err error
 		// Ping up to max_connections + 1 times as long as the returned error is driver.ErrBadConn, to purge the connection
 		// pool of bad connections. This might happen if the previous scrape timed out and in-flight queries got canceled.
@@ -177,4 +182,9 @@ func boolToFloat64(value bool) float64 {
 		return 1.0
 	}
 	return 0.0
+}
+
+// OfBool returns bool address.
+func OfBool(i bool) *bool {
+	return &i
 }

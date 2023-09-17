@@ -39,6 +39,8 @@ var (
 
 func init() {
 	prometheus.MustRegister(version.NewCollector("sql_exporter"))
+	flag.BoolVar(&cfg.EnablePing, "config.enable-ping", true, "Enable ping for targets")
+	flag.StringVar(&cfg.DsnOverride, "config.data-source-name", "", "Data source name to override the value in the configuration file with.")
 }
 
 func main() {
@@ -46,7 +48,6 @@ func main() {
 		runtime.SetBlockProfileRate(1)
 		runtime.SetMutexProfileFraction(1)
 	}
-
 	flag.Parse()
 
 	promlogConfig := &promlog.Config{}
@@ -134,7 +135,7 @@ func reloadCollectors(e sql_exporter.Exporter) func(http.ResponseWriter, *http.R
 			klog.Warning("Reloading target collectors...")
 			// FIXME: Should be t.Collectors() instead of config.Collectors
 			target, err := sql_exporter.NewTarget("", currentConfig.Target.Name, string(currentConfig.Target.DSN),
-				exporterNewConfig.Target.Collectors(), nil, currentConfig.Globals)
+				exporterNewConfig.Target.Collectors(), nil, currentConfig.Globals, currentConfig.Target.EnablePing)
 			if err != nil {
 				klog.Errorf("Error recreating a target - %v", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
