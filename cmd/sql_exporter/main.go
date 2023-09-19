@@ -40,8 +40,8 @@ var (
 func init() {
 	prometheus.MustRegister(version.NewCollector("sql_exporter"))
 	flag.BoolVar(&cfg.EnablePing, "config.enable-ping", true, "Enable ping for targets")
-	flag.StringVar(&cfg.DsnOverride, "config.data-source-name", "", "Data source name to override the value in the configuration file with.")
-  flag.StringVar(&cfg.TargetLabel, "config.target-label", "target", "Target label name")
+	flag.StringVar(&cfg.DsnOverride, "config.data-source-name", "", "Data source name to override the value in the configuration file with")
+	flag.StringVar(&cfg.TargetLabel, "config.target-label", "target", "Target label name")
 }
 
 func main() {
