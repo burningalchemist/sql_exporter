@@ -35,8 +35,8 @@ func NewJob(jc *config.JobConfig, gc *config.GlobalConfig) (Job, errors.WithCont
 	for _, sc := range jc.StaticConfigs {
 		for tname, dsn := range sc.Targets {
 			constLabels := prometheus.Labels{
-				"job":      jc.Name,
-				"instance": tname,
+				"job":              jc.Name,
+				config.TargetLabel: tname,
 			}
 			for name, value := range sc.Labels {
 				// Shouldn't happen as there are sanity checks in config, but check nonetheless.

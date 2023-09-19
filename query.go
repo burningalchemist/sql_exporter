@@ -136,23 +136,23 @@ func (q *Query) scanDest(rows *sql.Rows) ([]any, errors.WithContext) {
 	if err != nil {
 		return nil, errors.Wrap(q.logContext, err)
 	}
-	klog.V(3).Infof(`returned_columns="%v"%v`, columns, q.logContext)
+	klog.V(3).Infof("[%s] Returned columns: %q", q.logContext, columns)
 	// Create the slice to scan the row into, with strings for keys and float64s for values.
 	dest := make([]any, 0, len(columns))
 	have := make(map[string]bool, len(q.columnTypes))
 	for i, column := range columns {
 		switch q.columnTypes[column] {
 		case columnTypeKey:
-			dest = append(dest, new(string))
+			dest = append(dest, new(sql.NullString))
 			have[column] = true
 		case columnTypeValue:
 			dest = append(dest, new(float64))
 			have[column] = true
 		default:
 			if column == "" {
-				klog.Warningf("[%s] Unnamed column %d returned by query", q.logContext, i)
+				klog.Infof("[%s] Unnamed column %d returned by query", q.logContext, i)
 			} else {
-				klog.Warningf("[%s] Extra column %q returned by query", q.logContext, column)
+				klog.Infof("[%s] Extra column %q returned by query", q.logContext, column)
 			}
 			dest = append(dest, new(any))
 		}
@@ -190,7 +190,10 @@ func (q *Query) scanRow(rows *sql.Rows, dest []any) (map[string]any, errors.With
 	for i, column := range columns {
 		switch q.columnTypes[column] {
 		case columnTypeKey:
-			result[column] = *dest[i].(*string)
+			if !dest[i].(*sql.NullString).Valid {
+				klog.V(3).Infof("[%s] Key column %q is NULL, return empty string", q.logContext, column)
+			}
+			result[column] = *dest[i].(*sql.NullString)
 		case columnTypeValue:
 			result[column] = *dest[i].(*float64)
 		}

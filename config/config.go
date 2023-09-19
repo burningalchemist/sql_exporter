@@ -28,6 +28,8 @@ var (
 // and serves to help us avoid overflow/wraparound issues.
 const MaxInt32 int = 1<<31 - 1
 
+var TargetLabel string
+
 // Load attempts to parse the given config file and return a Config object.
 func Load(configFile string) (*Config, error) {
 	klog.Infof("Loading configuration from %s", configFile)
@@ -638,7 +640,7 @@ func checkLabel(label string, ctx ...string) error {
 	if label == "" {
 		return fmt.Errorf("empty label defined in %s", strings.Join(ctx, " "))
 	}
-	if label == "job" || label == "instance" {
+	if label == "job" || label == TargetLabel {
 		return fmt.Errorf("reserved label %q redefined in %s", label, strings.Join(ctx, " "))
 	}
 	return nil
