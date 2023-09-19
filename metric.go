@@ -1,6 +1,7 @@
 package sql_exporter
 
 import (
+	"database/sql"
 	"fmt"
 	"sort"
 
@@ -76,7 +77,7 @@ func NewMetricFamily(logContext string, mc *config.MetricConfig, constLabels []*
 func (mf MetricFamily) Collect(row map[string]any, ch chan<- Metric) {
 	labelValues := make([]string, len(mf.labels))
 	for i, label := range mf.config.KeyLabels {
-		labelValues[i] = row[label].(string)
+		labelValues[i] = row[label].(sql.NullString).String
 	}
 	for _, v := range mf.config.Values {
 		if mf.config.ValueLabel != "" {
