@@ -38,8 +38,6 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) {
 				klog.Errorf("Timeout collecting metrics from target: %s", err)
-				http.Error(w, "Timeout collecting metrics from target, "+err.Error(), http.StatusInternalServerError)
-				return
 			}
 			if len(mfs) == 0 {
 				klog.Errorf("No metrics gathered: %s", err)
@@ -47,8 +45,6 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 				return
 			}
 			klog.Errorf("Error gathering metrics: %s", err)
-			http.Error(w, "Error gathering metrics, "+err.Error(), http.StatusInternalServerError)
-			return
 		}
 
 		contentType := expfmt.Negotiate(req.Header)
