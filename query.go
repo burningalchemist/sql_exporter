@@ -141,7 +141,7 @@ func (q *Query) scanDest(rows *sql.Rows) ([]interface{}, errors.WithContext) {
 			dest = append(dest, new(string))
 			have[column] = true
 		case columnTypeValue:
-			dest = append(dest, new(float64))
+			dest = append(dest, new(string))
 			have[column] = true
 		default:
 			if column == "" {
@@ -187,7 +187,7 @@ func (q *Query) scanRow(rows *sql.Rows, dest []interface{}) (map[string]interfac
 		case columnTypeKey:
 			result[column] = *dest[i].(*string)
 		case columnTypeValue:
-			result[column] = *dest[i].(*float64)
+			result[column] = *dest[i].(*string)
 		}
 	}
 	return result, nil

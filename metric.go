@@ -9,6 +9,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"google.golang.org/protobuf/proto"
+	"strings"
+        "strconv"
+        "regexp"
 )
 
 // MetricDesc is a descriptor for a family of metrics, sharing the same name, help, labes, type.
@@ -48,7 +51,9 @@ func NewMetricFamily(logContext string, mc *config.MetricConfig, constLabels []*
 	}
 
 	labels := make([]string, 0, len(mc.KeyLabels)+1)
-	labels = append(labels, mc.KeyLabels...)
+	for _, label := range mc.KeyLabels {
+                labels = append(labels, strings.Replace(label, " ", "", -1))
+        }
 	if mc.ValueLabel != "" {
 		labels = append(labels, mc.ValueLabel)
 	}
@@ -78,13 +83,34 @@ func (mf MetricFamily) Collect(row map[string]interface{}, ch chan<- Metric) {
 	for i, label := range mf.config.KeyLabels {
 		labelValues[i] = row[label].(string)
 	}
-	for _, v := range mf.config.Values {
-		if mf.config.ValueLabel != "" {
-			labelValues[len(labelValues)-1] = v
-		}
-		value := row[v].(float64)
-		ch <- NewMetric(&mf, value, labelValues...)
-	}
+for _, v := range mf.config.Values {	
+
+    if mf.config.ValueLabel != "" {
+        labelValues[len(labelValues)-1] = v
+    }
+
+    reg, _ := regexp.Compile("[^0-9.]")
+    valueStr := reg.ReplaceAllString(strings.TrimSpace(row[v].(string)), "")
+
+    var value float64 // Declare the value variable
+
+    if valueStr == "Primary" || valueStr == "Active" {
+        value = 0
+	ch <- NewMetric(&mf, value, labelValues...)
+    } else if valueStr == "Standby" || valueStr == "Inactive" || valueStr == "Deactivating" {
+	value = 1
+        ch <- NewMetric(&mf, value, labelValues...)
+    } else if valueStr == "NoHADR" || valueStr == "Unreachable" || valueStr == "Starting" || valueStr == "Unknown" {
+	value = -1
+        ch <- NewMetric(&mf, value, labelValues...)
+    } else {
+	value, err := strconv.ParseFloat(valueStr, 64)
+        if err != nil {
+            // Handle error
+        }
+	ch <- NewMetric(&mf, value, labelValues...)
+    }
+}
 }
 
 // Name implements MetricDesc.
