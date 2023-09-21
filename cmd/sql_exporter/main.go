@@ -39,6 +39,7 @@ var (
 
 func init() {
 	prometheus.MustRegister(version.NewCollector("sql_exporter"))
+	flag.StringVar(&cfg.TargetLabel, "config.target-label", "target", "Target label name")
 }
 
 func main() {

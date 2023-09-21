@@ -50,16 +50,17 @@ type target struct {
 	conn *sql.DB
 }
 
-// NewTarget returns a new Target with the given instance name, data source name, collectors and constant labels.
+// NewTarget returns a new Target with the given target name, data source name, collectors and constant labels.
 // An empty target name means the exporter is running in single target mode: no synthetic metrics will be exported.
 func NewTarget(
-	logContext, name, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig) (
+	logContext, tname, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig) (
 	Target, errors.WithContext,
 ) {
-	if name != "" {
-		logContext = fmt.Sprintf("%s, target=%q", logContext, name)
+
+	if tname != "" {
+		logContext = fmt.Sprintf("%s, target=%q", logContext, tname)
 		if constLabels == nil {
-			constLabels = prometheus.Labels{"instance": name}
+			constLabels = prometheus.Labels{config.TargetLabel: tname}
 		}
 	}
 
@@ -84,7 +85,7 @@ func NewTarget(
 	upDesc := NewAutomaticMetricDesc(logContext, upMetricName, upMetricHelp, prometheus.GaugeValue, constLabelPairs)
 	scrapeDurationDesc := NewAutomaticMetricDesc(logContext, scrapeDurationName, scrapeDurationHelp, prometheus.GaugeValue, constLabelPairs)
 	t := target{
-		name:               name,
+		name:               tname,
 		dsn:                dsn,
 		collectors:         collectors,
 		constLabels:        constLabels,
