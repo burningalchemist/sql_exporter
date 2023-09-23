@@ -463,7 +463,8 @@ type MetricConfig struct {
 	QueryLiteral string            `yaml:"query,omitempty"`         // a literal query
 	QueryRef     string            `yaml:"query_ref,omitempty"`     // references a query in the query map
 
-	NoPreparedStatement bool `yaml:"no_prepared_statement,omitempty"` // do not prepare statement
+	NoPreparedStatement bool     `yaml:"no_prepared_statement,omitempty"` // do not prepare statement
+	StaticValue         *float64 `yaml:"static_value,omitempty"`
 
 	valueType prometheus.ValueType // TypeString converted to prometheus.ValueType
 	query     *QueryConfig         // QueryConfig resolved from QueryRef or generated from Query
@@ -527,8 +528,12 @@ func (m *MetricConfig) UnmarshalYAML(unmarshal func(any) error) error {
 		}
 	}
 
-	if len(m.Values) == 0 {
+	if len(m.Values) == 0 && m.StaticValue == nil {
 		return fmt.Errorf("no values defined for metric %q", m.Name)
+	}
+
+	if len(m.Values) > 0 && m.StaticValue != nil {
+		return fmt.Errorf("metric %q cannot have both static_value and values defined", m.Name)
 	}
 
 	if len(m.Values) > 1 {
