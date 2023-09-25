@@ -51,12 +51,15 @@ type target struct {
 // NewTarget returns a new Target with the given target name, data source name, collectors and constant labels.
 // An empty target name means the exporter is running in single target mode: no synthetic metrics will be exported.
 func NewTarget(
-	logContext, tname, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig, ep *bool) (
+	logContext, tname, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig) (
 	Target, errors.WithContext,
 ) {
+
 	if tname != "" {
 		logContext = fmt.Sprintf("%s, target=%q", logContext, tname)
-		constLabels = prometheus.Labels{config.TargetLabel: tname}
+		if constLabels == nil {
+			constLabels = prometheus.Labels{config.TargetLabel: tname}
+		}
 	}
 
 	constLabelPairs := make([]*dto.LabelPair, 0, len(constLabels))
