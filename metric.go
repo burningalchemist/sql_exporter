@@ -38,7 +38,7 @@ type MetricFamily struct {
 func NewMetricFamily(logContext string, mc *config.MetricConfig, constLabels []*dto.LabelPair) (*MetricFamily, errors.WithContext) {
 	logContext = fmt.Sprintf("%s, metric=%q", logContext, mc.Name)
 
-	if len(mc.Values) == 0 {
+	if len(mc.Values) == 0 && mc.StaticValue == nil {
 		return nil, errors.New(logContext, "no value column defined")
 	}
 	if len(mc.Values) > 1 && mc.ValueLabel == "" {
@@ -84,6 +84,10 @@ func (mf MetricFamily) Collect(row map[string]any, ch chan<- Metric) {
 			labelValues[len(labelValues)-1] = v
 		}
 		value := row[v].(float64)
+		ch <- NewMetric(&mf, value, labelValues...)
+	}
+	if mf.config.StaticValue != nil {
+		value := *mf.config.StaticValue
 		ch <- NewMetric(&mf, value, labelValues...)
 	}
 }
