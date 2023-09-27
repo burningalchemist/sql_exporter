@@ -28,6 +28,10 @@ func NewJob(jc *config.JobConfig, gc *config.GlobalConfig) (Job, errors.WithCont
 		logContext: fmt.Sprintf("job=%q", jc.Name),
 	}
 
+	if jc.EnablePing == nil {
+		jc.EnablePing = &config.EnablePing
+	}
+
 	for _, sc := range jc.StaticConfigs {
 		for tname, dsn := range sc.Targets {
 			constLabels := prometheus.Labels{
@@ -41,7 +45,7 @@ func NewJob(jc *config.JobConfig, gc *config.GlobalConfig) (Job, errors.WithCont
 				}
 				constLabels[name] = value
 			}
-			t, err := NewTarget(j.logContext, tname, string(dsn), jc.Collectors(), constLabels, gc)
+			t, err := NewTarget(j.logContext, tname, string(dsn), jc.Collectors(), constLabels, gc, jc.EnablePing)
 			if err != nil {
 				return nil, err
 			}

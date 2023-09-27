@@ -19,11 +19,15 @@ import (
 	"k8s.io/klog/v2"
 )
 
+var (
+	EnablePing  bool
+	DsnOverride string
+	TargetLabel string
+)
+
 // MaxInt32 defines the maximum value of allowed integers
 // and serves to help us avoid overflow/wraparound issues.
 const MaxInt32 int = 1<<31 - 1
-
-var TargetLabel string
 
 // Load attempts to parse the given config file and return a Config object.
 func Load(configFile string) (*Config, error) {
@@ -204,10 +208,11 @@ func (g *GlobalConfig) UnmarshalYAML(unmarshal func(any) error) error {
 
 // TargetConfig defines a DSN and a set of collectors to be executed on it.
 type TargetConfig struct {
-	Name          string   `yaml:"name,omitempty"`   // name of the target
-	DSN           Secret   `yaml:"data_source_name"` // data source name to connect to
-	AwsSecretName string   `yaml:"aws_secret_name"`  // AWS secret name
-	CollectorRefs []string `yaml:"collectors"`       // names of collectors to execute on the target
+	Name          string   `yaml:"name,omitempty"`        // name of the target
+	DSN           Secret   `yaml:"data_source_name"`      // data source name to connect to
+	AwsSecretName string   `yaml:"aws_secret_name"`       // AWS secret name
+	CollectorRefs []string `yaml:"collectors"`            // names of collectors to execute on the target
+	EnablePing    *bool    `yaml:"enable_ping,omitempty"` // ping the target before executing the collectors
 
 	collectors []*CollectorConfig // resolved collector references
 
@@ -292,6 +297,8 @@ type JobConfig struct {
 	StaticConfigs []*StaticConfig `yaml:"static_configs"` // collections of statically defined targets
 
 	collectors []*CollectorConfig // resolved collector references
+
+	EnablePing *bool `yaml:"enable_ping,omitempty"` // ping the target before executing the collectors
 
 	// Catches all undefined fields and must be empty after parsing.
 	XXX map[string]any `yaml:",inline" json:"-"`
