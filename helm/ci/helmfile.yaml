@@ -1,0 +1,37 @@
+repositories:
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+
+releases:
+  - name: postgres-instance
+    installed: true
+    namespace: postgres
+    createNamespace: true
+    chart: bitnami/postgresql
+    values:
+      - global:
+          postgresql:
+            auth:
+              postgresPassword: 123123!!
+  - name: prometheus-stack
+    namespace: monitoring
+    createNamespace: true
+    chart: prometheus-community/kube-prometheus-stack
+    values:
+      - prometheus:
+          prometheusSpec:
+            enableAdminAPI: true
+            podMonitorNamespaceSelector:
+              any: true
+            podMonitorSelector: {}
+            podMonitorSelectorNilUsesHelmValues: false
+            ruleNamespaceSelector:
+              any: true
+            ruleSelector: {}
+            ruleSelectorNilUsesHelmValues: false
+            serviceMonitorNamespaceSelector:
+              any: true
+            serviceMonitorSelector: {}
+            serviceMonitorSelectorNilUsesHelmValues: false

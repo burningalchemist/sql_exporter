@@ -1,0 +1,53 @@
+tests:
+  serviceMonitor:
+    enabled: true
+    prom:
+      service: prometheus-operated
+      namespace: monitoring
+config:
+  target:
+    data_source_name: 'postgresql://postgres:123123!!@postgres-instance-postgresql.postgres.svc.cluster.local:5432?sslmode=disable'
+    collectors: [active_connections]
+  collectors:
+    - collector_name: active_connections
+      metrics:
+        - metric_name: active_connections
+          type: gauge
+          help: 'Active connections'
+          key_labels:
+            - "datname"
+            - "usename"
+            - "state"
+          values:
+            - "count"
+          query_ref: active_connections
+      queries:
+        - query_name: active_connections
+          query: |
+            SELECT
+              datname::text,
+              usename::text,
+              state::text,
+              COUNT(state)::float AS count
+            FROM pg_stat_activity
+            GROUP BY datname, usename, state;
+  collector_files:
+    - "*.collector.yml"
+collectorFiles:
+  pricing_data_freshness.collector.yml:
+    collector_name: pricing_data_freshness
+    metrics:
+      - metric_name: pricing_update_time
+        type: gauge
+        help: 'Time when prices for a market were last updated.'
+        key_labels:
+          # Populated from the `market` column of each row.
+          - Market
+        static_labels:
+          # Arbitrary key/value pair
+          portfolio: income
+        values: [LastUpdateTime]
+        query: |
+          SELECT Market, max(UpdateTime) AS LastUpdateTime
+          FROM MarketPrices
+          GROUP BY Market
