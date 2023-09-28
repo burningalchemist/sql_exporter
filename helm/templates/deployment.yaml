@@ -46,7 +46,7 @@ spec:
           {{- if .Values.collectorFiles }}
           - name: sql-collector
             readOnly: true
-            mountPath: /etc/sql_exporter
+            mountPath: /etc/sql_exporter/collectors/
           {{- end }}
           livenessProbe:
             httpGet:
