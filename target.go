@@ -57,7 +57,7 @@ func NewTarget(
 ) {
 
 	if tname != "" {
-		logContext = fmt.Sprintf("%s, target=%q", logContext, tname)
+		logContext = fmt.Sprintf("%s,target=%s", logContext, tname)
 		if constLabels == nil {
 			constLabels = prometheus.Labels{config.TargetLabel: tname}
 		}
