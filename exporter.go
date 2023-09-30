@@ -132,12 +132,14 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 		dtoMetric := &dto.Metric{}
 		if err := metric.Write(dtoMetric); err != nil {
 			errs = append(errs, err)
-			ctxLabels := parseLogCtx(err.Context())
-			e.scrapeErrors.WithLabelValues(
-				ctxLabels["job"],
-				ctxLabels["target"],
-				ctxLabels["collector"],
-				ctxLabels["query"]).Inc()
+			if err.Context() != "" {
+				ctxLabels := parseLogCtx(err.Context())
+				e.scrapeErrors.WithLabelValues(
+					ctxLabels["job"],
+					ctxLabels["target"],
+					ctxLabels["collector"],
+					ctxLabels["query"]).Inc()
+			}
 			continue
 		}
 		metricDesc := metric.Desc()
