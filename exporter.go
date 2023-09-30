@@ -51,12 +51,11 @@ func NewExporter(configFile string) (Exporter, error) {
 		c.Target.DSN = config.Secret(config.DsnOverride)
 	}
 
-	if c.Target.EnablePing == nil {
-		c.Target.EnablePing = &config.EnablePing
-	}
-
 	var targets []Target
 	if c.Target != nil {
+		if c.Target.EnablePing == nil {
+			c.Target.EnablePing = &config.EnablePing
+		}
 		target, err := NewTarget("", c.Target.Name, string(c.Target.DSN), c.Target.Collectors(), nil, c.Globals, c.Target.EnablePing)
 		if err != nil {
 			return nil, err
