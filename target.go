@@ -6,7 +6,6 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"google.golang.org/protobuf/proto"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -63,11 +63,7 @@ func NewTarget(
 		}
 	}
 
-	// Leading comma appears when target name is undefined, which is a side-effect of running in single target mode.
-	// Let's trim to avoid confusions.
-	if strings.HasPrefix(logContext, ",") {
-		logContext = strings.TrimLeft(logContext, ", ")
-	}
+	klog.Infof("[%s] Target ping enabled: %v", logContext, *ep)
 
 	// Sort const labels by name to ensure consistent ordering.
 	constLabelPairs := make([]*dto.LabelPair, 0, len(constLabels))
