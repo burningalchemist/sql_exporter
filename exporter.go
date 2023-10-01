@@ -14,9 +14,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const envDsnOverride = "SQLEXPORTER_TARGET_DSN"
-
-var SvcRegistry = prometheus.NewRegistry()
+var (
+	SvcRegistry     = prometheus.NewRegistry()
+	svcMetricLabels = []string{"job", "target", "collector", "query"}
+)
 
 // Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the default registry.
 type Exporter interface {
@@ -44,7 +45,7 @@ func NewExporter(configFile string) (Exporter, error) {
 		return nil, err
 	}
 
-	if val, ok := os.LookupEnv(envDsnOverride); ok {
+	if val, ok := os.LookupEnv(config.EnvDsnOverride); ok {
 		config.DsnOverride = val
 	}
 	// Override the DSN if requested (and in single target mode).
@@ -133,12 +134,12 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 		if err := metric.Write(dtoMetric); err != nil {
 			errs = append(errs, err)
 			if err.Context() != "" {
-				ctxLabels := parseLogCtx(err.Context())
-				e.scrapeErrors.WithLabelValues(
-					ctxLabels["job"],
-					ctxLabels["target"],
-					ctxLabels["collector"],
-					ctxLabels["query"]).Inc()
+				ctxLabels := parseContextLog(err.Context())
+				values := make([]string, len(svcMetricLabels))
+				for i, label := range svcMetricLabels {
+					values[i] = ctxLabels[label]
+				}
+				e.scrapeErrors.WithLabelValues(values...).Inc()
 			}
 			continue
 		}
@@ -184,19 +185,17 @@ func registerSvcMetrics() *prometheus.CounterVec {
 	scrapeErrors := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "scrape_errors",
 		Help: "Total number of scrape errors per job, target, collector and query.",
-	}, []string{"job", "target", "collector", "query"})
+	}, svcMetricLabels)
 	SvcRegistry.MustRegister(scrapeErrors)
 	return scrapeErrors
 }
 
-// write a function to split comma separated list of key=value pairs
-// and return a map of key value pairs
-func parseLogCtx(list string) map[string]string {
+// split comma separated list of key=value pairs and return a map of key value pairs
+func parseContextLog(list string) map[string]string {
 	m := make(map[string]string)
 	for _, item := range strings.Split(list, ",") {
-		key := strings.Split(item, "=")[0]
-		value := strings.Split(item, "=")[1]
-		m[key] = value
+		parts := strings.SplitN(item, "=", 2)
+		m[parts[0]] = parts[1]
 	}
 	return m
 }
