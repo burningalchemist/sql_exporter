@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -24,6 +23,13 @@ const (
 	contentLengthHeader   string = "Content-Length"
 	contentEncodingHeader string = "Content-Encoding"
 	acceptEncodingHeader  string = "Accept-Encoding"
+	scrapeTimeoutHeader   string = "X-Prometheus-Scrape-Timeout-Seconds"
+)
+
+const (
+	prometheusHeaderErr = "Failed to parse timeout from Prometheus header"
+	noMetricsGathered   = "No metrics gathered"
+	noMetricsEncoded    = "No metrics encoded"
 )
 
 // ExporterHandlerFor returns an http.Handler for the provided Exporter.
@@ -36,15 +42,19 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		gatherer := prometheus.Gatherers{exporter.WithContext(ctx)}
 		mfs, err := gatherer.Gather()
 		if err != nil {
-			if errors.Is(err, context.DeadlineExceeded) {
-				klog.Errorf("Timeout collecting metrics from target: %s", err)
-			}
 			if len(mfs) == 0 {
-				klog.Errorf("No metrics gathered: %s", err)
-				http.Error(w, "No metrics gathered, "+err.Error(), http.StatusInternalServerError)
+				klog.Errorf("%s: %s", noMetricsGathered, err)
+				http.Error(w, noMetricsGathered+", "+err.Error(), http.StatusInternalServerError)
 				return
 			}
-			klog.Errorf("Error gathering metrics: %s", err)
+			multierr := err.(prometheus.MultiError)
+			for _, err := range multierr {
+				if errors.Is(err, context.DeadlineExceeded) {
+					klog.Errorf("%s: timeout collecting metrics", err)
+				} else {
+					klog.Errorf("Error gathering metrics: %s", err)
+				}
+			}
 		}
 
 		contentType := expfmt.Negotiate(req.Header)
@@ -63,12 +73,13 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 			closer.Close()
 		}
 		if errs.MaybeUnwrap() != nil && buf.Len() == 0 {
-			http.Error(w, "No metrics encoded, "+errs.Error(), http.StatusInternalServerError)
+			klog.Errorf("%s: %s", noMetricsEncoded, errs)
+			http.Error(w, noMetricsEncoded+", "+errs.Error(), http.StatusInternalServerError)
 			return
 		}
 		header := w.Header()
 		header.Set(contentTypeHeader, string(contentType))
-		header.Set(contentLengthHeader, fmt.Sprint(buf.Len()))
+		header.Set(contentLengthHeader, strconv.Itoa(buf.Len()))
 		if encoding != "" {
 			header.Set(contentEncodingHeader, encoding)
 		}
@@ -80,19 +91,14 @@ func contextFor(req *http.Request, exporter sql_exporter.Exporter) (context.Cont
 	timeout := time.Duration(0)
 	configTimeout := time.Duration(exporter.Config().Globals.ScrapeTimeout)
 	// If a timeout is provided in the Prometheus header, use it.
-	if v := req.Header.Get("X-Prometheus-Scrape-Timeout-Seconds"); v != "" {
+	if v := req.Header.Get(scrapeTimeoutHeader); v != "" {
 		timeoutSeconds, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			parseError := errors.Unwrap(err)
 			switch {
-			case errors.Is(parseError, strconv.ErrSyntax):
-				{
-					klog.Errorf("Failed to parse timeout from Prometheus header: unsupported value")
-				}
-			case errors.Is(parseError, strconv.ErrRange):
-				{
-					klog.Errorf("Failed to parse timeout from Prometheus header: value is out of range")
-				}
+			case errors.Is(err, strconv.ErrSyntax):
+				klog.Errorf("%s: unsupported value", prometheusHeaderErr)
+			case errors.Is(err, strconv.ErrRange):
+				klog.Errorf("%s: value out of range", prometheusHeaderErr)
 			}
 		} else {
 			timeout = time.Duration(timeoutSeconds * float64(time.Second))

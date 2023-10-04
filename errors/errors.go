@@ -12,23 +12,24 @@ type WithContext interface {
 	error
 
 	Context() string
-	RawError() string
+	RawError() error
+	Unwrap() error
 }
 
 // withContext implements WithContext.
 type withContext struct {
 	context string
-	err     string
+	err     error
 }
 
 // New creates a new WithContext.
-func New(context, err string) WithContext {
-	return &withContext{context, err}
+func New(context string, err string) WithContext {
+	return &withContext{context, fmt.Errorf(err)}
 }
 
 // Errorf formats according to a format specifier and returns a new WithContext.
 func Errorf(context, format string, a ...any) WithContext {
-	return &withContext{context, fmt.Sprintf(format, a...)}
+	return &withContext{context, fmt.Errorf(format, a...)}
 }
 
 // Wrap returns a WithContext wrapping err. If err is nil, it returns nil. If err is a WithContext, it is returned
@@ -40,7 +41,7 @@ func Wrap(context string, err error) WithContext {
 	if w, ok := err.(WithContext); ok {
 		return w
 	}
-	return &withContext{context, err.Error()}
+	return &withContext{context, err}
 }
 
 // Wrapf returns a WithContext that prepends a formatted message to err.Error(). If err is nil, it returns nil. If err
@@ -55,17 +56,17 @@ func Wrapf(context string, err error, format string, a ...any) WithContext {
 		prefix = fmt.Sprintf(format, a...)
 	}
 	if w, ok := err.(WithContext); ok {
-		return &withContext{w.Context(), prefix + ": " + w.RawError()}
+		return &withContext{w.Context(), fmt.Errorf("%s: %w", prefix, w.RawError())}
 	}
-	return &withContext{context, prefix + ": " + err.Error()}
+	return &withContext{context, err}
 }
 
 // Error implements error.
 func (w *withContext) Error() string {
 	if len(w.context) == 0 {
-		return w.err
+		return w.err.Error()
 	}
-	return "[" + w.context + "] " + w.err
+	return "[" + w.context + "] " + w.err.Error()
 }
 
 // Context implements WithContext.
@@ -74,6 +75,11 @@ func (w *withContext) Context() string {
 }
 
 // RawError implements WithContext.
-func (w *withContext) RawError() string {
+func (w *withContext) RawError() error {
 	return w.err
+}
+
+// Unwrap implements WithContext.
+func (w *withContext) Unwrap() error {
+	return fmt.Errorf("[%s] %w", w.context, w.err)
 }
