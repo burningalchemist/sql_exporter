@@ -1,3 +1,4 @@
+{{- if (((.Values.tests).metricsEndpoint).enabled) }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -46,3 +47,4 @@ spec:
       args:
         - /test.sh
   restartPolicy: Never
+{{- end }}

@@ -12,3 +12,7 @@ keywords:
 home: https://github.com/burningalchemist/sql_exporter
 sources:
   - https://github.com/burningalchemist/sql_exporter
+maintainers:
+  - name: Nikolai Rodionov
+    email: allanger@zohomail.com
+    url: https://badhouseplants.net

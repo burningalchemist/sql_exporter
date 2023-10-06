@@ -11,7 +11,7 @@ spec:
       {{- include "sql-exporter.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations:        
+      annotations:
         checksum/config: {{ include (print $.Template.BasePath "/secret.configuration.yaml") . | sha256sum }}
         checksum/collectors: {{ include (print $.Template.BasePath "/configmap.collectors.yaml") . | sha256sum }}
       labels:

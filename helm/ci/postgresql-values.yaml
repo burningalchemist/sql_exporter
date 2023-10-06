@@ -4,6 +4,8 @@ tests:
     prom:
       service: prometheus-operated
       namespace: monitoring
+  metricsEndpoint:
+    enabled: true
 
 config:
   target:
