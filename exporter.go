@@ -183,8 +183,8 @@ func (e *exporter) UpdateTarget(target []Target) {
 // registerSvcMetrics registers the metrics for the exporter itself.
 func registerSvcMetrics() *prometheus.CounterVec {
 	scrapeErrors := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "scrape_errors",
-		Help: "Total number of scrape errors per job, target, collector and query.",
+		Name: "scrape_errors_total",
+		Help: "Total number of scrape errors per job, target, collector and query",
 	}, svcMetricLabels)
 	SvcRegistry.MustRegister(scrapeErrors)
 	return scrapeErrors
