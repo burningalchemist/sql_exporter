@@ -118,4 +118,4 @@ require (
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
 )
 
-replace k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.1.0
+replace k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.3.0
