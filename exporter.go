@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	SvcRegistry     = prometheus.NewRegistry()
-	svcMetricLabels = []string{"job", "target", "collector", "query"}
+	SvcRegistry        = prometheus.NewRegistry()
+	svcMetricLabels    = []string{"job", "target", "collector", "query"}
+	scrapeErrorsMetric *prometheus.CounterVec
 )
 
 // Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the default registry.
@@ -34,8 +35,7 @@ type exporter struct {
 	config  *config.Config
 	targets []Target
 
-	ctx          context.Context
-	scrapeErrors *prometheus.CounterVec
+	ctx context.Context
 }
 
 // NewExporter returns a new Exporter with the provided config.
@@ -80,22 +80,20 @@ func NewExporter(configFile string) (Exporter, error) {
 		}
 	}
 
-	scrapeErrors := registerSvcMetrics()
+	scrapeErrorsMetric = registerScrapeErrorMetric()
 
 	return &exporter{
-		config:       c,
-		targets:      targets,
-		ctx:          context.Background(),
-		scrapeErrors: scrapeErrors,
+		config:  c,
+		targets: targets,
+		ctx:     context.Background(),
 	}, nil
 }
 
 func (e *exporter) WithContext(ctx context.Context) Exporter {
 	return &exporter{
-		config:       e.config,
-		targets:      e.targets,
-		ctx:          ctx,
-		scrapeErrors: e.scrapeErrors,
+		config:  e.config,
+		targets: e.targets,
+		ctx:     ctx,
 	}
 }
 
@@ -139,7 +137,7 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 				for i, label := range svcMetricLabels {
 					values[i] = ctxLabels[label]
 				}
-				e.scrapeErrors.WithLabelValues(values...).Inc()
+				scrapeErrorsMetric.WithLabelValues(values...).Inc()
 			}
 			continue
 		}
@@ -180,8 +178,8 @@ func (e *exporter) UpdateTarget(target []Target) {
 	e.targets = target
 }
 
-// registerSvcMetrics registers the metrics for the exporter itself.
-func registerSvcMetrics() *prometheus.CounterVec {
+// registerScrapeErrorMetric registers the metrics for the exporter itself.
+func registerScrapeErrorMetric() *prometheus.CounterVec {
 	scrapeErrors := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "scrape_errors_total",
 		Help: "Total number of scrape errors per job, target, collector and query",
