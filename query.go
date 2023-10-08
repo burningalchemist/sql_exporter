@@ -34,7 +34,7 @@ const (
 
 // NewQuery returns a new Query that will populate the given metric families.
 func NewQuery(logContext string, qc *config.QueryConfig, metricFamilies ...*MetricFamily) (*Query, errors.WithContext) {
-	logContext = fmt.Sprintf("%s, query=%q", logContext, qc.Name)
+	logContext = fmt.Sprintf(`%s,query=%s`, logContext, qc.Name)
 
 	columnTypes := make(columnTypeMap)
 
@@ -77,6 +77,7 @@ func setColumnType(logContext, columnName string, ctype columnType, columnTypes 
 func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 	if ctx.Err() != nil {
 		ch <- NewInvalidMetric(errors.Wrap(q.logContext, ctx.Err()))
+
 		return
 	}
 	rows, err := q.run(ctx, conn)

@@ -31,9 +31,9 @@ type collector struct {
 // NewCollector returns a new Collector with the given configuration and database. The metrics it creates will all have
 // the provided const labels applied.
 func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*dto.LabelPair) (Collector, errors.WithContext) {
-	logContext = fmt.Sprintf("%s, collector=%q", logContext, cc.Name)
+	logContext = fmt.Sprintf(`%s,collector=%s`, logContext, cc.Name)
 
-	// Leading comma appears when target name is undefined, which is a side-effect of running in single target mode.
+	// Leading comma appears when previous parameter is undefined, which is a side-effect of running in single target mode.
 	// Let's trim to avoid confusions.
 	if strings.HasPrefix(logContext, ",") {
 		logContext = strings.TrimLeft(logContext, ", ")

@@ -1,15 +1,11 @@
 package main
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
 	"errors"
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/burningalchemist/sql_exporter"
@@ -39,7 +35,7 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		defer cancel()
 
 		// Go through prometheus.Gatherers to sanitize and sort metrics.
-		gatherer := prometheus.Gatherers{exporter.WithContext(ctx)}
+		gatherer := prometheus.Gatherers{exporter.WithContext(ctx), sql_exporter.SvcRegistry}
 		mfs, err := gatherer.Gather()
 		if err != nil {
 			switch t := err.(type) {
@@ -127,34 +123,4 @@ func contextFor(req *http.Request, exporter sql_exporter.Exporter) (context.Cont
 		return context.Background(), func() {}
 	}
 	return context.WithTimeout(context.Background(), timeout)
-}
-
-var bufPool sync.Pool
-
-func getBuf() *bytes.Buffer {
-	buf := bufPool.Get()
-	if buf == nil {
-		return &bytes.Buffer{}
-	}
-	return buf.(*bytes.Buffer)
-}
-
-func giveBuf(buf *bytes.Buffer) {
-	buf.Reset()
-	bufPool.Put(buf)
-}
-
-// decorateWriter wraps a writer to handle gzip compression if requested.  It
-// returns the decorated writer and the appropriate "Content-Encoding" header
-// (which is empty if no compression is enabled).
-func decorateWriter(request *http.Request, writer io.Writer) (w io.Writer, encoding string) {
-	header := request.Header.Get(acceptEncodingHeader)
-	parts := strings.Split(header, ",")
-	for _, part := range parts {
-		part := strings.TrimSpace(part)
-		if part == "gzip" || strings.HasPrefix(part, "gzip;") {
-			return gzip.NewWriter(writer), "gzip"
-		}
-	}
-	return writer, ""
 }

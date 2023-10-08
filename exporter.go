@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/burningalchemist/sql_exporter/config"
@@ -13,7 +14,11 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const envDsnOverride = "SQLEXPORTER_TARGET_DSN"
+var (
+	SvcRegistry        = prometheus.NewRegistry()
+	svcMetricLabels    = []string{"job", "target", "collector", "query"}
+	scrapeErrorsMetric *prometheus.CounterVec
+)
 
 // Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the default registry.
 type Exporter interface {
@@ -40,7 +45,7 @@ func NewExporter(configFile string) (Exporter, error) {
 		return nil, err
 	}
 
-	if val, ok := os.LookupEnv(envDsnOverride); ok {
+	if val, ok := os.LookupEnv(config.EnvDsnOverride); ok {
 		config.DsnOverride = val
 	}
 	// Override the DSN if requested (and in single target mode).
@@ -74,6 +79,8 @@ func NewExporter(configFile string) (Exporter, error) {
 			targets = append(targets, job.Targets()...)
 		}
 	}
+
+	scrapeErrorsMetric = registerScrapeErrorMetric()
 
 	return &exporter{
 		config:  c,
@@ -124,6 +131,14 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 		dtoMetric := &dto.Metric{}
 		if err := metric.Write(dtoMetric); err != nil {
 			errs = append(errs, err)
+			if err.Context() != "" {
+				ctxLabels := parseContextLog(err.Context())
+				values := make([]string, len(svcMetricLabels))
+				for i, label := range svcMetricLabels {
+					values[i] = ctxLabels[label]
+				}
+				scrapeErrorsMetric.WithLabelValues(values...).Inc()
+			}
 			continue
 		}
 		metricDesc := metric.Desc()
@@ -161,4 +176,24 @@ func (e *exporter) Config() *config.Config {
 
 func (e *exporter) UpdateTarget(target []Target) {
 	e.targets = target
+}
+
+// registerScrapeErrorMetric registers the metrics for the exporter itself.
+func registerScrapeErrorMetric() *prometheus.CounterVec {
+	scrapeErrors := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "scrape_errors_total",
+		Help: "Total number of scrape errors per job, target, collector and query",
+	}, svcMetricLabels)
+	SvcRegistry.MustRegister(scrapeErrors)
+	return scrapeErrors
+}
+
+// split comma separated list of key=value pairs and return a map of key value pairs
+func parseContextLog(list string) map[string]string {
+	m := make(map[string]string)
+	for _, item := range strings.Split(list, ",") {
+		parts := strings.SplitN(item, "=", 2)
+		m[parts[0]] = parts[1]
+	}
+	return m
 }

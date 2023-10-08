@@ -14,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"google.golang.org/protobuf/proto"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -56,12 +57,15 @@ func NewTarget(
 ) {
 
 	if tname != "" {
-		logContext = fmt.Sprintf("%s, target=%q", logContext, tname)
+		logContext = fmt.Sprintf(`%s,target=%s`, logContext, tname)
 		if constLabels == nil {
 			constLabels = prometheus.Labels{config.TargetLabel: tname}
 		}
 	}
 
+	klog.Infof("[%s] Target ping enabled: %v", logContext, *ep)
+
+	// Sort const labels by name to ensure consistent ordering.
 	constLabelPairs := make([]*dto.LabelPair, 0, len(constLabels))
 	for n, v := range constLabels {
 		constLabelPairs = append(constLabelPairs, &dto.LabelPair{
