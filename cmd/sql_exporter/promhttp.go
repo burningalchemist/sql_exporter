@@ -42,18 +42,22 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		gatherer := prometheus.Gatherers{exporter.WithContext(ctx)}
 		mfs, err := gatherer.Gather()
 		if err != nil {
+			switch t := err.(type) {
+			case prometheus.MultiError:
+				for _, err := range t {
+					if errors.Is(err, context.DeadlineExceeded) {
+						klog.Errorf("%s: timeout collecting metrics", err)
+					} else {
+						klog.Errorf("Error gathering metrics: %s", err)
+					}
+				}
+			default:
+				klog.Errorf("Error gathering metrics: %s", err)
+			}
 			if len(mfs) == 0 {
 				klog.Errorf("%s: %s", noMetricsGathered, err)
 				http.Error(w, noMetricsGathered+", "+err.Error(), http.StatusInternalServerError)
 				return
-			}
-			multierr := err.(prometheus.MultiError)
-			for _, err := range multierr {
-				if errors.Is(err, context.DeadlineExceeded) {
-					klog.Errorf("%s: timeout collecting metrics", err)
-				} else {
-					klog.Errorf("Error gathering metrics: %s", err)
-				}
 			}
 		}
 
