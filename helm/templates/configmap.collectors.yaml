@@ -1,0 +1,13 @@
+{{- if .Values.collectorFiles }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sql-exporter.fullname" . }}
+  labels:
+    {{- include "sql-exporter.labels" . | nindent 4 }}
+data:
+  {{- range $k, $v := .Values.collectorFiles }}
+  {{ $k }}: |-
+    {{- toYaml $v | nindent 4}}
+  {{- end}}
+{{- end }}

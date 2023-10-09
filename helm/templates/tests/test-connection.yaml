@@ -1,0 +1,50 @@
+{{- if (((.Values.tests).metricsEndpoint).enabled) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sql-exporter.fullname" . }}-test-script
+  labels:
+    {{- include "sql-exporter.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+data:
+  test.sh: |-
+    #! /bin/sh
+    STATUS=$(curl {{ include "sql-exporter.fullname" . }}:80/metrics --head -s | awk '/^HTTP/{print $2}')
+    if [ "$STATUS" != 200 ]; then
+      echo "sql-exporter didn't return code 200, probably something is broken"
+      exit 1;
+    fi
+    echo "metrics endpoint returned 200"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "sql-exporter.fullname" . }}-test-connection"
+  labels:
+    {{- include "sql-exporter.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "2"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  volumes:
+    - name: test-script
+      configMap:
+        name: "{{ include "sql-exporter.fullname" . }}-test-script"
+  containers:
+    - name: check-metrics-endpoint
+      image: alpine/curl
+      command: ['sh']
+      volumeMounts:
+        - name: test-script
+          readOnly: true
+          mountPath: /test.sh
+          subPath: test.sh
+      args:
+        - /test.sh
+  restartPolicy: Never
+{{- end }}

@@ -1,0 +1,33 @@
+------------------------------
+Hello there! 
+
+{{- if and (not .Values.config.target ) (not .Values.config.jobs)}}
+------------------------------
+
+It seems like you haven't configured the target, please check the example here:
+ 
+ https://github.com/burningalchemist/sql_exporter/blob/master/documentation/sql_exporter.yml#L30
+
+In case you need to have multiple targets, you can confiure jobs instead, have a look here
+
+ https://github.com/burningalchemist/sql_exporter#multiple-database-connections
+
+{{- end}}
+
+{{- if and (not .Values.config.collectors) (not .Values.config.collectorFiles)}}
+
+------------------------------
+You need to configure either collectors or collectorFiles (or both), please have a look at the example here:
+
+ https://github.com/burningalchemist/sql_exporter#multiple-database-connections
+
+{{- end }}
+
+------------------------------
+If you want to test if the helm release is configured correctly, you can execute 
+
+ $ helm test {{ .Release.Name }}
+
+This test will check that sql_exported metrics endpoint returns status 200
+
+

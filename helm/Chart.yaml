@@ -1,0 +1,18 @@
+apiVersion: v2
+name: sql-exporter
+description: Database agnostic SQL exporter for Prometheus
+type: application
+version: 0.1.0
+appVersion: 0.12.3
+keywords:
+  - exporter
+  - servicemonitor
+  - sql
+  - metrics
+home: https://github.com/burningalchemist/sql_exporter
+sources:
+  - https://github.com/burningalchemist/sql_exporter
+maintainers:
+  - name: Nikolai Rodionov
+    email: allanger@zohomail.com
+    url: https://badhouseplants.net

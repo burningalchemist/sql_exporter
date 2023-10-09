@@ -1,0 +1,64 @@
+{{- if (((.Values.tests).serviceMonitor).enabled) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sql-exporter.fullname" . }}-test-prom-script
+  labels:
+    {{- include "sql-exporter.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+data:
+  test.sh: |-
+    #! /bin/sh
+    # -----------------------------------------------------------------
+    # -- JQ is required for this test, but since the jq image doesn't
+    # -- have curl installed, it's not an option to use it.
+    # -- Also, it doesn't have any shell installed, so we can't use
+    # -- it to copy the binary to an emptydir.
+    # -- That's why I'm using apk add here
+    # -----------------------------------------------------------------
+    apk update && apk add jq
+    sleep {{ .Values.serviceMonitor.interval }}
+    URL="{{.Values.tests.serviceMonitor.prom.service}}.{{.Values.tests.serviceMonitor.prom.namespace}}.svc.cluster.local"
+    CURL_RES=$(curl -q "http://${URL}:9090/api/v1/query?query=active_connections")
+    STATUS=$(echo "$CURL_RES" | jq -r '.status')
+    if [ "$STATUS" != "success" ]; then
+      echo "metric doesn't have a status 'success' in the prometheus"
+      echo "curl output is: $CURL_RES"
+      exit 1;
+    fi
+    echo "Prometheus rerturns success for the sql-exporter metric"
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "sql-exporter.fullname" . }}-test-prom"
+  labels:
+    {{- include "sql-exporter.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-weight": "2"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  volumes:
+    - name: test-script
+      configMap:
+        name: "{{ include "sql-exporter.fullname" . }}-test-prom-script"
+  containers:
+    - name: check-metrics-endpoint
+      image: alpine/curl
+      command:
+        - sh
+      volumeMounts:
+        - name: test-script
+          readOnly: true
+          mountPath: /test.sh
+          subPath: test.sh
+      args:
+        - /test.sh
+  restartPolicy: Never
+{{- end}}
