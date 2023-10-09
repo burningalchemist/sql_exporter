@@ -32,11 +32,13 @@ const (
 type Target interface {
 	// Collect is the equivalent of prometheus.Collector.Collect(), but takes a context to run in.
 	Collect(ctx context.Context, ch chan<- Metric)
+	JobGroup() string
 }
 
 // target implements Target. It wraps a sql.DB, which is initially nil but never changes once instantianted.
 type target struct {
 	name               string
+	jobGroup           string
 	dsn                string
 	collectors         []Collector
 	constLabels        prometheus.Labels
@@ -52,7 +54,7 @@ type target struct {
 // NewTarget returns a new Target with the given target name, data source name, collectors and constant labels.
 // An empty target name means the exporter is running in single target mode: no synthetic metrics will be exported.
 func NewTarget(
-	logContext, tname, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig, ep *bool) (
+	logContext, tname, jg, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig, ep *bool) (
 	Target, errors.WithContext,
 ) {
 
@@ -88,6 +90,7 @@ func NewTarget(
 	scrapeDurationDesc := NewAutomaticMetricDesc(logContext, scrapeDurationName, scrapeDurationHelp, prometheus.GaugeValue, constLabelPairs)
 	t := target{
 		name:               tname,
+		jobGroup:           jg,
 		dsn:                dsn,
 		collectors:         collectors,
 		constLabels:        constLabels,
@@ -188,4 +191,8 @@ func boolToFloat64(value bool) float64 {
 // OfBool returns bool address.
 func OfBool(i bool) *bool {
 	return &i
+}
+
+func (t *target) JobGroup() string {
+	return t.jobGroup
 }

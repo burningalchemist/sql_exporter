@@ -34,6 +34,10 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		ctx, cancel := contextFor(req, exporter)
 		defer cancel()
 
+		// Parse the query params and set the job filters if any
+		jobFilters := req.URL.Query()["jobs[]"]
+		exporter.SetJobFilters(jobFilters)
+
 		// Go through prometheus.Gatherers to sanitize and sort metrics.
 		gatherer := prometheus.Gatherers{exporter.WithContext(ctx), sql_exporter.SvcRegistry}
 		mfs, err := gatherer.Gather()
