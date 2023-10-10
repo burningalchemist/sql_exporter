@@ -121,12 +121,12 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 		ch <- NewInvalidMetric(errors.Wrap(cc.rawColl.logContext, ctx.Err()))
 		return
 	}
-
+	klog.Infof("Cache size: %d", len(cc.cache))
 	collTime := time.Now()
 	select {
 	case cacheTime := <-cc.cacheSem:
 		// Have the lock.
-		if age := collTime.Sub(cacheTime); age > cc.minInterval {
+		if age := collTime.Sub(cacheTime); age > cc.minInterval || len(cc.cache) == 0 {
 			// Cache contents are older than minInterval, collect fresh metrics, cache them and pipe them through.
 			klog.V(2).Infof("[%s] Collecting fresh metrics: min_interval=%.3fs cache_age=%.3fs",
 				cc.rawColl.logContext, cc.minInterval.Seconds(), age.Seconds())
@@ -137,6 +137,13 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 				close(cacheChan)
 			}()
 			for metric := range cacheChan {
+				// catch invalid metrics and return them immediately, don't cache them
+				if ctx.Err() != nil {
+					klog.V(2).Infof("[%s] Context closed, returning invalid metric", cc.rawColl.logContext)
+					ch <- NewInvalidMetric(errors.Wrap(cc.rawColl.logContext, ctx.Err()))
+					continue
+				}
+
 				cc.cache = append(cc.cache, metric)
 				ch <- metric
 			}
