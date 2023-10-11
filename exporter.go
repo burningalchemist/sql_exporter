@@ -197,3 +197,12 @@ func parseContextLog(list string) map[string]string {
 	}
 	return m
 }
+
+// Leading comma appears when previous parameter is undefined, which is a side-effect of running in single target mode.
+// Let's trim to avoid confusions.
+func TrimMissingCtx(logContext string) string {
+	if strings.HasPrefix(logContext, ",") {
+		logContext = strings.TrimLeft(logContext, ", ")
+	}
+	return logContext
+}

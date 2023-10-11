@@ -34,7 +34,7 @@ const (
 
 // NewQuery returns a new Query that will populate the given metric families.
 func NewQuery(logContext string, qc *config.QueryConfig, metricFamilies ...*MetricFamily) (*Query, errors.WithContext) {
-	logContext = fmt.Sprintf(`%s,query=%s`, logContext, qc.Name)
+	logContext = TrimMissingCtx(fmt.Sprintf(`%s,query=%s`, logContext, qc.Name))
 
 	columnTypes := make(columnTypeMap)
 
