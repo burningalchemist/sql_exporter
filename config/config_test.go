@@ -18,7 +18,7 @@ func TestResolveCollectorRefs(t *testing.T) {
 			"a",
 			"b",
 		}
-		cs, err := resolveCollectorRefs(crefs, colls, "target")
+		cs, err := ResolveCollectorRefs(crefs, colls, "target")
 		if err != nil {
 			t.Fatalf("expected no error but got: %v", err)
 		}
@@ -39,7 +39,7 @@ func TestResolveCollectorRefs(t *testing.T) {
 			"a*",
 			"b",
 		}
-		cs, err := resolveCollectorRefs(crefs, colls, "target")
+		cs, err := ResolveCollectorRefs(crefs, colls, "target")
 		if err != nil {
 			t.Fatalf("expected no error but got: %v", err)
 		}
@@ -63,7 +63,7 @@ func TestResolveCollectorRefs(t *testing.T) {
 
 	t.Run("NoCollectorRefs", func(t *testing.T) {
 		crefs := []string{}
-		cs, err := resolveCollectorRefs(crefs, colls, "target")
+		cs, err := ResolveCollectorRefs(crefs, colls, "target")
 		if err != nil {
 			t.Fatalf("expected no error but got: %v", err)
 		}
@@ -77,7 +77,7 @@ func TestResolveCollectorRefs(t *testing.T) {
 			"a",
 			"x",
 		}
-		_, err := resolveCollectorRefs(crefs, colls, "target")
+		_, err := ResolveCollectorRefs(crefs, colls, "target")
 		if err == nil {
 			t.Fatalf("expected error but got none")
 		}

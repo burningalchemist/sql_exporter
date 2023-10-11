@@ -31,6 +31,7 @@ var (
 	showVersion   = flag.Bool("version", false, "Print version information")
 	listenAddress = flag.String("web.listen-address", ":9399", "Address to listen on for web interface and telemetry")
 	metricsPath   = flag.String("web.metrics-path", "/metrics", "Path under which to expose metrics")
+	scrapePath    = flag.String("web.scrape-path", "/scrape", "Path under which to receive scrape requests")
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
 	webConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
@@ -83,7 +84,11 @@ func main() {
 
 	klog.Warningf("Starting SQL exporter %s %s", version.Info(), version.BuildContext())
 
-	exporter, err := sql_exporter.NewExporter(*configFile)
+	if val, ok := os.LookupEnv(cfg.EnvDsnOverride); ok {
+		cfg.DsnOverride = val
+	}
+
+	exporter, err := sql_exporter.NewExporter(*configFile, cfg.DsnOverride, []string{})
 	if err != nil {
 		klog.Fatalf("Error creating exporter: %s", err)
 	}
@@ -95,6 +100,8 @@ func main() {
 	http.Handle(*metricsPath, promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, ExporterHandlerFor(exporter)))
 	// Expose exporter metrics separately, for debugging purposes.
 	http.Handle("/sql_exporter_metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
+	// Expose the multi-target scrape endpoint
+	http.Handle(*scrapePath, handleScrape(*configFile))
 
 	// Expose refresh handler to reload query collections
 	if *enableReload {

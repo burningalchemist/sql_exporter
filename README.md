@@ -183,6 +183,34 @@ metrics:
       FROM MarketPrices
       GROUP BY Market
 ```
+### Multi-target
+
+The exporter also supports the [multi-target](https://prometheus.io/docs/guides/multi-target-exporter/) pattern on the `/scrape` endpoint. Example:
+
+```
+curl localhost:9399/scrape?target=sqlserver://prom_user:prom_password@dbserver1.example.com:1433&collectors=pricing_data_freshness,pricing_*
+```
+
+An example configuration:
+
+```
+scrape_configs:
+  - job_name: "sql_exporter_targets"
+    static_configs:
+      - targets:
+        - sqlserver://prom_user:prom_password@dbserver1.example.com:1433
+        - sqlserver://prom_user:prom_password@dbserver2.example.com:1433
+    metrics_path: /scrape
+    params:
+      collectors: pricing_data_freshness,pricing_* # specify which collectors to run, comma separated
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9399 # The sql exporter's real hostname:port.
+```
 
 ### Data Source Names (DSN)
 

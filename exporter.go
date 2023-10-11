@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
@@ -17,7 +16,7 @@ import (
 var (
 	SvcRegistry        = prometheus.NewRegistry()
 	svcMetricLabels    = []string{"job", "target", "collector", "query"}
-	scrapeErrorsMetric *prometheus.CounterVec
+	scrapeErrorsMetric = registerScrapeErrorMetric()
 )
 
 // Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the default registry.
@@ -39,21 +38,18 @@ type exporter struct {
 }
 
 // NewExporter returns a new Exporter with the provided config.
-func NewExporter(configFile string) (Exporter, error) {
+func NewExporter(configFile, dsnOverride string, collectorOverride []string) (Exporter, error) {
 	c, err := config.Load(configFile)
 	if err != nil {
 		return nil, err
 	}
 
-	if val, ok := os.LookupEnv(config.EnvDsnOverride); ok {
-		config.DsnOverride = val
-	}
-	// Override the DSN if requested (and in single target mode).
-	if config.DsnOverride != "" {
+	// Override the DSN if requested (and in single target mode or scrape requests).
+	if dsnOverride != "" {
 		if len(c.Jobs) > 0 {
-			return nil, fmt.Errorf("the config.data-source-name flag (value %q) only applies in single target mode", config.DsnOverride)
+			return nil, fmt.Errorf("the config.data-source-name flag (value %q) only applies in single target mode", dsnOverride)
 		}
-		c.Target.DSN = config.Secret(config.DsnOverride)
+		c.Target.DSN = config.Secret(dsnOverride)
 	}
 
 	var targets []Target
@@ -61,10 +57,27 @@ func NewExporter(configFile string) (Exporter, error) {
 		if c.Target.EnablePing == nil {
 			c.Target.EnablePing = &config.EnablePing
 		}
-		target, err := NewTarget("", c.Target.Name, string(c.Target.DSN), c.Target.Collectors(), nil, c.Globals, c.Target.EnablePing)
+
+		targetCollectors := c.Target.Collectors()
+		// Resolve collectors ref (for scrape requests)
+		if len(collectorOverride) > 0 {
+			colls := make(map[string]*config.CollectorConfig)
+			for _, coll := range c.Collectors {
+				colls[coll.Name] = coll
+			}
+
+			cs, err := config.ResolveCollectorRefs(collectorOverride, colls, "target")
+			if err != nil {
+				return nil, err
+			}
+			targetCollectors = cs
+		}
+
+		target, err := NewTarget("", c.Target.Name, string(c.Target.DSN), targetCollectors, nil, c.Globals, c.Target.EnablePing)
 		if err != nil {
 			return nil, err
 		}
+
 		targets = []Target{target}
 	} else {
 		if len(c.Jobs) > (config.MaxInt32 / 3) {
@@ -79,8 +92,6 @@ func NewExporter(configFile string) (Exporter, error) {
 			targets = append(targets, job.Targets()...)
 		}
 	}
-
-	scrapeErrorsMetric = registerScrapeErrorMetric()
 
 	return &exporter{
 		config:  c,

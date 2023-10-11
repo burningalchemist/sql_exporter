@@ -107,14 +107,14 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		colls[coll.Name] = coll
 	}
 	if c.Target != nil {
-		cs, err := resolveCollectorRefs(c.Target.CollectorRefs, colls, "target")
+		cs, err := ResolveCollectorRefs(c.Target.CollectorRefs, colls, "target")
 		if err != nil {
 			return err
 		}
 		c.Target.collectors = cs
 	}
 	for _, j := range c.Jobs {
-		cs, err := resolveCollectorRefs(j.CollectorRefs, colls, fmt.Sprintf("job %q", j.Name))
+		cs, err := ResolveCollectorRefs(j.CollectorRefs, colls, fmt.Sprintf("job %q", j.Name))
 		if err != nil {
 			return err
 		}
@@ -616,9 +616,7 @@ func checkCollectorRefs(collectorRefs []string, ctx string) error {
 	return nil
 }
 
-func resolveCollectorRefs(
-	collectorRefs []string, collectors map[string]*CollectorConfig, ctx string,
-) ([]*CollectorConfig, error) {
+func ResolveCollectorRefs(collectorRefs []string, collectors map[string]*CollectorConfig, ctx string) ([]*CollectorConfig, error) {
 	resolved := make([]*CollectorConfig, 0, len(collectorRefs))
 	found := make(map[*CollectorConfig]bool)
 	for _, cref := range collectorRefs {
