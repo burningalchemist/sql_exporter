@@ -143,7 +143,7 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 	// We cannot do this only once at creation time because the sql.Open() documentation says it "may" open an actual
 	// connection, so it "may" actually fail to open a handle to a DB that's initially down.
 	if t.conn == nil {
-		conn, err := OpenConnection(ctx, t.logContext, t.dsn, t.globalConfig.MaxConns, t.globalConfig.MaxIdleConns, t.globalConfig.MaxConnLifetime)
+		conn, err := OpenConnection(ctx, t.logContext, t.dsn, t.globalConfig.MaxConns, t.globalConfig.MaxIdleConns, t.globalConfig.MaxConnLifetime, t.globalConfig.MaxConnIdletime)
 		if err != nil {
 			if err != ctx.Err() {
 				return errors.Wrap(t.logContext, err)

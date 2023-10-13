@@ -173,6 +173,7 @@ type GlobalConfig struct {
 	ScrapeTimeout   model.Duration `yaml:"scrape_timeout"`          // per-scrape timeout, global
 	TimeoutOffset   model.Duration `yaml:"scrape_timeout_offset"`   // offset to subtract from timeout in seconds
 	MaxConnLifetime time.Duration  `yaml:"max_connection_lifetime"` // maximum amount of time a connection may be reused to any one target
+	MaxConnIdletime time.Duration  `yaml:"max_connection_idletime"` // maximum amount of time a connection can be idle to any one target
 	MaxConns        int            `yaml:"max_connections"`         // maximum number of open connections to any one target
 	MaxIdleConns    int            `yaml:"max_idle_connections"`    // maximum number of idle connections to any one target
 
@@ -191,6 +192,7 @@ func (g *GlobalConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	g.MaxConns = 3
 	g.MaxIdleConns = 3
 	g.MaxConnLifetime = time.Duration(0)
+	g.MaxConnIdletime = time.Duration(0)
 
 	type plain GlobalConfig
 	if err := unmarshal((*plain)(g)); err != nil {
