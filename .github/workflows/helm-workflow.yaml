@@ -8,6 +8,10 @@ on:
     branches:
       - master
 
+env: 
+  HELM_VERSION: 3.12.1
+  PYTHON_VERSION: 3.9
+
 jobs:
   helm-jobs:
     runs-on: ubuntu-latest
@@ -20,27 +24,53 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v3
         with:
-          version: v3.12.1
+          version: "v${{ env.HELM_VERSION }}"
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: ${{ env.PYTHON_VERSION }}
           check-latest: true
 
+      # ---------------------------------------------------------------
+      # -- On each run we're setting an annotation with the current 
+      # --  commit hash, so in case it's released, we will see it 
+      # --  running `$ helm show sql-exporter/sql-exporter`
+      # ---------------------------------------------------------------
+      - name: Set the git sha annotations in the helm chart
+        run: yq -i ".annotations.git/commit-sha = \"${GITHUB_SHA}\"" ./helm/Chart.yaml
+
+      # ---------------------------------------------------------------
+      # -- Instead of compairing to the master branch, I'm getting 
+      # --  the commit hash set in the previous step from a
+      # --  currently released chart. If it doesn't existsm then
+      # --  I assume that chart is not released and compair to the 
+      # --  previous commit 
+      # ---------------------------------------------------------------
+      - name: Retrieve the latest commit sha from the helm chart
+        run: |
+          HELM_REPO_URL=$(helm show chart ./helm | yq '.annotations.helm/repo-url')
+          if helm repo add sql-exporter $HELM_REPO_URL
+          then
+            helm repo update
+            echo "SINCE_COMMIT=$(helm show chart sql-exporter/sql-exporter | yq '.annotations.git/commit-sha')" >> "${GITHUB_ENV}"
+          else
+            echo "SINCE_COMMIT=$(git show HEAD^1 --pretty=format:%H --no-patch)" >> "${GITHUB_ENV}"
+          fi
+        
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.4.0
 
       - name: Run chart-testing (list-changed)
         id: list-changed
         run: |
-          changed=$(ct list-changed --chart-dirs . --target-branch ${{ github.event.repository.default_branch }})
+          changed=$(ct list-changed --chart-dirs . --since $SINCE_COMMIT)
           if [[ -n "$changed" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run chart-testing (lint)
         if: steps.list-changed.outputs.changed == 'true'
-        run: ct lint --target-branch ${{ github.event.repository.default_branch }} --validate-maintainers=false --chart-dirs .
+        run: ct lint --since $SINCE_COMMIT --validate-maintainers=false --chart-dirs .
 
       - name: Setup helmfile
         if: steps.list-changed.outputs.changed == 'true'
@@ -57,11 +87,11 @@ jobs:
 
       - name: Run chart-testing (install)
         if: steps.list-changed.outputs.changed == 'true'
-        run: ct install --target-branch ${{ github.event.repository.default_branch }} --chart-dirs .
+        run: ct install --since $SINCE_COMMIT --chart-dirs .
 
       - name: Run chart-testing (upgrade)
         if: steps.list-changed.outputs.changed == 'true'
-        run: ct install --target-branch ${{ github.event.repository.default_branch }} --chart-dirs . --upgrade
+        run: ct install --since $SINCE_COMMIT --chart-dirs . --upgrade
 
       - name: Configure Git
         run: |
@@ -69,7 +99,7 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Release charts
-        if: ${{ github.ref == github.event.repository.default_branch }}
+        if: ${{ github.ref == github.event.repository.default_branch && github.event.name == 'push' }}
         uses: helm/chart-releaser-action@v1.5.0
         with:
           charts_dir: .
