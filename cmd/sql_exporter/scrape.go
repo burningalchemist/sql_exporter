@@ -36,6 +36,14 @@ func handleScrape(configFile string) http.HandlerFunc {
 		}
 
 		exporter, err := sql_exporter.NewExporter(configFile, target, collectors)
+
+		// Cleanup underlying connections to prevent connection leaks
+		defer func() {
+			for _, target := range exporter.GetTarget() {
+				target.DB().Close()
+			}
+		}()
+
 		if err != nil {
 			http.Error(w, fmt.Sprintf("ERROR: %v", err), http.StatusBadRequest)
 		} else {

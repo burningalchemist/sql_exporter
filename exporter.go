@@ -28,6 +28,7 @@ type Exporter interface {
 	// Config returns the Exporter's underlying Config object.
 	Config() *config.Config
 	UpdateTarget([]Target)
+	GetTarget() []Target
 }
 
 type exporter struct {
@@ -183,6 +184,10 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 // Config implements Exporter.
 func (e *exporter) Config() *config.Config {
 	return e.config
+}
+
+func (e *exporter) GetTarget() []Target {
+	return e.targets
 }
 
 func (e *exporter) UpdateTarget(target []Target) {

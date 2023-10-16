@@ -32,6 +32,7 @@ const (
 type Target interface {
 	// Collect is the equivalent of prometheus.Collector.Collect(), but takes a context to run in.
 	Collect(ctx context.Context, ch chan<- Metric)
+	DB() *sql.DB
 }
 
 // target implements Target. It wraps a sql.DB, which is initially nil but never changes once instantianted.
@@ -136,6 +137,10 @@ func (t *target) Collect(ctx context.Context, ch chan<- Metric) {
 		// And export a `scrape duration` metric once we're done scraping.
 		ch <- NewMetric(t.scrapeDurationDesc, float64(time.Since(scrapeStart))*1e-9)
 	}
+}
+
+func (t *target) DB() *sql.DB {
+	return t.conn
 }
 
 func (t *target) ping(ctx context.Context) errors.WithContext {
