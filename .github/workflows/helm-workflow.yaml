@@ -105,9 +105,10 @@ jobs:
 
       - name: Release charts
         if: ${{ github.event.repository.default_branch && github.event_name == 'push' }}
-        uses: helm/chart-releaser-action@v1.5.0
+        uses: helm/chart-releaser-action@main
         with:
           charts_dir: .
           mark_as_latest: false
+          packages_with_index: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
