@@ -23,11 +23,3 @@ You need to configure either collectors or collectorFiles (or both), please have
 
 {{- end }}
 
-------------------------------
-If you want to test if the helm release is configured correctly, you can execute 
-
- $ helm test {{ .Release.Name }}
-
-This test will check that sql_exported metrics endpoint returns status 200
-
-
