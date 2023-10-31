@@ -6,7 +6,9 @@ tests:
       namespace: monitoring
   metricsEndpoint:
     enabled: true
-
+service:
+  annotations:
+    prometheus.io/scrape: "true"
 config:
   target:
     data_source_name: 'postgresql://postgres:123123!!@postgres-instance-postgresql.postgres.svc.cluster.local:5432?sslmode=disable'

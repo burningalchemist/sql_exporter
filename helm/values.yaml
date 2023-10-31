@@ -11,6 +11,10 @@ fullnameOverride: ""
 service:
   type: ClusterIP
   port: 80
+  annotations: {}
+    # example of prometheus usage
+    # prometheus.io/scrape: "true"
+    # prometheus.io/path: "/metrics"
 resources:
   {}
   # limits:
