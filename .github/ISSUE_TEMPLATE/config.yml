@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+ - name: Questions and Answers
+   url: https://github.com/burningalchemist/sql_exporter/discussions
+   about: Please ask your questions on installation and usage here.
