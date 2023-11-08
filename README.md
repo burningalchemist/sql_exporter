@@ -136,6 +136,9 @@ global:
 
 # The target to monitor and the list of collectors to execute on it.
 target:
+  # Target name (optional). Setting this field enables extra metrics e.g. `up` and `scrape_duration` with
+  # the `target` label that are always returned on a scrape.
+  name: "prices_db"
   # Data source name always has a URI schema that matches the driver name. In some cases (e.g. MySQL)
   # the schema gets dropped or replaced to match the driver expected DSN format.
   data_source_name: 'sqlserver://prom_user:prom_password@dbserver1.example.com:1433'
@@ -143,6 +146,10 @@ target:
   # Collectors (referenced by name) to execute on the target.
   # Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
   collectors: [pricing_data_freshness, pricing_*]
+
+  # In case you need to connect to a backend that only responds to a limited set of commands (e.g. pgbouncer) or
+  # a data warehouse you don't want to keep online all the time (due to the extra cost), you might want to disable `ping`
+  # enable_ping: true
 
 # Collector definition files.
 # Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
@@ -178,6 +185,9 @@ metrics:
       # Arbitrary key/value pair
       portfolio: income
     values: [LastUpdateTime]
+    # Static metric value (optional). Useful in case we are interested in string data (key_labels) only. It's mutually
+    # exclusive with `values` field.
+    # static_value: 1
     query: |
       SELECT Market, max(UpdateTime) AS LastUpdateTime
       FROM MarketPrices
@@ -258,6 +268,7 @@ configure `jobs` list instead of the `target` section as in the following exampl
 jobs:
   - job_name: db_targets
     collectors: [pricing_data_freshness, pricing_*]
+    enable_ping: true # Optional, true by default. Set to `false` in case you connect to pgbouncer or a data warehouse
     static_configs:
         - targets:
             pg1: 'pg://db1@127.0.0.1:25432/postgres?sslmode=disable'

@@ -28,12 +28,19 @@ global:
 
 # The target to monitor and the collectors to execute on it.
 target:
+  # Target name (optional). Setting this field enables extra metrics e.g. `up` and `scrape_duration` with the `target`
+  # label that are always returned on a scrape. If set, sql_exporter always returns HTTP 200 with these metrics populated
+  name: mssql_database
   # Data source name always has a URI schema that matches the driver name. In some cases (e.g. MySQL)
   # the schema gets dropped or replaced to match the driver expected DSN format.
   data_source_name: 'sqlserver://prom_user:prom_password@dbserver1.example.com:1433'
 
   # Collectors (referenced by name) to execute on the target.
   collectors: [mssql_standard]
+
+  # In case you need to connect to a backend that only responds to a limited set of commands (e.g. pgbouncer) or
+  # a data warehouse you don't want to keep online all the time (due to the extra cost), you might want to disable `ping`
+  enable_ping: true
 
 # A collector is a named set of related metrics that are collected together. It can be referenced by name, possibly
 # along with other collectors.
@@ -65,6 +72,10 @@ collectors:
         key_labels:
           # Populated from the `db` column of each row.
           - db
+        static_labels:
+        # Arbitrary key/value pair
+          env: dev
+          region: europe
         # This query returns exactly one value per row, in the `counter` column.
         values: [counter]
         query: |
@@ -101,6 +112,19 @@ collectors:
         values:
           - io_stall
         query_ref: io_stall
+
+      # Metric with a static value to retrieve string data.
+      - metric_name: mssql_hostname
+        type: gauge
+        help: 'Database server hostname'
+        key_labels:
+          # Populated from the `hostname` column of the result.
+          - hostname
+        # Static value, always set to `1`.
+        static_value: 1
+        query: |
+          SELECT @@SERVERNAME AS hostname
+
 
     # Named queries, referenced by one or more metrics, through query_ref.
     queries:
