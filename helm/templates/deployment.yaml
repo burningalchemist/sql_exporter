@@ -14,8 +14,14 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/secret.configuration.yaml") . | sha256sum }}
         checksum/collectors: {{ include (print $.Template.BasePath "/configmap.collectors.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
       labels:
         {{- include "sql-exporter.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

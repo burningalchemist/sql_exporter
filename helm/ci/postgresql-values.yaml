@@ -7,8 +7,16 @@ tests:
   metricsEndpoint:
     enabled: true
 service:
+  labels:
+    deployment: ci
   annotations:
     prometheus.io/scrape: "true"
+
+podLabels:
+  test-label: test-value
+podAnnotations:
+  test/annotation: test-value
+
 config:
   target:
     data_source_name: 'postgresql://postgres:123123!!@postgres-instance-postgresql.postgres.svc.cluster.local:5432?sslmode=disable'

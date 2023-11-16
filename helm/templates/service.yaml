@@ -4,6 +4,9 @@ metadata:
   name: {{ include "sql-exporter.fullname" . }}
   labels:
     {{- include "sql-exporter.labels" . | nindent 4 }}
+    {{- with .Values.service.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- with .Values.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
