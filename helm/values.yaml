@@ -77,6 +77,12 @@ serviceMonitor:
 #       kind: Secret
 #       name: sql_exporter_secret
 #       key: CONNECTION_STRING
+
+# ---------------------------------------------------------------------
+# -- Option to provide an existing secret with all the values from the config section
+# ---------------------------------------------------------------------
+existingSecret: {}
+
 config:
   global:
     # -- Scrape timeout

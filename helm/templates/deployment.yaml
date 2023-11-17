@@ -32,7 +32,11 @@ spec:
       volumes:
         - name: sql-exporter
           secret:
+            {{- if .Values.existingSecret }}
+            secretName: {{ .Values.existingSecret }}
+            {{- else }}
             secretName: {{ include "sql-exporter.fullname" . }}
+            {{- end }}
         {{- if .Values.collectorFiles }}
         - name: sql-collector
           configMap:

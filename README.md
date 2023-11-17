@@ -100,6 +100,17 @@ sc.exe create SqlExporterSvc binPath= "%SQL_EXPORTER_PATH%\sql_exporter.exe --co
 `%SQL_EXPORTER_PATH%` is a path to the SQL Exporter binary executable. This document assumes that configuration files
 are in the same location.
 
+## Helm installation
+
+A Helm chart is available for SQL Exporter. It can be installed by running the following commands:
+
+**TL;DR**
+```shell
+helm repo add burningalchemist https://burningalchemist.github.io
+helm intall burningalchemist/sql-exporter
+```
+
+
 ## Configuration
 
 SQL Exporter is deployed alongside the DB server it collects metrics from. If both the exporter and the DB
@@ -251,7 +262,7 @@ the secret. Policy example:
       "Effect": "Allow",
       "Principal": {"AWS": "arn:aws:iam::123456789012:role/EC2RoleToAccessSecrets"},
       "Action": "secretsmanager:GetSecretValue",
-      "Resource": "*",
+      "Resource": "*"
     }
   ]
 }
