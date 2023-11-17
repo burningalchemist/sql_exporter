@@ -42,6 +42,7 @@ helm install sql_exporter/sql-exporter
 | {{ .Key }} | {{ .Type }} | {{ if .Default }}{{ .Default }}{{ else }}{{ .AutoDefault }}{{ end }} | {{ if .Description }}{{ .Description }}{{ else }}{{ .AutoDescription }}{{ end }} |
   {{- end }}
 {{- end }}
+| serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout |
 
 ### Configuration
 

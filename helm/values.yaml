@@ -62,7 +62,7 @@ serviceMonitor:
   # -- ServiceMonitor path
   path: /metrics
   # -- ServiceMonitor scrape timeout
-  scrapeTimeout: 60s
+  # scrapeTimeout: 10s
 
 config:
   global:

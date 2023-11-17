@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.13.0](https://img.shields.io/badge/AppVersion-0.13.0-informational?style=flat-square)
+![Version: 0.2.2](https://img.shields.io/badge/Version-0.2.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.13.0](https://img.shields.io/badge/AppVersion-0.13.0-informational?style=flat-square)
 
 Database agnostic SQL exporter for Prometheus
 
@@ -51,7 +51,7 @@ helm install sql_exporter/sql-exporter
 | serviceMonitor.enabled | bool | `true` | Enable ServiceMonitor |
 | serviceMonitor.interval | string | `"15s"` | ServiceMonitor interval |
 | serviceMonitor.path | string | `"/metrics"` | ServiceMonitor path |
-| serviceMonitor.scrapeTimeout | string | `"60s"` | ServiceMonitor scrape timeout |
+| serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout |
 
 ### Configuration
 
