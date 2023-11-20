@@ -21,3 +21,5 @@
 .idea/
 *.tmproj
 .vscode/
+# Dir with local binaries
+bin
