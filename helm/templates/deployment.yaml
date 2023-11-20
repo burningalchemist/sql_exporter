@@ -54,6 +54,26 @@ spec:
             readOnly: true
             mountPath: /etc/sql_exporter/collectors/
           {{- end }}
+          {{- if .Values.env }}
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              {{- if $value.value }}
+              value: {{ $value.value }}
+              {{- else }}
+              valueFrom:
+                {{- if eq $value.from.kind "Secret" }}
+                secretKeyRef:
+                {{- else if eq $value.from.kind "ConfigMap" }}
+                configMapKeyRef:
+                {{- else }}
+                {{- fail "Values.env[].from.kind should be either Secret or ConfigMap" }}
+                {{- end }}
+                  name: {{ $value.from.name }}
+                  key: {{ $value.from.key }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: /healthz

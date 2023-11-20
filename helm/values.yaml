@@ -23,13 +23,15 @@ service:
   # -- Service labels
   labels: {}
   # -- Service annotations
-  annotations: {}
+  annotations:
+    {}
     # example of prometheus usage
     # prometheus.io/scrape: "true"
     # prometheus.io/path: "/metrics"
 
 # -- Resource limits and requests for the application controller pods
-resources: {}
+resources:
+  {}
   # limits:
   #   cpu: 100m
   #   memory: 128Mi
@@ -43,7 +45,8 @@ podLabels: {}
 podAnnotations: {}
 
 # -- Pod security context
-podSecurityContext: {}
+podSecurityContext:
+  {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -64,6 +67,16 @@ serviceMonitor:
   # -- ServiceMonitor scrape timeout
   # scrapeTimeout: 10s
 
+# Additional env variables
+# - kind should be either Secret or ConfigMap
+# - name is the name of the Secret or ConfigMap that should be used
+# - key is the key of the object inside of a Secret or ConfigMap
+# env:
+#   SQLEXPORTER_TARGET_DSN:
+#     from:
+#       kind: Secret
+#       name: sql_exporter_secret
+#       key: CONNECTION_STRING
 config:
   global:
     # -- Scrape timeout
@@ -76,7 +89,6 @@ config:
     max_connections: 3
     # -- Number of idle connections.
     max_idle_connections: 3
-
 # Target and collectors are not set so the chart is more flexible. Please configure it yourself.
 # target:
 #   data_source_name: 'sqlserver://prom_user:prom_password@dbserver1.example.com:1433'
