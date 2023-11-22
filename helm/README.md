@@ -57,11 +57,12 @@ helm install sql_exporter/sql-exporter
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| config.global.scrape_timeout | string | `"10s"` | Scrape timeout |
-| config.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
-| config.global.min_interval | string | `"0s"` | Minimum interval between collector runs. |
-| config.global.max_connections | int | `3` | Number of open connections. |
-| config.global.max_idle_connections | int | `3` | Number of idle connections. |
+| config.from | object | `{}` | Option to provide an existing secret or configmap with all the values from the config section |
+| config.value.global.scrape_timeout | string | `"10s"` | Scrape timeout |
+| config.value.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
+| config.value.global.min_interval | string | `"0s"` | Minimum interval between collector runs. |
+| config.value.global.max_connections | int | `3` | Number of open connections. |
+| config.value.global.max_idle_connections | int | `3` | Number of idle connections. |
 | target | object | `nil` | Check documentation. Mutually exclusive with `jobs`  |
 | jobs   | list | `nil` | Check documentation. Mutually exclusive with `target` |
 | collector_files | list | `[]` | Check documentation |

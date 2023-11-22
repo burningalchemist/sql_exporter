@@ -78,23 +78,25 @@ serviceMonitor:
 #       name: sql_exporter_secret
 #       key: CONNECTION_STRING
 
-# ---------------------------------------------------------------------
-# -- Option to provide an existing secret with all the values from the config section
-# ---------------------------------------------------------------------
-existingSecret: {}
 
 config:
-  global:
-    # -- Scrape timeout
-    scrape_timeout: 10s
-    # -- Scrape timeout offset. Must be strictly positive.
-    scrape_timeout_offset: 500ms
-    # -- Minimum interval between collector runs.
-    min_interval: 0s
-    # -- Number of open connections.
-    max_connections: 3
-    # -- Number of idle connections.
-    max_idle_connections: 3
+  # -- Option to provide an existing secret or configmap with all the values from the config section
+  from: {}
+#    kind: Secret
+#    name: sql_exporter_secret
+#    key:  sql_exporter.yml
+  value:
+    global:
+      # -- Scrape timeout
+      scrape_timeout: 10s
+      # -- Scrape timeout offset. Must be strictly positive.
+      scrape_timeout_offset: 500ms
+      # -- Minimum interval between collector runs.
+      min_interval: 0s
+      # -- Number of open connections.
+      max_connections: 3
+      # -- Number of idle connections.
+      max_idle_connections: 3
 # Target and collectors are not set so the chart is more flexible. Please configure it yourself.
 # target:
 #   data_source_name: 'sqlserver://prom_user:prom_password@dbserver1.example.com:1433'

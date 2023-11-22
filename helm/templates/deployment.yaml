@@ -31,12 +31,22 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
         - name: sql-exporter
+          {{- if eq .Values.config.from.kind "ConfigMap" }}
+          configMap:
+            name: {{ .Values.config.from.name }}
+            items:
+              - key: {{ .Values.config.from.key }}
+                path: "sql_exporter.yml"
+          {{- else if eq .Values.config.from.kind "Secret" }}
           secret:
-            {{- if .Values.existingSecret }}
-            secretName: {{ .Values.existingSecret }}
-            {{- else }}
+            secretName: {{ .Values.config.from.name }}
+            items:
+              - key: {{ .Values.config.from.key }}
+                path: "sql_exporter.yml"
+          {{- else }}
+          secret:
             secretName: {{ include "sql-exporter.fullname" . }}
-            {{- end }}
+          {{- end }}
         {{- if .Values.collectorFiles }}
         - name: sql-collector
           configMap:
