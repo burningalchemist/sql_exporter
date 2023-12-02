@@ -16,7 +16,7 @@ require (
 	github.com/prometheus/client_model v0.5.0
 	github.com/prometheus/common v0.45.0
 	github.com/prometheus/exporter-toolkit v0.10.0
-	github.com/snowflakedb/gosnowflake v1.6.25
+	github.com/snowflakedb/gosnowflake v1.7.0
 	github.com/vertica/vertica-sql-go v1.3.3
 	github.com/xo/dburl v0.16.0
 	google.golang.org/protobuf v1.31.0
