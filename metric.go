@@ -83,8 +83,10 @@ func (mf MetricFamily) Collect(row map[string]any, ch chan<- Metric) {
 		if mf.config.ValueLabel != "" {
 			labelValues[len(labelValues)-1] = v
 		}
-		value := row[v].(float64)
-		ch <- NewMetric(&mf, value, labelValues...)
+		value := row[v].(sql.NullFloat64)
+		if value.Valid {
+			ch <- NewMetric(&mf, value.Float64, labelValues...)
+		}
 	}
 	if mf.config.StaticValue != nil {
 		value := *mf.config.StaticValue
