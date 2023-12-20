@@ -147,7 +147,7 @@ func (q *Query) scanDest(rows *sql.Rows) ([]any, errors.WithContext) {
 			dest = append(dest, new(sql.NullString))
 			have[column] = true
 		case columnTypeValue:
-			dest = append(dest, new(float64))
+			dest = append(dest, new(sql.NullFloat64))
 			have[column] = true
 		default:
 			if column == "" {
@@ -192,11 +192,14 @@ func (q *Query) scanRow(rows *sql.Rows, dest []any) (map[string]any, errors.With
 		switch q.columnTypes[column] {
 		case columnTypeKey:
 			if !dest[i].(*sql.NullString).Valid {
-				klog.V(3).Infof("[%s] Key column %q is NULL, return empty string", q.logContext, column)
+				klog.V(3).Infof("[%s] Key column %q is NULL", q.logContext, column)
 			}
 			result[column] = *dest[i].(*sql.NullString)
 		case columnTypeValue:
-			result[column] = *dest[i].(*float64)
+			if !dest[i].(*sql.NullFloat64).Valid {
+				klog.V(3).Infof("[%s] Value column %q is NULL", q.logContext, column)
+			}
+			result[column] = *dest[i].(*sql.NullFloat64)
 		}
 	}
 	return result, nil
