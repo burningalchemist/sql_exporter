@@ -133,6 +133,8 @@ global:
   max_idle_connections: 3
   # Maximum amount of time a connection may be reused to any one target. Infinite by default.
   max_connection_lifetime: 10m
+  # Maximum amount of time a connection can be idle to any one target. Infinite by default.
+  max_connection_idletime: 1m
 
 # The target to monitor and the list of collectors to execute on it.
 target:
