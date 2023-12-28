@@ -66,6 +66,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
@@ -118,4 +119,4 @@ require (
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
 )
 
-replace k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.3.0
+replace k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.4.0
