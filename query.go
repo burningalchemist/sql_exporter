@@ -89,6 +89,10 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 
 	dest, err := q.scanDest(rows)
 	if err != nil {
+		if config.IgnoreMissingVals {
+			klog.V(3).Info(err)
+			return
+		}
 		ch <- NewInvalidMetric(err)
 		return
 	}
