@@ -52,9 +52,20 @@ func main() {
 	}
 	flag.Parse()
 
+	// Show version and exit.
+	if *showVersion {
+		fmt.Println(version.Print(appName))
+		os.Exit(0)
+	}
+
+	// Setup logging.
 	promlogConfig := &promlog.Config{}
 	promlogConfig.Level = &promlog.AllowedLevel{}
-	_ = promlogConfig.Level.Set(*logLevel)
+	err := promlogConfig.Level.Set(*logLevel)
+	if err != nil {
+		fmt.Printf("Error initializing exporter: %s\n", err)
+		os.Exit(1)
+	}
 	if *logFormatJSON {
 		promlogConfig.Format = &promlog.AllowedFormat{}
 		_ = promlogConfig.Format.Set("json")
@@ -66,19 +77,9 @@ func main() {
 	klog.SetLogger(logger)
 	klog.ClampLevel(debugMaxLevel)
 
-	// Override --alsologtostderr default value.
-	if alsoLogToStderr := flag.Lookup("alsologtostderr"); alsoLogToStderr != nil {
-		alsoLogToStderr.DefValue = "true"
-		_ = alsoLogToStderr.Value.Set("true")
-	}
 	// Override the config.file default with the SQLEXPORTER_CONFIG environment variable if set.
 	if val, ok := os.LookupEnv(envConfigFile); ok {
 		*configFile = val
-	}
-
-	if *showVersion {
-		fmt.Println(version.Print(appName))
-		os.Exit(0)
 	}
 
 	klog.Warningf("Starting SQL exporter %s %s", version.Info(), version.BuildContext())

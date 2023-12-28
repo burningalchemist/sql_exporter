@@ -7,10 +7,10 @@ import (
 
 func TestResolveCollectorRefs(t *testing.T) {
 	colls := map[string]*CollectorConfig{
-		"a":  &CollectorConfig{Name: "a"},
-		"b":  &CollectorConfig{Name: "b"},
-		"c":  &CollectorConfig{Name: "b"},
-		"aa": &CollectorConfig{Name: "aa"},
+		"a":  {Name: "a"},
+		"b":  {Name: "b"},
+		"c":  {Name: "b"},
+		"aa": {Name: "aa"},
 	}
 
 	t.Run("NoGlobbing", func(t *testing.T) {
