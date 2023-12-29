@@ -26,9 +26,10 @@ const EnvDsnOverride = "SQLEXPORTER_TARGET_DSN"
 const MaxInt32 int = 1<<31 - 1
 
 var (
-	EnablePing  bool
-	DsnOverride string
-	TargetLabel string
+	EnablePing        bool
+	IgnoreMissingVals bool
+	DsnOverride       string
+	TargetLabel       string
 )
 
 // Load attempts to parse the given config file and return a Config object.
