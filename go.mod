@@ -19,7 +19,7 @@ require (
 	github.com/snowflakedb/gosnowflake v1.7.1
 	github.com/vertica/vertica-sql-go v1.3.3
 	github.com/xo/dburl v0.20.0
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/klog/v2 v2.70.1
 )
