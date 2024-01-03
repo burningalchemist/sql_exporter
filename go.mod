@@ -6,7 +6,7 @@ require (
 	github.com/ClickHouse/clickhouse-go v1.5.4
 	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/config v1.26.2
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.25.6
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.26.0
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/kardianos/minwinsvc v1.0.2
