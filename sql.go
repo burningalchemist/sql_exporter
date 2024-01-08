@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/xo/dburl"
@@ -85,7 +86,8 @@ func PingDB(ctx context.Context, conn *sql.DB) error {
 // if underlying url parse failed. By default it returns a raw url string in error message,
 // which most likely contains a password. It's undesired here.
 func safeParse(rawURL string) (*dburl.URL, error) {
-	parsed, err := dburl.Parse(rawURL)
+
+	parsed, err := dburl.Parse(expandEnv(rawURL))
 	if err != nil {
 		if uerr := new(url.Error); errors.As(err, &uerr) {
 			return nil, uerr.Err
@@ -93,4 +95,16 @@ func safeParse(rawURL string) (*dburl.URL, error) {
 		return nil, errors.New("invalid URL")
 	}
 	return parsed, nil
+}
+
+// expandEnv falls back to the original env variable if not found for better readability
+func expandEnv(env string) string {
+	lookupFunc := func(env string) string {
+		if value, ok := os.LookupEnv(env); ok {
+			return value
+		}
+		klog.Errorf("Environment variable '$%s' is not found, cannot expand", env)
+		return fmt.Sprintf("$%s", env)
+	}
+	return os.Expand(env, lookupFunc)
 }
