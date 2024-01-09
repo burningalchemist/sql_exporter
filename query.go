@@ -30,6 +30,7 @@ type (
 const (
 	columnTypeKey   columnType = 1
 	columnTypeValue columnType = 2
+	columnTypeTime  columnType = 3
 )
 
 // NewQuery returns a new Query that will populate the given metric families.
@@ -48,6 +49,9 @@ func NewQuery(logContext string, qc *config.QueryConfig, metricFamilies ...*Metr
 			if err := setColumnType(logContext, vcol, columnTypeValue, columnTypes); err != nil {
 				return nil, err
 			}
+		}
+		if err := setColumnType(logContext, mf.config.TimeValue, columnTypeTime, columnTypes); err != nil {
+			return nil, err
 		}
 	}
 
@@ -153,6 +157,9 @@ func (q *Query) scanDest(rows *sql.Rows) ([]any, errors.WithContext) {
 		case columnTypeValue:
 			dest = append(dest, new(sql.NullFloat64))
 			have[column] = true
+		case columnTypeTime:
+			dest = append(dest, new(sql.NullTime))
+			have[column] = true
 		default:
 			if column == "" {
 				klog.Infof("[%s] Unnamed column %d returned by query", q.logContext, i)
@@ -199,6 +206,11 @@ func (q *Query) scanRow(rows *sql.Rows, dest []any) (map[string]any, errors.With
 				klog.V(3).Infof("[%s] Key column %q is NULL", q.logContext, column)
 			}
 			result[column] = *dest[i].(*sql.NullString)
+		case columnTypeTime:
+			if !dest[i].(*sql.NullTime).Valid {
+				klog.V(3).Infof("[%s] Time column %q is invalid or NULL", q.logContext, column)
+			}
+			result[column] = *dest[i].(*sql.NullTime)
 		case columnTypeValue:
 			if !dest[i].(*sql.NullFloat64).Valid {
 				klog.V(3).Infof("[%s] Value column %q is NULL", q.logContext, column)

@@ -20,8 +20,9 @@ type MetricConfig struct {
 	QueryLiteral string            `yaml:"query,omitempty"`         // a literal query
 	QueryRef     string            `yaml:"query_ref,omitempty"`     // references a query in the query map
 
-	NoPreparedStatement bool     `yaml:"no_prepared_statement,omitempty"` // do not prepare statement
-	StaticValue         *float64 `yaml:"static_value,omitempty"`
+	NoPreparedStatement bool      `yaml:"no_prepared_statement,omitempty"` // do not prepare statement
+	StaticValue         *float64  `yaml:"static_value,omitempty"`
+	TimeValue           string `yaml:"time_value,omitempty"` // with multiple value columns, map their names under this label
 
 	valueType prometheus.ValueType // TypeString converted to prometheus.ValueType
 	query     *QueryConfig         // QueryConfig resolved from QueryRef or generated from Query
