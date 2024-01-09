@@ -1,6 +1,8 @@
 # sql-exporter
 
-![Version: 0.2.5](https://img.shields.io/badge/Version-0.2.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.13.1](https://img.shields.io/badge/AppVersion-0.13.1-informational?style=flat-square)
+
+
+![Version: 0.2.6](https://img.shields.io/badge/Version-0.2.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.13.1](https://img.shields.io/badge/AppVersion-0.13.1-informational?style=flat-square)
 
 Database agnostic SQL exporter for Prometheus
 
@@ -57,7 +59,7 @@ helm install sql_exporter/sql-exporter
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| config.from | object | `{}` | Option to provide an existing secret or configmap with all the values from the config section |
+| config.from | object | `{}` | Option to provide an existing secret or configmap with all the values from the config section. If set, it will take precedence and override all other values in the config.value section. |
 | config.value.global.scrape_timeout | string | `"10s"` | Scrape timeout |
 | config.value.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
 | config.value.global.min_interval | string | `"0s"` | Minimum interval between collector runs. |

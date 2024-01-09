@@ -80,7 +80,8 @@ serviceMonitor:
 
 
 config:
-  # -- Option to provide an existing secret or configmap with all the values from the config section
+  # -- Option to provide an existing secret or configmap with all the values from the config section. If set, it will
+  # take precedence and override all other values in the config.value section.
   from: {}
 #    kind: Secret
 #    name: sql_exporter_secret
