@@ -188,6 +188,9 @@ metrics:
     # Static metric value (optional). Useful in case we are interested in string data (key_labels) only. It's mutually
     # exclusive with `values` field.
     # static_value: 1
+    # Timestamp value (optional). Should point at the existing column containing valid timestamps to return a metric
+    # with an explicit timestamp.
+    # timestamp_value: CreatedAt
     query: |
       SELECT Market, max(UpdateTime) AS LastUpdateTime
       FROM MarketPrices
