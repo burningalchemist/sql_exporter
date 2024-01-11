@@ -22,6 +22,7 @@ type MetricConfig struct {
 
 	NoPreparedStatement bool     `yaml:"no_prepared_statement,omitempty"` // do not prepare statement
 	StaticValue         *float64 `yaml:"static_value,omitempty"`
+	TimestampValue      string   `yaml:"timestamp_value,omitempty"` // optional column name containing a valid timestamp value
 
 	valueType prometheus.ValueType // TypeString converted to prometheus.ValueType
 	query     *QueryConfig         // QueryConfig resolved from QueryRef or generated from Query

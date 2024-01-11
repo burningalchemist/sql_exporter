@@ -76,6 +76,9 @@ collectors:
         # Arbitrary key/value pair
           env: dev
           region: europe
+        # Optional timestamp_value to point at the existing timestamp column to return a metric with an explicit
+        # timestamp.
+        # timestamp_value: CreatedAt
         # This query returns exactly one value per row, in the `counter` column.
         values: [counter]
         query: |

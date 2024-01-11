@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/burningalchemist/sql_exporter/errors"
@@ -85,7 +86,15 @@ func (mf MetricFamily) Collect(row map[string]any, ch chan<- Metric) {
 		}
 		value := row[v].(sql.NullFloat64)
 		if value.Valid {
-			ch <- NewMetric(&mf, value.Float64, labelValues...)
+			metric := NewMetric(&mf, value.Float64, labelValues...)
+			if mf.config.TimestampValue == "" {
+				ch <- metric
+			} else {
+				ts := row[mf.config.TimestampValue].(sql.NullTime)
+				if ts.Valid {
+					ch <- NewMetricWithTimestamp(ts.Time, metric)
+				}
+			}
 		}
 	}
 	if mf.config.StaticValue != nil {
@@ -286,3 +295,18 @@ func NewInvalidMetric(err errors.WithContext) Metric {
 func (m invalidMetric) Desc() MetricDesc { return nil }
 
 func (m invalidMetric) Write(*dto.Metric) errors.WithContext { return m.err }
+
+type timestampedMetric struct {
+	Metric
+	t time.Time
+}
+
+func (m timestampedMetric) Write(pb *dto.Metric) errors.WithContext {
+	e := m.Metric.Write(pb)
+	pb.TimestampMs = proto.Int64(m.t.Unix()*1000 + int64(m.t.Nanosecond()/1000000))
+	return e
+}
+
+func NewMetricWithTimestamp(t time.Time, m Metric) Metric {
+	return timestampedMetric{Metric: m, t: t}
+}
