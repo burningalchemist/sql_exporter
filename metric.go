@@ -87,10 +87,10 @@ func (mf MetricFamily) Collect(row map[string]any, ch chan<- Metric) {
 		value := row[v].(sql.NullFloat64)
 		if value.Valid {
 			metric := NewMetric(&mf, value.Float64, labelValues...)
-			if mf.config.TimeValue == "" {
+			if mf.config.TimestampValue == "" {
 				ch <- metric
 			} else {
-				ts := row[mf.config.TimeValue].(sql.NullTime)
+				ts := row[mf.config.TimestampValue].(sql.NullTime)
 				if ts.Valid {
 					ch <- NewMetricWithTimestamp(ts.Time, metric)
 				}
