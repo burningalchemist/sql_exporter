@@ -20,9 +20,8 @@ import (
 )
 
 const (
-	appName               string        = "sql_exporter"
-	envConfigFile         string        = "SQLEXPORTER_CONFIG"
-	envDebug              string        = "SQLEXPORTER_DEBUG"
+	appName string = "sql_exporter"
+
 	httpReadHeaderTimeout time.Duration = time.Duration(time.Second * 60)
 	debugMaxLevel         klog.Level    = 3
 )
@@ -47,10 +46,11 @@ func init() {
 }
 
 func main() {
-	if os.Getenv(envDebug) != "" {
+	if os.Getenv(cfg.EnvDebug) != "" {
 		runtime.SetBlockProfileRate(1)
 		runtime.SetMutexProfileFraction(1)
 	}
+
 	flag.Parse()
 
 	// Show version and exit.
@@ -79,7 +79,7 @@ func main() {
 	klog.ClampLevel(debugMaxLevel)
 
 	// Override the config.file default with the SQLEXPORTER_CONFIG environment variable if set.
-	if val, ok := os.LookupEnv(envConfigFile); ok {
+	if val, ok := os.LookupEnv(cfg.EnvConfigFile); ok {
 		*configFile = val
 	}
 

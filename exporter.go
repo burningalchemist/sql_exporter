@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
 	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -45,13 +45,10 @@ func NewExporter(configFile string) (Exporter, error) {
 		return nil, err
 	}
 
-	if val, ok := os.LookupEnv(config.EnvDsnOverride); ok {
-		config.DsnOverride = val
-	}
 	// Override the DSN if requested (and in single target mode).
 	if config.DsnOverride != "" {
 		if len(c.Jobs) > 0 {
-			return nil, fmt.Errorf("the config.data-source-name flag (value %q) only applies in single target mode", config.DsnOverride)
+			return nil, errors.New("the config.data-source-name flag only applies in single target mode")
 		}
 		c.Target.DSN = config.Secret(config.DsnOverride)
 	}
