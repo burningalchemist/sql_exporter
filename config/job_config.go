@@ -1,6 +1,10 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+
+	"gopkg.in/yaml.v3"
+)
 
 //
 // Jobs
@@ -45,6 +49,15 @@ func (j *JobConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	}
 
 	return checkOverflow(j.XXX, "job")
+}
+
+// EnvDecode implements the envdecode.Decoder interface for JobConfig.
+func (j *JobConfigs) EnvDecode(val string) error {
+	err := yaml.Unmarshal([]byte(val), &j)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // checkLabelCollisions checks for label collisions between StaticConfig labels and Metric labels.

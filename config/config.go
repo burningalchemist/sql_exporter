@@ -55,12 +55,15 @@ func Load(configFile string) (*Config, error) {
 // Top-level config
 //
 
+// JobConfigs is a slice of JobConfig. It exists to allow custom unmarshalling for environment variables.
+type JobConfigs []*JobConfig
+
 // Config is a collection of jobs and collectors.
 type Config struct {
 	Globals        *GlobalConfig      `yaml:"global,omitempty" env:", prefix=GLOBAL_"`
 	CollectorFiles []string           `yaml:"collector_files,omitempty" env:"COLLECTOR_FILES"`
 	Target         *TargetConfig      `yaml:"target,omitempty" env:", prefix=TARGET_"`
-	Jobs           []*JobConfig       `yaml:"jobs,omitempty"`
+	Jobs           JobConfigs         `yaml:"jobs,omitempty" env:"JOBS"`
 	Collectors     []*CollectorConfig `yaml:"collectors,omitempty"`
 
 	configFile string
