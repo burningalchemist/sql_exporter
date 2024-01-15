@@ -1,19 +1,27 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/sethvargo/go-envconfig"
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 )
 
-const EnvDsnOverride = "SQLEXPORTER_TARGET_DSN"
-
 // MaxInt32 defines the maximum value of allowed integers
 // and serves to help us avoid overflow/wraparound issues.
 const MaxInt32 int = 1<<31 - 1
+
+// EnvPrefix is the prefix for environment variables.
+const (
+	EnvPrefix string = "SQLEXPORTER_"
+
+	EnvConfigFile string = EnvPrefix + "CONFIG"
+	EnvDebug      string = EnvPrefix + "DEBUG"
+)
 
 var (
 	EnablePing        bool
@@ -49,9 +57,9 @@ func Load(configFile string) (*Config, error) {
 
 // Config is a collection of jobs and collectors.
 type Config struct {
-	Globals        *GlobalConfig      `yaml:"global,omitempty"`
-	CollectorFiles []string           `yaml:"collector_files,omitempty"`
-	Target         *TargetConfig      `yaml:"target,omitempty"`
+	Globals        *GlobalConfig      `yaml:"global,omitempty" env:", prefix=GLOBAL_"`
+	CollectorFiles []string           `yaml:"collector_files,omitempty" env:"COLLECTOR_FILES"`
+	Target         *TargetConfig      `yaml:"target,omitempty" env:", prefix=TARGET_"`
 	Jobs           []*JobConfig       `yaml:"jobs,omitempty"`
 	Collectors     []*CollectorConfig `yaml:"collectors,omitempty"`
 
@@ -63,21 +71,13 @@ type Config struct {
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for Config.
 func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
-	type plain Config
-	if err := unmarshal((*plain)(c)); err != nil {
+	// unmarshalConfig does the actual unmarshalling
+	if err := c.unmarshalConfig(unmarshal); err != nil {
 		return err
 	}
-
-	if c.Globals == nil {
-		c.Globals = &GlobalConfig{}
-		// Force a dummy unmarshall to populate global defaults
-		if err := c.Globals.UnmarshalYAML(func(any) error { return nil }); err != nil {
-			return err
-		}
-	}
-
-	if (len(c.Jobs) == 0) == (c.Target == nil) {
-		return fmt.Errorf("exactly one of `jobs` and `target` must be defined")
+	// Populate global defaults.
+	if err := c.populateGlobalDefaults(); err != nil {
+		return err
 	}
 
 	// Load any externally defined collectors.
@@ -85,10 +85,63 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		return err
 	}
 
+	// Process environment variables.
+	if err := c.processEnvConfig(); err != nil {
+		return err
+	}
+
+	// Check required fields
+	if err := c.checkRequiredFields(); err != nil {
+		return err
+	}
+
 	// Populate collector references for the target/jobs.
+	if err := c.populateCollectorReferences(); err != nil {
+		return err
+	}
+
+	return checkOverflow(c.XXX, "config")
+}
+
+// unmarshalConfig unmarshals the config, but does not populate global defaults, process environment variables, or check required fields.
+func (c *Config) unmarshalConfig(unmarshal func(any) error) error {
+	type plain Config
+	return unmarshal((*plain)(c))
+}
+
+// populateGlobalDefaults populates any unset global defaults.
+func (c *Config) populateGlobalDefaults() error {
+	if c.Globals == nil {
+		c.Globals = &GlobalConfig{}
+		// Force a dummy unmarshall to populate global defaults
+		return c.Globals.UnmarshalYAML(func(any) error { return nil })
+	}
+	return nil
+}
+
+// processEnvConfig processes environment variables.
+func (c *Config) processEnvConfig() error {
+	return envconfig.ProcessWith(context.Background(), &envconfig.Config{
+		Target:           c,
+		Lookuper:         envconfig.PrefixLookuper(EnvPrefix, envconfig.OsLookuper()),
+		DefaultNoInit:    true,
+		DefaultOverwrite: true,
+		DefaultDelimiter: ";",
+	})
+}
+
+// checkRequiredFields checks that all required fields are present.
+func (c *Config) checkRequiredFields() error {
+	if (len(c.Jobs) == 0) == (c.Target == nil) {
+		return fmt.Errorf("exactly one of `jobs` and `target` must be defined")
+	}
+	return nil
+}
+
+// populateCollectorReferences populates collector references for the target/jobs.
+func (c *Config) populateCollectorReferences() error {
 	colls := make(map[string]*CollectorConfig)
 	for _, coll := range c.Collectors {
-		// Set the min interval to the global default if not explicitly set.
 		if coll.MinInterval < 0 {
 			coll.MinInterval = c.Globals.MinInterval
 		}
@@ -97,6 +150,7 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		}
 		colls[coll.Name] = coll
 	}
+
 	if c.Target != nil {
 		cs, err := resolveCollectorRefs(c.Target.CollectorRefs, colls, "target")
 		if err != nil {
@@ -104,6 +158,7 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		}
 		c.Target.collectors = cs
 	}
+
 	for _, j := range c.Jobs {
 		cs, err := resolveCollectorRefs(j.CollectorRefs, colls, fmt.Sprintf("job %q", j.Name))
 		if err != nil {
@@ -111,8 +166,7 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		}
 		j.collectors = cs
 	}
-
-	return checkOverflow(c.XXX, "config")
+	return nil
 }
 
 // YAML marshals the config into YAML format.

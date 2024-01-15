@@ -17,11 +17,11 @@ import (
 
 // TargetConfig defines a DSN and a set of collectors to be executed on it.
 type TargetConfig struct {
-	Name          string   `yaml:"name,omitempty"`        // name of the target
-	DSN           Secret   `yaml:"data_source_name"`      // data source name to connect to
-	AwsSecretName string   `yaml:"aws_secret_name"`       // AWS secret name
-	CollectorRefs []string `yaml:"collectors"`            // names of collectors to execute on the target
-	EnablePing    *bool    `yaml:"enable_ping,omitempty"` // ping the target before executing the collectors
+	Name          string   `yaml:"name,omitempty" env:"NAME"`               // name of the target
+	DSN           Secret   `yaml:"data_source_name" env:"DSN"`              // data source name to connect to
+	AwsSecretName string   `yaml:"aws_secret_name" env:"AWS_SECRET_NAME"`   // AWS secret name
+	CollectorRefs []string `yaml:"collectors" env:"COLLECTORS"`             // names of collectors to execute on the target
+	EnablePing    *bool    `yaml:"enable_ping,omitempty" env:"ENABLE_PING"` // ping the target before executing the collectors
 
 	collectors []*CollectorConfig // resolved collector references
 

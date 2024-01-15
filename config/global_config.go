@@ -9,12 +9,12 @@ import (
 
 // GlobalConfig contains globally applicable defaults.
 type GlobalConfig struct {
-	MinInterval     model.Duration `yaml:"min_interval"`            // minimum interval between query executions, default is 0
-	ScrapeTimeout   model.Duration `yaml:"scrape_timeout"`          // per-scrape timeout, global
-	TimeoutOffset   model.Duration `yaml:"scrape_timeout_offset"`   // offset to subtract from timeout in seconds
-	MaxConnLifetime time.Duration  `yaml:"max_connection_lifetime"` // maximum amount of time a connection may be reused to any one target
-	MaxConns        int            `yaml:"max_connections"`         // maximum number of open connections to any one target
-	MaxIdleConns    int            `yaml:"max_idle_connections"`    // maximum number of idle connections to any one target
+	MinInterval     model.Duration `yaml:"min_interval" env:"MIN_INTERVAL"`                       // minimum interval between query executions, default is 0
+	ScrapeTimeout   model.Duration `yaml:"scrape_timeout" env:"SCRAPE_TIMEOUT"`                   // per-scrape timeout, global
+	TimeoutOffset   model.Duration `yaml:"scrape_timeout_offset" env:"SCRAPE_TIMEOUT_OFFSET"`     // offset to subtract from timeout in seconds
+	MaxConnLifetime time.Duration  `yaml:"max_connection_lifetime" env:"MAX_CONNECTION_LIFETIME"` // maximum amount of time a connection may be reused to any one target
+	MaxConns        int            `yaml:"max_connections" env:"MAX_CONNECTIONS"`                 // maximum number of open connections to any one target
+	MaxIdleConns    int            `yaml:"max_idle_connections" env:"MAX_IDLE_CONNECTIONS"`       // maximum number of idle connections to any one target
 
 	// Catches all undefined fields and must be empty after parsing.
 	XXX map[string]any `yaml:",inline" json:"-"`
