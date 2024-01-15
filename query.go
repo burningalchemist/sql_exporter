@@ -50,8 +50,10 @@ func NewQuery(logContext string, qc *config.QueryConfig, metricFamilies ...*Metr
 				return nil, err
 			}
 		}
-		if err := setColumnType(logContext, mf.config.TimestampValue, columnTypeTime, columnTypes); err != nil {
-			return nil, err
+		if mf.config.TimestampValue != "" {
+			if err := setColumnType(logContext, mf.config.TimestampValue, columnTypeTime, columnTypes); err != nil {
+				return nil, err
+			}
 		}
 	}
 
