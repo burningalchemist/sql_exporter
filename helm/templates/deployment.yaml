@@ -1,3 +1,6 @@
+{{- $extraVolumes := .Values.extraVolumes }}
+{{- $extraVolumeMounts := .Values.extraVolumeMounts }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -38,6 +41,11 @@ spec:
           configMap:
             name: {{ include "sql-exporter.fullname" . }}
         {{- end }}
+
+        {{- if $extraVolumes }}
+        {{- toYaml $extraVolumes | nindent 8 }}
+        {{- end }}
+
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -54,6 +62,11 @@ spec:
             readOnly: true
             mountPath: /etc/sql_exporter/collectors/
           {{- end }}
+
+          {{- if $extraVolumeMounts }}
+          {{- toYaml $extraVolumeMounts | nindent 10 }}
+          {{- end }}
+
           {{- if .Values.env }}
           env:
             {{- range $key, $value := .Values.env }}

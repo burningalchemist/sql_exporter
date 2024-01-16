@@ -67,6 +67,26 @@ serviceMonitor:
   # -- ServiceMonitor scrape timeout
   # scrapeTimeout: 10s
 
+## extra VolumeMounts for the pod
+## - spec for VolumeMount:
+##   https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volumemount-v1-core
+##
+extraVolumeMounts: []
+# - name: big-query-credential-json
+#   mountPath: /etc/sql_exporter/extra/
+#   readOnly: true
+
+## extra Volumes for the pod
+## - spec for Volume:
+##   https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#volume-v1-core
+extraVolumes: []
+# - name: big-query-credential-json
+#   secret:
+#     secretName: sql-exporter-connections-secret
+#     items:
+#     - key: big-query-credential.json
+#       path: big-query-credential.json
+
 # Additional env variables
 # - kind should be either Secret or ConfigMap
 # - name is the name of the Secret or ConfigMap that should be used
@@ -77,6 +97,7 @@ serviceMonitor:
 #       kind: Secret
 #       name: sql_exporter_secret
 #       key: CONNECTION_STRING
+
 config:
   global:
     # -- Scrape timeout
