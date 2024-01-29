@@ -282,6 +282,20 @@ jobs:
 
 We can also define multiple jobs to run different collectors against different target sets.
 
+Since v0.14, sql_exporter can be passed an optional list of job names to filter out metrics. The `jobs[]` query
+parameter may be used multiple times. In Prometheus configuration we can use this syntax under the [scrape
+config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#%3Cscrape_config%3E):
+
+```yaml
+  params:
+    jobs[]:
+      - db_targets1
+      - db_targets2
+```
+
+This might be useful for scraping targets with different intervals or any other advanced use cases, when calling all
+jobs at once is undesired.
+
 ### TLS and Basic Authentication
 
 SQL Exporter supports TLS and Basic Authentication. This enables better control of the various HTTP endpoints.
