@@ -274,8 +274,8 @@ jobs:
     enable_ping: true # Optional, true by default. Set to `false` in case you connect to pgbouncer or a data warehouse
     static_configs:
       - targets:
-        pg1: 'pg://db1@127.0.0.1:25432/postgres?sslmode=disable'
-        pg2: 'postgresql://username:password@pg-host.example.com:5432/dbname?sslmode=disable'
+          pg1: 'pg://db1@127.0.0.1:25432/postgres?sslmode=disable'
+          pg2: 'postgresql://username:password@pg-host.example.com:5432/dbname?sslmode=disable'
 ```
 
 , where DSN strings are assigned to the arbitrary instance names (i.e. pg1 and pg2).
