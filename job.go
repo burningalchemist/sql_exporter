@@ -45,7 +45,7 @@ func NewJob(jc *config.JobConfig, gc *config.GlobalConfig) (Job, errors.WithCont
 				}
 				constLabels[name] = value
 			}
-			t, err := NewTarget(j.logContext, tname, string(dsn), jc.Collectors(), constLabels, gc, jc.EnablePing)
+			t, err := NewTarget(j.logContext, tname, jc.Name, string(dsn), jc.Collectors(), constLabels, gc, jc.EnablePing)
 			if err != nil {
 				return nil, err
 			}
