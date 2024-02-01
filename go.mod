@@ -6,7 +6,7 @@ toolchain go1.21.5
 
 require (
 	github.com/ClickHouse/clickhouse-go v1.5.4
-	github.com/aws/aws-sdk-go-v2 v1.24.0
+	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.26.0
 	github.com/go-sql-driver/mysql v1.7.1
