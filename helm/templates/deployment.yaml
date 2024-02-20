@@ -29,15 +29,23 @@ spec:
     {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if eq (include "sql-exporter.volumes" .)  "\"true\"" }}
       volumes:
+        {{- if .Values.createConfig }}
         - name: sql-exporter
           secret:
             secretName: {{ include "sql-exporter.fullname" . }}
+        {{- end }}
         {{- if .Values.collectorFiles }}
         - name: sql-collector
           configMap:
             name: {{ include "sql-exporter.fullname" . }}
         {{- end }}
+      {{- end }}
+      {{- range $v := .Values.extraVolumes }}
+        - name: {{ $v.name }}
+          {{- toYaml $v.volume | nindent 10 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -45,14 +53,26 @@ spec:
           image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: ["-config.file=/etc/sql_exporter/sql_exporter.yml"]
+          {{- if eq (include "sql-exporter.volumes" .) "\"true\"" }}
           volumeMounts:
+          {{- if .Values.createConfig }}
           - name: sql-exporter
             readOnly: true
             mountPath: /etc/sql_exporter/
+          {{- end }}
           {{- if .Values.collectorFiles }}
           - name: sql-collector
             readOnly: true
             mountPath: /etc/sql_exporter/collectors/
+          {{- end }}
+          {{- range $v := .Values.extraVolumes }}
+            - name: {{ $v.name }}
+              {{- toYaml $v.mount | nindent 14 }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }} 
           {{- end }}
           {{- if .Values.env }}
           env:

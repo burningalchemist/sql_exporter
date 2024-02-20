@@ -60,3 +60,13 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{- define "sql-exporter.volumes" -}}
+{{- if or .Values.createConfig .Values.collectorFiles -}}
+{{- true | quote -}}
+{{- else if .Values.extraVolumes -}}
+{{- true | quote -}}
+{{- else -}}
+{{- false | quote -}}
+{{- end -}}
+{{- end -}}
