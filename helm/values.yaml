@@ -94,7 +94,7 @@ serviceMonitor:
 #       readOnly: true
 #       mountPath: /etc/config
 # Set to true to create a config as a part of the helm chart
-createConfig: false
+createConfig: true
 config:
   global:
     # -- Scrape timeout
