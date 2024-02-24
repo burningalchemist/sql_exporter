@@ -16,7 +16,7 @@ require (
 	github.com/microsoft/go-mssqldb v1.7.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/prometheus/client_model v0.6.0
-	github.com/prometheus/common v0.46.0
+	github.com/prometheus/common v0.48.0
 	github.com/prometheus/exporter-toolkit v0.11.0
 	github.com/sethvargo/go-envconfig v1.0.0
 	github.com/snowflakedb/gosnowflake v1.8.0
