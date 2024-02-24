@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.2.5](https://img.shields.io/badge/Version-0.2.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.13.1](https://img.shields.io/badge/AppVersion-0.13.1-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.13.1](https://img.shields.io/badge/AppVersion-0.13.1-informational?style=flat-square)
 
 Database agnostic SQL exporter for Prometheus
 
@@ -43,6 +43,7 @@ helm install sql_exporter/sql-exporter
 | podLabels | object | `{}` | Pod labels |
 | podAnnotations | object | `{}` | Pod annotations |
 | podSecurityContext | object | `{}` | Pod security context |
+| createConfig | bool | `true` |  |
 
 ### Prometheus ServiceMonitor
 
@@ -65,6 +66,8 @@ helm install sql_exporter/sql-exporter
 | target | object | `nil` | Check documentation. Mutually exclusive with `jobs`  |
 | jobs   | list | `nil` | Check documentation. Mutually exclusive with `target` |
 | collector_files | list | `[]` | Check documentation |
+
+To generate the config as a part of a helm release, please set the `.Values.createConfig` to true, and define a config under the `.Values.config` property.
 
 To configure `target`, `jobs`, `collector_files` please refer to the [documentation](https://github.com/burningalchemist/sql_exporter/blob/master/documentation/sql_exporter.yml) in the source repository. These values are not set by default.
 
