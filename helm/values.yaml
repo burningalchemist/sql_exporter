@@ -66,6 +66,7 @@ serviceMonitor:
   path: /metrics
   # -- ServiceMonitor scrape timeout
   # scrapeTimeout: 10s
+  # -- ServiceMonitor metric relabelings
   metricRelabelings: {}
 
 # Additional env variables
