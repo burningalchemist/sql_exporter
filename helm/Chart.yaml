@@ -3,6 +3,7 @@ name: sql-exporter
 description: Database agnostic SQL exporter for Prometheus
 type: application
 version: 0.4.1
+appVersion: 0.14.0
 keywords:
   - exporter
   - servicemonitor
