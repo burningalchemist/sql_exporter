@@ -78,6 +78,24 @@ serviceMonitor:
 #       kind: Secret
 #       name: sql_exporter_secret
 #       key: CONNECTION_STRING
+# envFrom:
+#   - configMapRef:
+#       name: env-configmap
+#   - secretRef:
+#       name: env-secrets
+# extraVolumes:
+#   - name: configmap-mount
+#     volume:
+#       configMap:
+#         name: log-config
+#         items:
+#           - key: log_level
+#             path: log_level
+#     mount:
+#       readOnly: true
+#       mountPath: /etc/config
+# Set to true to create a config as a part of the helm chart
+createConfig: true
 config:
   global:
     # -- Scrape timeout
@@ -119,7 +137,6 @@ config:
 #                 GROUP BY datname, usename, state;
 # collector_files:
 #    - "*.collector.yml"
-
 # ---------------------------------------------------------------------
 # -- Collector Files
 # ---------------------------------------------------------------------
