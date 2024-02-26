@@ -66,6 +66,7 @@ serviceMonitor:
   path: /metrics
   # -- ServiceMonitor scrape timeout
   # scrapeTimeout: 10s
+  metricRelabelings: {}
 
 # Additional env variables
 # - kind should be either Secret or ConfigMap
