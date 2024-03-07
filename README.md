@@ -276,6 +276,8 @@ jobs:
       - targets:
           pg1: 'pg://db1@127.0.0.1:25432/postgres?sslmode=disable'
           pg2: 'postgresql://username:password@pg-host.example.com:5432/dbname?sslmode=disable'
+      - labels:  # Optional, arbitrary key/value pair for all targets
+          cluster: cluster1
 ```
 
 , where DSN strings are assigned to the arbitrary instance names (i.e. pg1 and pg2).
