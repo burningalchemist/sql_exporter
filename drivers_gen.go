@@ -21,7 +21,7 @@ var driverList = map[string][]string{
 		"github.com/microsoft/go-mssqldb/azuread",
 	},
 	"extra": {
-		"github.com/ClickHouse/clickhouse-go",
+		"github.com/ClickHouse/clickhouse-go/v2",
 		"github.com/jackc/pgx/v4/stdlib",
 		"github.com/snowflakedb/gosnowflake",
 		"github.com/vertica/vertica-sql-go",
