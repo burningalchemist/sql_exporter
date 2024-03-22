@@ -11,9 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# To distinguish between native Windows and Windows Subsystem for Linux (WSL),
+# we have to check how PATH is separated. For WSL and Unix-based systems it's
+# a colon; for native Windows it's a semicolon.
+ifeq '$(findstring ;,$(PATH))' ';'
+	GOPATH = $(firstword $(subst ;, ,$(shell $(GO) env GOPATH)))
+	PREFIX = $(shell cd)
+endif
+
 GO     := go
-GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
+GOPATH ?= $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 PROMU  := $(GOPATH)/bin/promu
+PROMU_VERSION := v0.14.0
 pkgs    = $(shell $(GO) list ./... | grep -v /vendor/)
 
 PREFIX              ?= $(shell pwd)
@@ -73,10 +82,17 @@ docker:
 	@echo ">> building docker image"
 	@docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
 
+# Override for native Windows, where the path separator is a semicolon.
+ifeq '$(findstring ;,$(PATH))' ';'
+promu:
+	@set GOOS=windows
+	@set GOARCH=$(subst AMD64,amd64,$(patsubst i%86,386,$(shell echo %PROCESSOR_ARCHITECTURE%)))
+	@$(GO) install github.com/prometheus/promu@$(PROMU_VERSION)
+else
 promu:
 	@GOOS=$(shell uname -s | tr A-Z a-z) \
 		GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
-		$(GO) install github.com/prometheus/promu@v0.14.0
-
+		$(GO) install github.com/prometheus/promu@$(PROMU_VERSION)
+endif
 
 .PHONY: all style format build test vet tarball docker promu
