@@ -19,7 +19,7 @@ require (
 	github.com/prometheus/common v0.49.0
 	github.com/prometheus/exporter-toolkit v0.11.0
 	github.com/sethvargo/go-envconfig v1.0.0
-	github.com/snowflakedb/gosnowflake v1.8.0
+	github.com/snowflakedb/gosnowflake v1.9.0
 	github.com/vertica/vertica-sql-go v1.3.3
 	github.com/xo/dburl v0.22.0
 	google.golang.org/protobuf v1.33.0
@@ -39,7 +39,7 @@ require (
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
 	github.com/JohnCGriffin/overflow v0.0.0-20211019200055-46fa312c352c // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/apache/arrow/go/v14 v14.0.2 // indirect
+	github.com/apache/arrow/go/v15 v15.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.10 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1 // indirect
