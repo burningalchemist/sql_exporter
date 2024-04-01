@@ -1,7 +1,5 @@
-# Prometheus SQL Exporter [![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo) [![Go Report Card](https://goreportcard.com/badge/github.com/burningalchemist/sql_exporter)](https://goreportcard.com/report/github.com/burningalchemist/sql_exporter) [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter) ![Downloads](https://img.shields.io/github/downloads/burningalchemist/sql_exporter/total)
-
-This is a permanent fork of Database agnostic SQL exporter for [Prometheus](https://prometheus.io) created by
-[@free](https://github.com/free/sql_exporter).
+# SQL Exporter for Prometheus
+[![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo) [![Go Report Card](https://goreportcard.com/badge/github.com/burningalchemist/sql_exporter)](https://goreportcard.com/report/github.com/burningalchemist/sql_exporter) [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter) ![Downloads](https://img.shields.io/github/downloads/burningalchemist/sql_exporter/total) [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/sql-exporter)](https://artifacthub.io/packages/search?repo=sql-exporter)
 
 ## Overview
 
@@ -326,3 +324,8 @@ philosophical issue, but practical issues are not all that difficult to imagine:
 
 The control they provide over which labels get applied is limited, and the base label set spammy. And finally,
 configurations are not easily reused without copy-pasting and editing across jobs and instances.
+
+## Credits
+
+This is a permanent fork of Database agnostic SQL exporter for [Prometheus](https://prometheus.io) created by
+[@free](https://github.com/free/sql_exporter).
