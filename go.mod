@@ -1,8 +1,7 @@
 module github.com/burningalchemist/sql_exporter
 
 go 1.21
-
-toolchain go1.21.5
+toolchain go1.22.1
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.23.0
@@ -18,7 +17,7 @@ require (
 	github.com/prometheus/client_model v0.6.0
 	github.com/prometheus/common v0.49.0
 	github.com/prometheus/exporter-toolkit v0.11.0
-	github.com/sethvargo/go-envconfig v1.0.0
+	github.com/sethvargo/go-envconfig v1.0.1
 	github.com/snowflakedb/gosnowflake v1.8.0
 	github.com/vertica/vertica-sql-go v1.3.3
 	github.com/xo/dburl v0.22.0
