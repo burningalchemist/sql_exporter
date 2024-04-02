@@ -12,6 +12,7 @@ import (
 	cfg "github.com/burningalchemist/sql_exporter/config"
 	_ "github.com/kardianos/minwinsvc"
 	"github.com/prometheus/client_golang/prometheus"
+	info "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/version"
@@ -38,7 +39,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(version.NewCollector("sql_exporter"))
+	prometheus.MustRegister(info.NewCollector("sql_exporter"))
 	flag.BoolVar(&cfg.EnablePing, "config.enable-ping", true, "Enable ping for targets")
 	flag.BoolVar(&cfg.IgnoreMissingVals, "config.ignore-missing-values", false, "[EXPERIMENTAL] Ignore results with missing values for the requested columns")
 	flag.StringVar(&cfg.DsnOverride, "config.data-source-name", "", "Data source name to override the value in the configuration file with")
