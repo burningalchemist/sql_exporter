@@ -2,6 +2,30 @@ apiVersion: v1
 entries:
   sql-exporter:
   - annotations:
+      git/commit-sha: 106059dde7ef352fdccce6209618249c0487412b
+    apiVersion: v2
+    appVersion: 0.14.2
+    created: "2024-04-05T19:05:57.20500322Z"
+    description: Database-agnostic SQL exporter for Prometheus
+    digest: d7296cb773fb0f7632791c56933c5efca7b2743c3c6fb014d45baf67c4939409
+    home: https://github.com/burningalchemist/sql_exporter
+    keywords:
+    - exporter
+    - servicemonitor
+    - sql
+    - metrics
+    maintainers:
+    - email: allanger@zohomail.com
+      name: Nikolai Rodionov
+      url: https://badhouseplants.net
+    name: sql-exporter
+    sources:
+    - https://github.com/burningalchemist/sql_exporter
+    type: application
+    urls:
+    - sql-exporter-0.4.3.tgz
+    version: 0.4.3
+  - annotations:
       git/commit-sha: cc37d602433398100b09825ae3fc22657edbdbef
     apiVersion: v2
     appVersion: 0.14.1
@@ -313,4 +337,4 @@ entries:
     urls:
     - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.1.3/sql-exporter-0.1.3.tgz
     version: 0.1.3
-generated: "2024-03-13T10:16:51.052834156Z"
+generated: "2024-04-05T19:05:57.205111632Z"
