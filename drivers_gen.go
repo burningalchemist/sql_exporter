@@ -22,7 +22,7 @@ var driverList = map[string][]string{
 	},
 	"extra": {
 		"github.com/ClickHouse/clickhouse-go/v2",
-		"github.com/jackc/pgx/v4/stdlib",
+		"github.com/jackc/pgx/v5/stdlib",
 		"github.com/snowflakedb/gosnowflake",
 		"github.com/vertica/vertica-sql-go",
 	},
