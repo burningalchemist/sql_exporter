@@ -55,6 +55,10 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
+      - name: Get Go version from the '.promu.yml' config
+        id: promu-go-version
+        run: printf "version=%s" "$(yq '.go.version' .promu.yml)" >> $GITHUB_OUTPUT
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -86,3 +90,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
           provenance: false
+          build-args: |
+            GOVERSION={{ steps.promu-go-version.outputs.version }}
