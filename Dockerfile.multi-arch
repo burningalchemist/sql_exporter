@@ -1,4 +1,6 @@
-FROM --platform=$BUILDPLATFORM quay.io/prometheus/golang-builder AS builder
+ARG GOVERSION=latest
+
+FROM --platform=$BUILDPLATFORM quay.io/prometheus/golang-builder:${GOVERSION}-main AS builder
 
 # Get sql_exporter
 ADD .   /go/src/github.com/burningalchemist/sql_exporter
