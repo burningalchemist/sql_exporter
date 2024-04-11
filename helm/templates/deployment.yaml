@@ -66,8 +66,8 @@ spec:
             mountPath: /etc/sql_exporter/collectors/
           {{- end }}
           {{- range $v := .Values.extraVolumes }}
-            - name: {{ $v.name }}
-              {{- toYaml $v.mount | nindent 14 }}
+          - name: {{ $v.name }}
+            {{- toYaml $v.mount | nindent 12 }}
           {{- end }}
           {{- end }}
           {{- with .Values.envFrom }}
