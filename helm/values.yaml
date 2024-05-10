@@ -39,16 +39,11 @@ serviceAccount:
   create: false
   # Annotations to add to the service account
   annotations: {}
-
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  # name: "my_sa"
-
-#  name: "my_kubernetes_sa"
-#  Example Annotations
-#  annotations: {
-#    iam.gke.io/gcp-service-account: my-service-account@gke.url
-#  }
+  ## example annotations ##
+  # annotations:
+  #   iam.gke.io/gcp-service-account: my-service-account@gke.url
+  #
+  # name: "my_kubernetes_sa"
 
 # -- Resource limits and requests for the application controller pods
 resources: {}
