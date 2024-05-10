@@ -1,5 +1,6 @@
 # -- Provide a name in place of `sql-exporter`
 nameOverride: ""
+
 # -- String to fully override "sql-exporter.fullname"
 fullnameOverride: ""
 
@@ -14,6 +15,7 @@ image:
 
 # -- Secrets with credentials to pull images from a private registry
 imagePullSecrets: []
+
 service:
   # -- Service type
   type: ClusterIP
@@ -26,13 +28,13 @@ service:
     # example of prometheus usage
     # prometheus.io/scrape: "true"
     # prometheus.io/path: "/metrics"
+
 extraContainers: {}
 #   - name: your_sidecar 
 #     image: gcr.io/your_image:your_tag
 #     args:
 #     resources:
 #       requests:{}
-
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -42,9 +44,9 @@ serviceAccount:
   ## example annotations ##
   # annotations:
   #   iam.gke.io/gcp-service-account: my-service-account@gke.url
+  name: ""
+  automountServiceAccountToken: false
 
-  # name: "my_kubernetes_sa"
-  # automountServiceAccountToken: false
 # -- Resource limits and requests for the application controller pods
 resources: {}
   # limits:
@@ -56,6 +58,7 @@ resources: {}
 
 # -- Pod labels
 podLabels: {}
+
 # -- Pod annotations
 podAnnotations: {}
 
@@ -67,6 +70,7 @@ podSecurityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
+
 # @ignored
 securityContext: {}
 

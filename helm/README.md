@@ -42,6 +42,8 @@ helm install sql_exporter/sql-exporter
 | extraContainers | object | `{}` |  |
 | serviceAccount.create | bool | `false` |  |
 | serviceAccount.annotations | object | `{}` |  |
+| serviceAccount.name | string | `""` |  |
+| serviceAccount.automountServiceAccountToken | bool | `false` |  |
 | resources | object | `{}` | Resource limits and requests for the application controller pods |
 | podLabels | object | `{}` | Pod labels |
 | podAnnotations | object | `{}` | Pod annotations |
