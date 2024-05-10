@@ -22,66 +22,30 @@ service:
   # -- Service labels
   labels: {}
   # -- Service annotations
-  annotations:
-    {}
+  annotations: {}
     # example of prometheus usage
     # prometheus.io/scrape: "true"
     # prometheus.io/path: "/metrics"
-extraContainers:
-  - name: cloud-sql-proxy
-    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.8-alpine
-    args:
-      # Enables Automatic IAM Authentication for all instances
-      - "--auto-iam-authn"
-      # Enable structured logging with LogEntry format:
-      - "--structured-logs"
-      # Debug flag
-      - "--debug"
-      # If connecting from a VPC-native GKE cluster, use the
-      # following flag to have the proxy connect over private IP
-      - "--private-ip"
-      # Enable the admin api server on port 9091
-      - "--admin-port=9091"
-      # Enable the /quitquitquit admin api endpoint for non-root SIGTERM
-      - "--quitquitquit"
-      # Tell the proxy to exit gracefully if it receives a SIGTERM
-      - "--exit-zero-on-sigterm"
-      # Replace DB_PORT with the port the proxy should listen on
-      - "--port=5432"
-      # Replace with the DB connection name
-      - "xpanse-pre-aw-svc-asset-inv:us-central1:expander-api-db-fr-dev"
-    securityContext:
-      # The default Cloud SQL proxy image runs as the
-      # "nonroot" user and group (uid: 65532) by default.
-      runAsNonRoot: false
-    # Resource configuration depends on an application's requirements. You
-    # should adjust the following values based on what your application
-    # needs. For details, see https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-    resources:
-      requests:
-        # The proxy's memory use scales linearly with the number of active
-        # connections. Fewer open connections will use less memory. Adjust
-        # this value based on your application's requirements.
-        memory: "2Gi"
-        # The proxy's CPU use scales linearly with the amount of IO between
-        # the database and the application. Adjust this value based on your
-        # application's requirements.
-        cpu:    "1"
+extraContainers: {}
+#   - name: your_sidecar 
+#     image: gcr.io/your_image:your_tag
+#     args:
+#     resources:
+#       requests:{}
 
 
 serviceAccount:
   # Specifies whether a service account should be created
-  create: true
+  create: false
   # Annotations to add to the service account
-  annotations:
-    iam.gke.io/gcp-service-account: "tenant-service-db-user@xpanse-pre-aw-svc-asset-inv.iam.gserviceaccount.com"
+  annotations: {}
 
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "db-proxy"
+  # name: "my_sa"
 
 #  name: "my_kubernetes_sa"
-# Example Annotations
+#  Example Annotations
 #  annotations: {
 #    iam.gke.io/gcp-service-account: my-service-account@gke.url
 #  }
