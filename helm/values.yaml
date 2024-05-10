@@ -42,9 +42,9 @@ serviceAccount:
   ## example annotations ##
   # annotations:
   #   iam.gke.io/gcp-service-account: my-service-account@gke.url
-  #
-  # name: "my_kubernetes_sa"
 
+  # name: "my_kubernetes_sa"
+  # automountServiceAccountToken: false
 # -- Resource limits and requests for the application controller pods
 resources: {}
   # limits:
