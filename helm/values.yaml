@@ -30,7 +30,7 @@ service:
     # prometheus.io/path: "/metrics"
 
 extraContainers: {}
-#   - name: your_sidecar 
+#   - name: your_sidecar
 #     image: gcr.io/your_image:your_tag
 #     args:
 #     resources:
@@ -179,3 +179,4 @@ config:
 #           SELECT Market, max(UpdateTime) AS LastUpdateTime
 #           FROM MarketPrices
 #           GROUP BY Market
+
