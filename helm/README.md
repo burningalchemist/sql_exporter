@@ -39,6 +39,9 @@ helm install sql_exporter/sql-exporter
 | service.port | int | `80` | Service port |
 | service.labels | object | `{}` | Service labels |
 | service.annotations | object | `{}` | Service annotations |
+| extraContainers | object | `{}` |  |
+| serviceAccount.create | bool | `false` |  |
+| serviceAccount.annotations | object | `{}` |  |
 | resources | object | `{}` | Resource limits and requests for the application controller pods |
 | podLabels | object | `{}` | Pod labels |
 | podAnnotations | object | `{}` | Pod annotations |
