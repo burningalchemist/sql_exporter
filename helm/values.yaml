@@ -2,7 +2,6 @@
 nameOverride: ""
 # -- String to fully override "sql-exporter.fullname"
 fullnameOverride: ""
-
 image:
   # -- Image repository
   repository: burningalchemist/sql_exporter
@@ -11,10 +10,8 @@ image:
   # -- Image tag
   # @default -- `appVersion` value from `Chart.yaml`
   tag: ""
-
 # -- Secrets with credentials to pull images from a private registry
 imagePullSecrets: []
-
 service:
   # -- Service type
   type: ClusterIP
@@ -23,30 +20,40 @@ service:
   # -- Service labels
   labels: {}
   # -- Service annotations
-  annotations:
-    {}
+  annotations: {}
     # example of prometheus usage
     # prometheus.io/scrape: "true"
     # prometheus.io/path: "/metrics"
-
+extraContainers: {}
+#   - name: your_sidecar
+#     image: gcr.io/your_image:your_tag
+#     args:
+#     resources:
+#       requests:{}
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  ## example annotations ##
+  # annotations:
+  #   iam.gke.io/gcp-service-account: my-service-account@gke.url
+  name: ""
+  automountServiceAccountToken: false
 # -- Resource limits and requests for the application controller pods
-resources:
-  {}
+resources: {}
   # limits:
   #   cpu: 100m
   #   memory: 128Mi
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-
 # -- Pod labels
 podLabels: {}
 # -- Pod annotations
 podAnnotations: {}
-
 # -- Pod security context
-podSecurityContext:
-  {}
+podSecurityContext: {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -55,7 +62,6 @@ podSecurityContext:
   # runAsUser: 1000
 # @ignored
 securityContext: {}
-
 # Prometheus Operator values
 serviceMonitor:
   # -- Enable ServiceMonitor
@@ -68,7 +74,6 @@ serviceMonitor:
   # scrapeTimeout: 10s
   # -- ServiceMonitor metric relabelings
   metricRelabelings: {}
-
 # Additional env variables
 # - kind should be either Secret or ConfigMap
 # - name is the name of the Secret or ConfigMap that should be used

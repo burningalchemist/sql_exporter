@@ -29,6 +29,7 @@ spec:
     {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      serviceAccount: {{ include "sql-exporter.serviceAccountName" . }}
       {{- if eq (include "sql-exporter.volumes" .)  "\"true\"" }}
       volumes:
         {{- if .Values.createConfig }}
@@ -108,6 +109,9 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+        {{- with .Values.extraContainers }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
