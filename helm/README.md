@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.4.5](https://img.shields.io/badge/Version-0.4.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.14.2](https://img.shields.io/badge/AppVersion-0.14.2-informational?style=flat-square)
+![Version: 0.5.0](https://img.shields.io/badge/Version-0.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.14.3](https://img.shields.io/badge/AppVersion-0.14.3-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -39,11 +39,9 @@ helm install sql_exporter/sql-exporter
 | service.port | int | `80` | Service port |
 | service.labels | object | `{}` | Service labels |
 | service.annotations | object | `{}` | Service annotations |
-| extraContainers | object | `{}` |  |
-| serviceAccount.create | bool | `false` |  |
-| serviceAccount.annotations | object | `{}` |  |
-| serviceAccount.name | string | `""` |  |
-| serviceAccount.automountServiceAccountToken | bool | `false` |  |
+| extraContainers | object | `{}` | Arbitrary sidecar containers list |
+| serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, defaults to "sql-exporter" unless overriden. Check values.yaml for all the available parameters |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
 | resources | object | `{}` | Resource limits and requests for the application controller pods |
 | podLabels | object | `{}` | Pod labels |
 | podAnnotations | object | `{}` | Pod annotations |

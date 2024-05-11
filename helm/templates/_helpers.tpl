@@ -51,23 +51,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Determine if service account needs to be created
-*/}}
-{{- define "sql-exporter.createServiceAccount" -}}
-{{- with .Values.serviceAccount }}
-{{- default "false" .create }}
-{{- end }}
-{{- end }}
-
-{{/*
 Create the name of the service account to use
 */}}
 {{- define "sql-exporter.serviceAccountName" -}}
-{{- if (include "sql-exporter.createServiceAccount" . ) }}
-{{- default (include "sql-exporter.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- "default" }}
-{{- end }}
+{{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 
 {{- define "sql-exporter.volumes" -}}

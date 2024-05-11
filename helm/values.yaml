@@ -24,6 +24,7 @@ service:
     # example of prometheus usage
     # prometheus.io/scrape: "true"
     # prometheus.io/path: "/metrics"
+# -- Arbitrary sidecar containers list
 extraContainers: {}
 #   - name: your_sidecar
 #     image: gcr.io/your_image:your_tag
@@ -31,15 +32,19 @@ extraContainers: {}
 #     resources:
 #       requests:{}
 serviceAccount:
-  # Specifies whether a service account should be created
-  create: false
-  # Annotations to add to the service account
+  # -- Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless
+  # overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the
+  # available parameters.
+  create: true
+  # -- References a custom Service Account if it already exists
+  # name: "sql-exporter-custom-sa"
+  # -- Annotations to add to the Service Account
   annotations: {}
   ## example annotations ##
   # annotations:
   #   iam.gke.io/gcp-service-account: my-service-account@gke.url
-  name: ""
-  automountServiceAccountToken: false
+  # -- Defines if token is automatically mounted to the pod after it has been created
+  # automountServiceAccountToken: false
 # -- Resource limits and requests for the application controller pods
 resources: {}
   # limits:
