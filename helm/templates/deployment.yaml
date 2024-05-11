@@ -29,7 +29,7 @@ spec:
     {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      serviceAccount: {{ include "sql-exporter.serviceAccountName" . }}
+      serviceAccountName: {{ if .Values.serviceAccount.create }}{{ template "sql-exporter.fullname" . }}{{ else }}{{ include "sql-exporter.serviceAccountName" . }}{{end}}
       {{- if eq (include "sql-exporter.volumes" .)  "\"true\"" }}
       volumes:
         {{- if .Values.createConfig }}
