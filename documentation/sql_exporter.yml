@@ -59,9 +59,9 @@ collectors:
     # The result columns conceptually fall into two categories:
     #  * zero or more key columns: their values will be directly mapped to labels of the same name;
     #  * one or more value columns:
-    #     * if exactly one value column, the column name name is ignored and its value becomes the metric value
+    #     * if exactly one value column, the column name is ignored and its value becomes the metric value
     #     * with multiple value columns, a `value_label` must be defined; the column name will populate this label and
-    #       the column value will popilate the metric value.
+    #       the column value will populate the metric value.
     metrics:
       # The metric name, type and help text, as exported to /metrics.
       - metric_name: mssql_log_growths
@@ -97,7 +97,7 @@ collectors:
         #
         # Required when multiple value columns are configured.
         value_label: operation
-        # Multiple value columns: their name is recorded in the label defined by `attrubute_label` (e.g. 
+        # Multiple value columns: their name is recorded in the label defined by `attribute_label` (e.g.
         # `operation="io_stall_read_ms"`).
         values:
           - io_stall_read

@@ -37,7 +37,7 @@ Use the `-help` flag to get help information.
 $ ./sql_exporter -help
 Usage of ./sql_exporter:
   -config.file string
-      SQL Exporter configuration file name. (default "sql_exporter.yml")
+      SQL Exporter configuration file path. (default "sql_exporter.yml")
   -web.listen-address string
       Address to listen on for web interface and telemetry. (default ":9399")
   -web.metrics-path string
