@@ -181,10 +181,10 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 }
 
 func (e *exporter) filterTargets(jf []string) {
-	if len(e.jobFilters) > 0 {
+	if len(jf) > 0 {
 		var filteredTargets []Target
 		for _, target := range e.targets {
-			for _, jobFilter := range e.jobFilters {
+			for _, jobFilter := range jf {
 				if jobFilter == target.JobGroup() {
 					filteredTargets = append(filteredTargets, target)
 					break
