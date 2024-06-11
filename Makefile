@@ -22,7 +22,7 @@ endif
 GO     := go
 GOPATH ?= $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 PROMU  := $(GOPATH)/bin/promu
-PROMU_VERSION := v0.14.0
+PROMU_VERSION := v0.17.0
 pkgs    = $(shell $(GO) list ./... | grep -v /vendor/)
 
 PREFIX              ?= $(shell pwd)
