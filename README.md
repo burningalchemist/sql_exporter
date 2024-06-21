@@ -132,7 +132,8 @@ collector_files:
   - "*.collector.yml"
 ```
 
-**NOTE:** The `collectors` and `collector_files` configurations support [Glob pattern matching](https://pkg.go.dev/path/filepath#Match).
+> [!NOTE]
+> The `collectors` and `collector_files` configurations support [Glob pattern matching](https://pkg.go.dev/path/filepath#Match).
 To match names with literal pattern terms in them, e.g. `collector_*1*`, these must be escaped: `collector_\*1\*`.
 
 ### Collectors
@@ -177,16 +178,17 @@ metrics:
 To keep things simple and yet allow fully configurable database connections, SQL Exporter uses DSNs (like
 `sqlserver://prom_user:prom_password@dbserver1.example.com:1433`) to refer to database instances.
 
-Since v0.9.0 `sql_exporter` relies on `github.com/xo/dburl` package for parsing Data Source Names (DSN).
-This can potentially affect your connection to certain databases like MySQL, so you might want to adjust your connection
-string accordingly:
+This exporter relies on `xo/dburl` package for parsing Data Source Names (DSN). The goal is to have a
+unified way to specify DSNs across all supported databases. This can potentially affect your connection to certain
+databases like MySQL, so you might want to adjust your connection string accordingly:
 
 ```plaintext
 mysql://user:pass@localhost/dbname - for TCP connection
 mysql:/var/run/mysqld/mysqld.sock - for Unix socket connection
 ```
 
-If your DSN contains special characters in any part of your connection string (including passwords), you might need to
+> [!IMPORTANT]
+> If your DSN contains special characters in any part of your connection string (including passwords), you might need to
 apply [URL encoding](https://en.wikipedia.org/wiki/URL_encoding#Reserved_characters) (percent-encoding) to them.
 For example, `p@$$w0rd#abc` then becomes `p%40%24%24w0rd%23abc`.
 
@@ -243,7 +245,7 @@ we need to make some adjustments to the configuration:
 - add `enable_ping: false` to the metric/job configuration as PgBouncer doesn't support the ping command;
 - add `no_prepared_statement: true` to the metric/job configuration as PgBouncer doesn't support the extended query protocol;
 
-Note: For libpq(postgres) we only need to add `no_prepared_statement: true` parameter. For pgx driver, we also need to
+For libpq (postgres) driver we only need to set `no_prepared_statement: true` parameter. For pgx driver, we also need to
 add `default_query_exec_mode=simple_protocol` parameter to the DSN (for v5).
 
 Below is an example of a metric configuration for PgBouncer:
