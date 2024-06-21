@@ -74,29 +74,6 @@ Running `make drivers-all` will regenerate driver set back to the current defaul
 Feel free to revisit and add more drivers as required. There's also the `custom` list that allows managing a separate
 list of drivers for special needs.
 
-## Run as a Windows service
-
-If you run SQL Exporter from Windows, it might come in handy to register it as a service to avoid interactive sessions.
-It is **important** to define `--config.file` parameter to load the configuration file. The other settings can be added
-as well. The registration itself is performed with Powershell or CMD (make sure you run it as Administrator):
-
-Powershell:
-
-```powershell
-New-Service -name "SqlExporterSvc" `
--BinaryPathName "%SQL_EXPORTER_PATH%\sql_exporter.exe --config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" `
--StartupType Automatic `
--DisplayName "Prometheus SQL Exporter"
-```
-
-CMD:
-
-```shell
-sc.exe create SqlExporterSvc binPath= "%SQL_EXPORTER_PATH%\sql_exporter.exe --config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" start= auto
-```
-
-`%SQL_EXPORTER_PATH%` is a path to the SQL Exporter binary executable. This document assumes that configuration files
-are in the same location.
 
 ## Configuration
 
@@ -215,7 +192,94 @@ For example, `p@$$w0rd#abc` then becomes `p%40%24%24w0rd%23abc`.
 
 For additional details please refer to [xo/dburl](https://github.com/xo/dburl) documentation.
 
-#### Using AWS Secrets Manager
+
+## Miscellaneous
+
+<details>
+<summary>Multiple database connections</summary>
+
+It is possible to run a single exporter instance against multiple database connections. In this case we need to
+configure `jobs` list instead of the `target` section as in the following example:
+
+```yaml
+jobs:
+  - job_name: db_targets
+    collectors: [pricing_data_freshness, pricing_*]
+    enable_ping: true # Optional, true by default. Set to `false` in case you connect to pgbouncer or a data warehouse
+    static_configs:
+      - targets:
+          pg1: 'pg://db1@127.0.0.1:25432/postgres?sslmode=disable'
+          pg2: 'postgresql://username:password@pg-host.example.com:5432/dbname?sslmode=disable'
+        labels:  # Optional, arbitrary key/value pair for all targets
+          cluster: cluster1
+```
+
+, where DSN strings are assigned to the arbitrary instance names (i.e. pg1 and pg2).
+
+We can also define multiple jobs to run different collectors against different target sets.
+
+Since v0.14, sql_exporter can be passed an optional list of job names to filter out metrics. The `jobs[]` query
+parameter may be used multiple times. In Prometheus configuration we can use this syntax under the [scrape
+config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#%3Cscrape_config%3E):
+
+```yaml
+  params:
+    jobs[]:
+      - db_targets1
+      - db_targets2
+```
+
+This might be useful for scraping targets with different intervals or any other advanced use cases, when calling all
+jobs at once is undesired.
+
+</details>
+
+<details>
+<summary>Scraping PgBouncer, ProxySQL, Clickhouse or Snowflake</summary>
+
+Given that PgBouncer is a connection pooler, it doesn't support all the commands that a regular SQL database does, so
+we need to make some adjustments to the configuration:
+
+- add `enable_ping: false` to the metric/job configuration as PgBouncer doesn't support the ping command;
+- add `no_prepared_statement: true` to the metric/job configuration as PgBouncer doesn't support the extended query protocol;
+
+Note: For libpq(postgres) we only need to add `no_prepared_statement: true` parameter. For pgx driver, we also need to
+add `default_query_exec_mode=simple_protocol` parameter to the DSN (for v5).
+
+Below is an example of a metric configuration for PgBouncer:
+```yaml
+    metrics:
+      - metric_name: max_connections
+        no_prepared_statement: true
+        type: gauge
+        values: [max_connections]
+        key_labels:
+          - name
+          - database
+          - force_user
+          - pool_mode
+          - disabled
+          - paused
+          - current_connections
+          - reserve_pool
+          - min_pool_size
+          - pool_size
+          - port
+        query: |
+          SHOW DATABASES;
+
+```
+
+Same goes for ProxySQL and Clickhouse, where we need to add `no_prepared_statement: true` to the metric/job
+configuration, as these databases doesn't support prepared statements.
+
+In case, you connect to a data warehouse (e.g. Snowflake) you don't want to keep online all the time (due to the extra
+cost), you might want to disable `ping` by setting `enable_ping: false`.
+</details>
+
+
+<details>
+<summary>Using AWS Secrets Manager</summary>
 
 If the database runs on AWS EC2 instance, this is a secure option to store the DSN without having it in
 the configuration file. To use this option:
@@ -260,49 +324,53 @@ the secret. Policy example:
 
 Currently, AWS Secret Manager integration is only available for a single target configuration.
 
-### Multiple database connections
+</details>
 
-It is possible to run a single exporter instance against multiple database connections. In this case we need to
-configure `jobs` list instead of the `target` section as in the following example:
+<details>
+<summary>Run as a Windows service</summary>
 
-```yaml
-jobs:
-  - job_name: db_targets
-    collectors: [pricing_data_freshness, pricing_*]
-    enable_ping: true # Optional, true by default. Set to `false` in case you connect to pgbouncer or a data warehouse
-    static_configs:
-      - targets:
-          pg1: 'pg://db1@127.0.0.1:25432/postgres?sslmode=disable'
-          pg2: 'postgresql://username:password@pg-host.example.com:5432/dbname?sslmode=disable'
-        labels:  # Optional, arbitrary key/value pair for all targets
-          cluster: cluster1
+If you run SQL Exporter from Windows, it might come in handy to register it as a service to avoid interactive sessions.
+It is **important** to define `--config.file` parameter to load the configuration file. The other settings can be added
+as well. The registration itself is performed with Powershell or CMD (make sure you run it as Administrator):
+
+Powershell:
+
+```powershell
+New-Service -name "SqlExporterSvc" `
+-BinaryPathName "%SQL_EXPORTER_PATH%\sql_exporter.exe --config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" `
+-StartupType Automatic `
+-DisplayName "Prometheus SQL Exporter"
 ```
 
-, where DSN strings are assigned to the arbitrary instance names (i.e. pg1 and pg2).
+CMD:
 
-We can also define multiple jobs to run different collectors against different target sets.
-
-Since v0.14, sql_exporter can be passed an optional list of job names to filter out metrics. The `jobs[]` query
-parameter may be used multiple times. In Prometheus configuration we can use this syntax under the [scrape
-config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#%3Cscrape_config%3E):
-
-```yaml
-  params:
-    jobs[]:
-      - db_targets1
-      - db_targets2
+```shell
+sc.exe create SqlExporterSvc binPath= "%SQL_EXPORTER_PATH%\sql_exporter.exe --config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" start= auto
 ```
 
-This might be useful for scraping targets with different intervals or any other advanced use cases, when calling all
-jobs at once is undesired.
+`%SQL_EXPORTER_PATH%` is a path to the SQL Exporter binary executable. This document assumes that configuration files
+are in the same location.
 
-### TLS and Basic Authentication
+In case you need a more sophisticated setup (e.g. with logging, environment variables, etc), you might want to use [NSSM](https://nssm.cc/) or
+[WinSW](https://github.com/winsw/winsw). Please consult their documentation for more details.
+
+</details>
+
+<details>
+<summary>TLS and Basic Authentication</summary>
 
 SQL Exporter supports TLS and Basic Authentication. This enables better control of the various HTTP endpoints.
 
 To use TLS and/or Basic Authentication, you need to pass a configuration file using the `--web.config.file` parameter.
 The format of the file is described in the
 [exporter-toolkit](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md) repository.
+
+</details>
+
+If you have an issue using sql_exporter, please check [Discussions](https://github.com/burningalchemist/sql_exporter/discussions) or
+closed [Issues](https://github.com/burningalchemist/sql_exporter/issues?q=is%3Aissue+is%3Aclosed) first. Chances are
+someone else has already encountered the same problem and there is a solution. If not, feel free to create a new
+discussion.
 
 ## Why It Exists
 
