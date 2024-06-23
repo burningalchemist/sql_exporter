@@ -47,14 +47,20 @@ func Reload(e Exporter, configFile *string) error {
 
 func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 	klog.Warning("Recreating targets collectors...")
-	// FIXME: Should be t.Collectors() instead of config.Collectors
+
+	// We want to preserve DSN from the previous config revision to avoid any connection changes
+	nc.Target.DSN = cc.Target.DSN
+	// Apply the new target configuration
+	cc.Target = nc.Target
+	// Recreate the target object
 	target, err := NewTarget("", cc.Target.Name, "", string(cc.Target.DSN),
-		nc.Target.Collectors(), nil, cc.Globals, cc.Target.EnablePing)
+		cc.Target.Collectors(), nil, cc.Globals, cc.Target.EnablePing)
 	if err != nil {
 		klog.Errorf("Error recreating a target - %v", err)
 		return err
 	}
 
+	// Populate the target list
 	e.UpdateTarget([]Target{target})
 	klog.Warning("Collectors have been successfully reloaded for target")
 	return nil
@@ -72,7 +78,6 @@ func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 		}
 	}
 	cc.Jobs = nc.Jobs
-
 	var updateErr error
 	targets := make([]Target, 0, len(cc.Jobs))
 
