@@ -57,7 +57,6 @@ func NewTarget(
 	logContext, tname, jg, dsn string, ccs []*config.CollectorConfig, constLabels prometheus.Labels, gc *config.GlobalConfig, ep *bool) (
 	Target, errors.WithContext,
 ) {
-
 	if tname != "" {
 		logContext = TrimMissingCtx(fmt.Sprintf(`%s,target=%s`, logContext, tname))
 		if constLabels == nil {
@@ -65,6 +64,9 @@ func NewTarget(
 		}
 	}
 
+	if ep == nil {
+		ep = &config.EnablePing
+	}
 	klog.Infof("[%s] Target ping enabled: %v", logContext, *ep)
 
 	// Sort const labels by name to ensure consistent ordering.
