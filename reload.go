@@ -10,34 +10,34 @@ import (
 func Reload(e Exporter, configFile *string) error {
 	klog.Warning("Reloading collectors has started...")
 	klog.Warning("Connections will not be changed upon the restart of the exporter")
-	exporterNewConfig, err := cfg.Load(*configFile)
+	configNext, err := cfg.Load(*configFile)
 	if err != nil {
 		klog.Errorf("Error reading config file - %v", err)
 		return err
 	}
 
-	currentConfig := e.Config()
+	configCurrent := e.Config()
 
 	// Clear current collectors and replace with new ones
-	if len(currentConfig.Collectors) > 0 {
-		currentConfig.Collectors = currentConfig.Collectors[:0]
+	if len(configCurrent.Collectors) > 0 {
+		configCurrent.Collectors = configCurrent.Collectors[:0]
 	}
-	currentConfig.Collectors = exporterNewConfig.Collectors
-	klog.Infof("Total collector size change: %v -> %v", len(currentConfig.Collectors),
-		len(exporterNewConfig.Collectors))
+	configCurrent.Collectors = configNext.Collectors
+	klog.Infof("Total collector size change: %v -> %v", len(configCurrent.Collectors),
+		len(configNext.Collectors))
 
 	// Reload targets
 	switch {
-	case currentConfig.Target != nil && exporterNewConfig.Target != nil:
-		if err = reloadTarget(e, exporterNewConfig, currentConfig); err != nil {
+	case configCurrent.Target != nil && configNext.Target != nil:
+		if err = reloadTarget(e, configNext, configCurrent); err != nil {
 			return err
 		}
-	case len(currentConfig.Jobs) > 0 && len(exporterNewConfig.Jobs) > 0:
-		if err = reloadJobs(e, exporterNewConfig, currentConfig); err != nil {
+	case len(configCurrent.Jobs) > 0 && len(configNext.Jobs) > 0:
+		if err = reloadJobs(e, configNext, configCurrent); err != nil {
 			return err
 		}
-	case currentConfig.Target != nil && len(exporterNewConfig.Jobs) > 0:
-	case len(currentConfig.Jobs) > 0 && exporterNewConfig.Target != nil:
+	case configCurrent.Target != nil && len(configNext.Jobs) > 0:
+	case len(configCurrent.Jobs) > 0 && configNext.Target != nil:
 		return errors.New("changing scrape mode is not allowed. Please restart the exporter")
 	default:
 		klog.Warning("No target or jobs have been found - nothing to reload")
