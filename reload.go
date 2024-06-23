@@ -7,6 +7,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
+// Reload function is used to reload the exporter configuration without restarting the exporter
 func Reload(e Exporter, configFile *string) error {
 	klog.Warning("Reloading collectors has started...")
 	klog.Warning("Connections will not be changed upon the restart of the exporter")
