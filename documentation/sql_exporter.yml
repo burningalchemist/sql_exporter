@@ -13,6 +13,8 @@ global:
   #
   # Must be strictly positive. The default is 500ms.
   scrape_timeout_offset: 500ms
+  # Interval between dropping scrape_errors_total metric: by default (0s) metrics are persistent.
+  scrape_error_drop_interval: 0s
   # Minimum interval between collector runs: by default (0s) collectors are executed on every scrape.
   min_interval: 0s
   # Maximum number of open connections to any one target. Metric queries will run concurrently on multiple connections,

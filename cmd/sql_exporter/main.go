@@ -105,6 +105,20 @@ func main() {
 		http.HandleFunc("/reload", reloadHandler(exporter))
 	}
 
+	// Drop scrape error metrics if configured
+	scrapeErrorsDropInterval := exporter.Config().Globals.ScrapeErrorDropInterval
+	if scrapeErrorsDropInterval > 0 {
+		ticker := time.NewTicker(time.Duration(scrapeErrorsDropInterval))
+		klog.Warning("Started scrape_errors_total metrics drop ticker: ", scrapeErrorsDropInterval)
+		defer ticker.Stop()
+		go func() {
+			for range ticker.C {
+				sql_exporter.DropErrorMetrics()
+				klog.Info("Dropped scrape_errors_total metrics")
+			}
+		}()
+	}
+
 	// Handle SIGHUP for reloading the configuration
 	go func() {
 		c := make(chan os.Signal, 1)

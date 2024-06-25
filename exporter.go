@@ -238,3 +238,7 @@ func TrimMissingCtx(logContext string) string {
 	}
 	return logContext
 }
+
+func DropErrorMetrics() {
+	scrapeErrorsMetric.Reset()
+}
