@@ -16,6 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	info "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
@@ -87,11 +88,16 @@ func main() {
 	}
 
 	klog.Warningf("Starting SQL exporter %s %s", version.Info(), version.BuildContext())
-
 	exporter, err := sql_exporter.NewExporter(*configFile)
 	if err != nil {
 		klog.Fatalf("Error creating exporter: %s", err)
 	}
+
+	// Start the scrape_errors_total metric drop ticker if configured.
+	startScrapeErrorsDropTicker(exporter, exporter.Config().Globals.ScrapeErrorDropInterval)
+
+	// Start signal handler to reload collector and target data.
+	signalHandler(exporter, *configFile)
 
 	// Setup and start webserver.
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { http.Error(w, "OK", http.StatusOK) })
@@ -102,38 +108,9 @@ func main() {
 	http.Handle("/sql_exporter_metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 	// Expose refresh handler to reload collectors and targets
 	if *enableReload {
-		http.HandleFunc("/reload", reloadHandler(exporter))
+		http.HandleFunc("/reload", reloadHandler(exporter, *configFile))
 	}
 
-	// Drop scrape error metrics if configured
-	scrapeErrorsDropInterval := exporter.Config().Globals.ScrapeErrorDropInterval
-	if scrapeErrorsDropInterval > 0 {
-		ticker := time.NewTicker(time.Duration(scrapeErrorsDropInterval))
-		klog.Warning("Started scrape_errors_total metrics drop ticker: ", scrapeErrorsDropInterval)
-		defer ticker.Stop()
-		go func() {
-			for range ticker.C {
-				sql_exporter.DropErrorMetrics()
-				klog.Info("Dropped scrape_errors_total metrics")
-			}
-		}()
-	}
-
-	// Handle SIGHUP for reloading the configuration
-	go func() {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGHUP)
-		for {
-			<-c
-			err := sql_exporter.Reload(exporter, configFile)
-			if err != nil {
-				klog.Error(err)
-				continue
-			}
-		}
-	}()
-
-	// Start the web server
 	server := &http.Server{Addr: *listenAddress, ReadHeaderTimeout: httpReadHeaderTimeout}
 	if err := web.ListenAndServe(server, &web.FlagConfig{
 		WebListenAddresses: &([]string{*listenAddress}),
@@ -143,14 +120,43 @@ func main() {
 	}
 }
 
-// reloadHandler returns a handler that reloads collectors and targets
-func reloadHandler(e sql_exporter.Exporter) func(http.ResponseWriter, *http.Request) {
+// reloadHandler returns a handler that reloads collector and target data.
+func reloadHandler(e sql_exporter.Exporter, configFile string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := sql_exporter.Reload(e, configFile)
-		if err != nil {
+		if err := sql_exporter.Reload(e, &configFile); err != nil {
+			klog.Error(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+// signalHandler listens for SIGHUP signals and reloads the collector and target data.
+func signalHandler(e sql_exporter.Exporter, configFile string) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP)
+	go func() {
+		for range c {
+			if err := sql_exporter.Reload(e, &configFile); err != nil {
+				klog.Error(err)
+			}
+		}
+	}()
+}
+
+// startScrapeErrorsDropTicker starts a ticker that periodically drops scrape error metrics.
+func startScrapeErrorsDropTicker(exporter sql_exporter.Exporter, interval model.Duration) {
+	if interval <= 0 {
+		return
+	}
+
+	ticker := time.NewTicker(time.Duration(interval))
+	klog.Warning("Started scrape_errors_total metrics drop ticker: ", interval)
+	go func() {
+		defer ticker.Stop()
+		for range ticker.C {
+			exporter.DropErrorMetrics()
+		}
+	}()
 }
