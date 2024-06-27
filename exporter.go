@@ -33,6 +33,8 @@ type Exporter interface {
 	UpdateTarget([]Target)
 	// SetJobFilters sets the jobFilters field
 	SetJobFilters([]string)
+	// DropErrorMetrics resets the scrape_errors_total metric
+	DropErrorMetrics()
 }
 
 type exporter struct {
@@ -208,6 +210,12 @@ func (e *exporter) UpdateTarget(target []Target) {
 // SetJobFilters implements Exporter.
 func (e *exporter) SetJobFilters(filters []string) {
 	e.jobFilters = filters
+}
+
+// DropErrorMetrics implements Exporter.
+func (e *exporter) DropErrorMetrics() {
+	scrapeErrorsMetric.Reset()
+	klog.Info("Dropped scrape_errors_total metric")
 }
 
 // registerScrapeErrorMetric registers the metrics for the exporter itself.

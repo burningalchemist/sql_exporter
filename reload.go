@@ -47,7 +47,7 @@ func Reload(e Exporter, configFile *string) error {
 }
 
 func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
-	klog.Warning("Recreating targets collectors...")
+	klog.Warning("Recreating target...")
 
 	// We want to preserve DSN from the previous config revision to avoid any connection changes
 	nc.Target.DSN = cc.Target.DSN
@@ -63,7 +63,7 @@ func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 
 	// Populate the target list
 	e.UpdateTarget([]Target{target})
-	klog.Warning("Collectors have been successfully reloaded for target")
+	klog.Warning("Collectors have been successfully updated for the target")
 	return nil
 }
 
@@ -98,6 +98,6 @@ func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 	}
 
 	e.UpdateTarget(targets)
-	klog.Warning("Query collectors have been successfully reloaded for jobs")
+	klog.Warning("Collectors have been successfully updated for the jobs")
 	return nil
 }
