@@ -5,7 +5,7 @@ go 1.21.0
 toolchain go1.21.9
 
 require (
-	github.com/ClickHouse/clickhouse-go/v2 v2.25.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.26.0
 	github.com/aws/aws-sdk-go-v2 v1.27.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.16
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.1
