@@ -12,6 +12,7 @@ import (
 
 	"github.com/burningalchemist/sql_exporter"
 	cfg "github.com/burningalchemist/sql_exporter/config"
+	"github.com/go-kit/log"
 	_ "github.com/kardianos/minwinsvc"
 	"github.com/prometheus/client_golang/prometheus"
 	info "github.com/prometheus/client_golang/prometheus/collectors/version"
@@ -37,7 +38,8 @@ var (
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
 	webConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
-	logFormatJSON = flag.Bool("log.json", false, "Set log output format to JSON")
+	logFormatJSON = flag.Bool("log.json", false, "[DEPRECATED] Set log output format to JSON")
+	logFormat     = flag.String("log.format", "logfmt", "Set log output format")
 	logLevel      = flag.String("log.level", "info", "Set log level")
 )
 
@@ -64,23 +66,11 @@ func main() {
 	}
 
 	// Setup logging.
-	promlogConfig := &promlog.Config{}
-	promlogConfig.Level = &promlog.AllowedLevel{}
-	err := promlogConfig.Level.Set(*logLevel)
+	logger, err := setupLogging(*logLevel, *logFormat, *logFormatJSON)
 	if err != nil {
 		fmt.Printf("Error initializing exporter: %s\n", err)
 		os.Exit(1)
 	}
-	if *logFormatJSON {
-		promlogConfig.Format = &promlog.AllowedFormat{}
-		_ = promlogConfig.Format.Set("json")
-	}
-
-	// Overriding the default klog with our go-kit klog implementation.
-	// Thus we need to pass it our go-kit logger object.
-	logger := promlog.New(promlogConfig)
-	klog.SetLogger(logger)
-	klog.ClampLevel(debugMaxLevel)
 
 	// Override the config.file default with the SQLEXPORTER_CONFIG environment variable if set.
 	if val, ok := os.LookupEnv(cfg.EnvConfigFile); ok {
@@ -159,4 +149,32 @@ func startScrapeErrorsDropTicker(exporter sql_exporter.Exporter, interval model.
 			exporter.DropErrorMetrics()
 		}
 	}()
+}
+
+// setupLogging configures and initializes the logging system.
+func setupLogging(logLevel, logFormat string, logFormatJSON bool) (log.Logger, error) {
+	promlogConfig := &promlog.Config{
+		Level:  &promlog.AllowedLevel{},
+		Format: &promlog.AllowedFormat{},
+	}
+
+	if err := promlogConfig.Level.Set(logLevel); err != nil {
+		return nil, err
+	}
+
+	// Override log format if JSON is specified.
+	finalLogFormat := logFormat
+	if logFormatJSON {
+		fmt.Print("Warning: The flag --log.json is deprecated and will be removed in a future release. Please use --log.format=json instead\n")
+		finalLogFormat = "json"
+	}
+	if err := promlogConfig.Format.Set(finalLogFormat); err != nil {
+		return nil, err
+	}
+	// Overriding the default klog with our go-kit klog implementation.
+	logger := promlog.New(promlogConfig)
+	klog.SetLogger(logger)
+	klog.ClampLevel(debugMaxLevel)
+
+	return logger, nil
 }
