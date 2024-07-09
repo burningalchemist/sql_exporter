@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.5.0](https://img.shields.io/badge/Version-0.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.14.3](https://img.shields.io/badge/AppVersion-0.14.3-informational?style=flat-square)
+![Version: 0.6.0](https://img.shields.io/badge/Version-0.6.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.15.0](https://img.shields.io/badge/AppVersion-0.15.0-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -40,7 +40,7 @@ helm install sql_exporter/sql-exporter
 | service.labels | object | `{}` | Service labels |
 | service.annotations | object | `{}` | Service annotations |
 | extraContainers | object | `{}` | Arbitrary sidecar containers list |
-| serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, defaults to "sql-exporter" unless overriden. Check values.yaml for all the available parameters |
+| serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
 | resources | object | `{}` | Resource limits and requests for the application controller pods |
 | podLabels | object | `{}` | Pod labels |
@@ -64,6 +64,7 @@ helm install sql_exporter/sql-exporter
 |-----|------|---------|-------------|
 | config.global.scrape_timeout | string | `"10s"` | Scrape timeout |
 | config.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
+| config.global.scrape_error_drop_interval | string | `"0s"` | Interval between dropping scrape_errors_total metric: by default the metric is persistent. |
 | config.global.min_interval | string | `"0s"` | Minimum interval between collector runs. |
 | config.global.max_connections | int | `3` | Number of open connections. |
 | config.global.max_idle_connections | int | `3` | Number of idle connections. |

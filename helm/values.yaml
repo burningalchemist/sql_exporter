@@ -113,6 +113,8 @@ config:
     scrape_timeout: 10s
     # -- Scrape timeout offset. Must be strictly positive.
     scrape_timeout_offset: 500ms
+    # -- Interval between dropping scrape_errors_total metric: by default the metric is persistent.
+    scrape_error_drop_interval: 0s
     # -- Minimum interval between collector runs.
     min_interval: 0s
     # -- Number of open connections.
