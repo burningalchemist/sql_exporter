@@ -79,6 +79,8 @@ serviceMonitor:
   # scrapeTimeout: 10s
   # -- ServiceMonitor metric relabelings
   metricRelabelings: {}
+  # -- ServiceMonitor namespace override (default is .Release.Namespace)
+  namespace: ~
 # Additional env variables
 # - kind should be either Secret or ConfigMap
 # - name is the name of the Secret or ConfigMap that should be used
