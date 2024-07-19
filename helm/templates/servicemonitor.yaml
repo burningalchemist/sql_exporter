@@ -34,5 +34,9 @@ spec:
       {{- end }}
   namespaceSelector:
     matchNames:
+    {{- if .Values.serviceMonitor.namespace }}
+    - {{ .Values.serviceMonitor.namespace }}
+    {{- else }}
     - {{ .Release.Namespace }}
+    {{- end }}
 {{- end }}
