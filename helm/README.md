@@ -54,6 +54,7 @@ helm install sql_exporter/sql-exporter
 |-----|------|---------|-------------|
 | serviceMonitor.enabled | bool | `true` | Enable ServiceMonitor |
 | serviceMonitor.interval | string | `"15s"` | ServiceMonitor interval |
+| serviceMonitor.namespace | string | `{{ .Release.Namespace }}` | override for the namespace where the ServiceMonitor will be deployed |
 | serviceMonitor.path | string | `"/metrics"` | ServiceMonitor path |
 | serviceMonitor.metricRelabelings | object | `{}` | ServiceMonitor metric relabelings |
 | serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout |
