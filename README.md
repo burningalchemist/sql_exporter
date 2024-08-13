@@ -12,6 +12,7 @@ monitoring system. Out of the box, it provides support for the following databas
 - Clickhouse
 - Snowflake
 - Vertica
+- Oracle DB
 
 In fact, any DBMS for which a Go driver is available may be monitored after rebuilding the binary with the DBMS driver
 included.

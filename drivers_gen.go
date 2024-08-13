@@ -25,6 +25,7 @@ var driverList = map[string][]string{
 		"github.com/jackc/pgx/v5/stdlib",
 		"github.com/snowflakedb/gosnowflake",
 		"github.com/vertica/vertica-sql-go",
+		"github.com/sijms/go-ora/v2",
 	},
 	"custom": {
 		"github.com/mithrandie/csvq-driver",
