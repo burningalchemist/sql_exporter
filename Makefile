@@ -91,7 +91,7 @@ promu:
 else
 promu:
 	@GOOS=$(shell uname -s | tr A-Z a-z) \
-		GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
+		GOARCH=$(subst x86_64,amd64,$(subst aarch64,arm64,$(patsubst i%86,386,$(shell uname -m)))) \
 		$(GO) install github.com/prometheus/promu@$(PROMU_VERSION)
 endif
 
