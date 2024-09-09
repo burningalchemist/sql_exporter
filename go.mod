@@ -1,8 +1,7 @@
 module github.com/burningalchemist/sql_exporter
 
 go 1.21.0
-
-toolchain go1.21.9
+toolchain go1.22.5
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.27.0
@@ -18,7 +17,7 @@ require (
 	github.com/prometheus/client_golang v1.20.3
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.59.1
-	github.com/prometheus/exporter-toolkit v0.11.0
+	github.com/prometheus/exporter-toolkit v0.12.0
 	github.com/sethvargo/go-envconfig v1.1.0
 	github.com/snowflakedb/gosnowflake v1.11.1
 	github.com/vertica/vertica-sql-go v1.3.3
@@ -87,6 +86,8 @@ require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/mdlayher/socket v0.4.1 // indirect
+	github.com/mdlayher/vsock v1.2.1 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
