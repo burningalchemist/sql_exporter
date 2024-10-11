@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.6.1](https://img.shields.io/badge/Version-0.6.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.15.0](https://img.shields.io/badge/AppVersion-0.15.0-informational?style=flat-square)
+![Version: 0.7.0](https://img.shields.io/badge/Version-0.7.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.15.0](https://img.shields.io/badge/AppVersion-0.15.0-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -42,6 +42,10 @@ helm install sql_exporter/sql-exporter
 | extraContainers | object | `{}` | Arbitrary sidecar containers list |
 | serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
+| livenessProbe.initialDelaySeconds | int | `5` |  |
+| livenessProbe.timeoutSeconds | int | `30` |  |
+| readinessProbe.initialDelaySeconds | int | `5` |  |
+| readinessProbe.timeoutSeconds | int | `30` |  |
 | resources | object | `{}` | Resource limits and requests for the application controller pods |
 | podLabels | object | `{}` | Pod labels |
 | podAnnotations | object | `{}` | Pod annotations |
