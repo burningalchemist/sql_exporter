@@ -45,6 +45,14 @@ serviceAccount:
   #   iam.gke.io/gcp-service-account: my-service-account@gke.url
   # -- Defines if token is automatically mounted to the pod after it has been created
   # automountServiceAccountToken: false
+# Liveness and readiness probes for the application controller pods
+livenessProbe:
+  initialDelaySeconds: 5
+  timeoutSeconds: 30
+
+readinessProbe:
+  initialDelaySeconds: 5
+  timeoutSeconds: 30
 # -- Resource limits and requests for the application controller pods
 resources: {}
   # limits:

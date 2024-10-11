@@ -96,12 +96,14 @@ spec:
             {{- end }}
             {{- end }}
           livenessProbe:
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
             httpGet:
               path: /healthz
               port: 9399
           readinessProbe:
-            httpGet:
-              path: /healthz
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
               port: 9399
           ports:
             - name: http
