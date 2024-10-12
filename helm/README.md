@@ -51,6 +51,7 @@ helm install sql_exporter/sql-exporter
 | podAnnotations | object | `{}` | Pod annotations |
 | podSecurityContext | object | `{}` | Pod security context |
 | createConfig | bool | `true` |  |
+| reload | bool | `false` | Enable reload collector data handler (endpoint /reload) |
 
 ### Prometheus ServiceMonitor
 
