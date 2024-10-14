@@ -117,6 +117,8 @@ serviceMonitor:
 #       mountPath: /etc/config
 # Set to true to create a config as a part of the helm chart
 createConfig: true
+# -- Enable reload collector data handler (endpoint /reload)
+reloadEnabled: false
 config:
   global:
     # -- Scrape timeout
