@@ -118,7 +118,7 @@ serviceMonitor:
 # Set to true to create a config as a part of the helm chart
 createConfig: true
 # -- Enable reload collector data handler (endpoint /reload)
-reload: false
+reloadEnabled: false
 config:
   global:
     # -- Scrape timeout

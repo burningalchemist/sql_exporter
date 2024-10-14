@@ -55,7 +55,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "-config.file=/etc/sql_exporter/sql_exporter.yml"
-            {{- if .Values.reload }}
+            {{- if .Values.reloadEnabled }}
             - "-web.enable-reload"
             {{- end }}
           {{- if eq (include "sql-exporter.volumes" .) "\"true\"" }}
