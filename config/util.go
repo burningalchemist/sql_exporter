@@ -2,10 +2,9 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"strings"
-
-	"k8s.io/klog/v2"
 )
 
 func checkCollectorRefs(collectorRefs []string, ctx string) error {
@@ -45,7 +44,7 @@ func resolveCollectorRefs(
 			return nil, fmt.Errorf("unknown collector %q referenced in %s", cref, ctx)
 		}
 	}
-	klog.Infof("Resolved collectors for %s: %v", ctx, len(resolved))
+	slog.Info("Resolved collectors", "ctx", ctx, "count", len(resolved))
 	return resolved, nil
 }
 

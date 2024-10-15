@@ -4,13 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/burningalchemist/sql_exporter/errors"
 	dto "github.com/prometheus/client_model/go"
-	"k8s.io/klog/v2"
 )
 
 // Collector is a self-contained group of SQL queries and metric families to collect from a specific database. It is
@@ -64,7 +64,7 @@ func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*
 		logContext: logContext,
 	}
 	if c.config.MinInterval > 0 {
-		klog.V(2).Infof("[%s] Non-zero min_interval (%s), using cached collector.", logContext, c.config.MinInterval)
+		slog.Info("Non-zero min_interval, using cached collector.", "logContext", logContext, "min_interval", c.config.MinInterval)
 		return newCachingCollector(&c), nil
 	}
 	return &c, nil
@@ -114,15 +114,14 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 		ch <- NewInvalidMetric(errors.Wrap(cc.rawColl.logContext, ctx.Err()))
 		return
 	}
-	klog.Infof("Cache size: %d", len(cc.cache))
+	slog.Info("Cache", "size", len(cc.cache))
 	collTime := time.Now()
 	select {
 	case cacheTime := <-cc.cacheSem:
 		// Have the lock.
 		if age := collTime.Sub(cacheTime); age > cc.minInterval || len(cc.cache) == 0 {
 			// Cache contents are older than minInterval, collect fresh metrics, cache them and pipe them through.
-			klog.V(2).Infof("[%s] Collecting fresh metrics: min_interval=%.3fs cache_age=%.3fs",
-				cc.rawColl.logContext, cc.minInterval.Seconds(), age.Seconds())
+			slog.Info("Collecting fresh metrics", "logContext", cc.rawColl.logContext, "min_interval", cc.minInterval.Seconds(), "cache_age", age.Seconds())
 			cacheChan := make(chan Metric, capMetricChan)
 			cc.cache = make([]Metric, 0, len(cc.cache))
 			go func() {
@@ -132,7 +131,7 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 			for metric := range cacheChan {
 				// catch invalid metrics and return them immediately, don't cache them
 				if ctx.Err() != nil {
-					klog.V(2).Infof("[%s] Context closed, returning invalid metric", cc.rawColl.logContext)
+					slog.Info("Context closed, returning invalid metric", "logContext", cc.rawColl.logContext)
 					ch <- NewInvalidMetric(errors.Wrap(cc.rawColl.logContext, ctx.Err()))
 					continue
 				}
@@ -142,8 +141,7 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 			}
 			cacheTime = collTime
 		} else {
-			klog.V(2).Infof("[%s] Returning cached metrics: min_interval=%.3fs cache_age=%.3fs",
-				cc.rawColl.logContext, cc.minInterval.Seconds(), age.Seconds())
+			slog.Info("Returning cached metrics", "logContext", cc.rawColl.logContext, "min_interval", cc.minInterval.Seconds(), "cache_age", age.Seconds())
 			for _, metric := range cc.cache {
 				ch <- metric
 			}

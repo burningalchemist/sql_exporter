@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"log/slog"
 	"sort"
 	"sync"
 	"time"
@@ -14,7 +15,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 	"google.golang.org/protobuf/proto"
-	"k8s.io/klog/v2"
 )
 
 const (
@@ -67,7 +67,7 @@ func NewTarget(
 	if ep == nil {
 		ep = &config.EnablePing
 	}
-	klog.Infof("[%s] Target ping enabled: %v", logContext, *ep)
+	slog.Info("target ping enabled", "logContext", logContext, "enabled", *ep)
 
 	// Sort const labels by name to ensure consistent ordering.
 	constLabelPairs := make([]*dto.LabelPair, 0, len(constLabels))

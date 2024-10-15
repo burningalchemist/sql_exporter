@@ -2,18 +2,18 @@ package sql_exporter
 
 import (
 	"errors"
+	"log/slog"
 
 	cfg "github.com/burningalchemist/sql_exporter/config"
-	"k8s.io/klog/v2"
 )
 
 // Reload function is used to reload the exporter configuration without restarting the exporter
 func Reload(e Exporter, configFile *string) error {
-	klog.Warning("Reloading collectors has started...")
-	klog.Warning("Connections will not be changed upon the restart of the exporter")
+	slog.Warn("Reloading collectors has started...")
+	slog.Warn("Connections will not be changed upon the restart of the exporter")
 	configNext, err := cfg.Load(*configFile)
 	if err != nil {
-		klog.Errorf("Error reading config file - %v", err)
+		slog.Error("Error reading config file", "error", err)
 		return err
 	}
 
@@ -24,8 +24,7 @@ func Reload(e Exporter, configFile *string) error {
 		configCurrent.Collectors = configCurrent.Collectors[:0]
 	}
 	configCurrent.Collectors = configNext.Collectors
-	klog.Infof("Total collector size change: %v -> %v", len(configCurrent.Collectors),
-		len(configNext.Collectors))
+	slog.Info("Total collector size change", "from", len(configCurrent.Collectors), "to", len(configNext.Collectors))
 
 	// Reload targets
 	switch {
@@ -41,13 +40,13 @@ func Reload(e Exporter, configFile *string) error {
 	case len(configCurrent.Jobs) > 0 && configNext.Target != nil:
 		return errors.New("changing scrape mode is not allowed. Please restart the exporter")
 	default:
-		klog.Warning("No target or jobs have been found - nothing to reload")
+		slog.Warn("No target or jobs have been found - nothing to reload")
 	}
 	return nil
 }
 
 func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
-	klog.Warning("Recreating target...")
+	slog.Warn("Recreating target...")
 
 	// We want to preserve DSN from the previous config revision to avoid any connection changes
 	nc.Target.DSN = cc.Target.DSN
@@ -57,19 +56,18 @@ func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 	target, err := NewTarget("", cc.Target.Name, "", string(cc.Target.DSN),
 		cc.Target.Collectors(), nil, cc.Globals, cc.Target.EnablePing)
 	if err != nil {
-		klog.Errorf("Error recreating a target - %v", err)
+		slog.Error("Error recreating a target", "error", err)
 		return err
 	}
 
 	// Populate the target list
 	e.UpdateTarget([]Target{target})
-	klog.Warning("Collectors have been successfully updated for the target")
+	slog.Warn("Collectors have been successfully updated for the target")
 	return nil
 }
 
 func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
-	klog.Warning("Recreating jobs...")
-
+	slog.Warn("Recreating jobs...")
 	// We want to preserve `static_configs`` from the previous config revision to avoid any connection changes
 	for _, currentJob := range cc.Jobs {
 		for _, newJob := range nc.Jobs {
@@ -89,15 +87,15 @@ func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 			break
 		}
 		targets = append(targets, job.Targets()...)
-		klog.Infof("Recreated Job: %s", jobConfigItem.Name)
+		slog.Info("Recreated Job", "name", jobConfigItem.Name)
 	}
 
 	if updateErr != nil {
-		klog.Errorf("Error recreating jobs - %v", updateErr)
+		slog.Error("Error recreating jobs", "error", updateErr)
 		return updateErr
 	}
 
 	e.UpdateTarget(targets)
-	klog.Warning("Collectors have been successfully updated for the jobs")
+	slog.Warn("Collectors have been successfully updated for the jobs")
 	return nil
 }
