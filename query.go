@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 
 	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/burningalchemist/sql_exporter/errors"
-	"k8s.io/klog/v2"
 )
 
 // Query wraps a sql.Stmt and all the metrics populated from it. It helps extract keys and values from result rows.
@@ -96,7 +96,7 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 	dest, err := q.scanDest(rows)
 	if err != nil {
 		if config.IgnoreMissingVals {
-			klog.V(3).Info(err)
+			slog.Warn("Ignoring missing values", "logContext", q.logContext)
 			return
 		}
 		ch <- NewInvalidMetric(err)
@@ -147,7 +147,7 @@ func (q *Query) scanDest(rows *sql.Rows) ([]any, errors.WithContext) {
 	if err != nil {
 		return nil, errors.Wrap(q.logContext, err)
 	}
-	klog.V(3).Infof("[%s] Returned columns: %q", q.logContext, columns)
+	slog.Debug("Returned columns", "logContext", q.logContext, "columns", columns)
 	// Create the slice to scan the row into, with strings for keys and float64s for values.
 	dest := make([]any, 0, len(columns))
 	have := make(map[string]bool, len(q.columnTypes))
@@ -164,9 +164,9 @@ func (q *Query) scanDest(rows *sql.Rows) ([]any, errors.WithContext) {
 			have[column] = true
 		default:
 			if column == "" {
-				klog.Infof("[%s] Unnamed column %d returned by query", q.logContext, i)
+				slog.Debug("Unnamed column", "logContext", q.logContext, "column", i)
 			} else {
-				klog.Infof("[%s] Extra column %q returned by query", q.logContext, column)
+				slog.Debug("Extra column returned by query", "logContext", q.logContext, "column", column)
 			}
 			dest = append(dest, new(any))
 		}
@@ -205,17 +205,17 @@ func (q *Query) scanRow(rows *sql.Rows, dest []any) (map[string]any, errors.With
 		switch q.columnTypes[column] {
 		case columnTypeKey:
 			if !dest[i].(*sql.NullString).Valid {
-				klog.V(3).Infof("[%s] Key column %q is NULL", q.logContext, column)
+				slog.Warn("Key column is NULL", "logContext", q.logContext, "column", column)
 			}
 			result[column] = *dest[i].(*sql.NullString)
 		case columnTypeTime:
 			if !dest[i].(*sql.NullTime).Valid {
-				klog.V(3).Infof("[%s] Time column %q is invalid or NULL", q.logContext, column)
+				slog.Warn("Time column is NULL", "logContext", q.logContext, "column", column)
 			}
 			result[column] = *dest[i].(*sql.NullTime)
 		case columnTypeValue:
 			if !dest[i].(*sql.NullFloat64).Valid {
-				klog.V(3).Infof("[%s] Value column %q is NULL", q.logContext, column)
+				slog.Warn("Value column is NULL", "logContext", q.logContext, "column", column)
 			}
 			result[column] = *dest[i].(*sql.NullFloat64)
 		}
