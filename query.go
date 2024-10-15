@@ -147,7 +147,7 @@ func (q *Query) scanDest(rows *sql.Rows) ([]any, errors.WithContext) {
 	if err != nil {
 		return nil, errors.Wrap(q.logContext, err)
 	}
-	slog.Info("Returned columns", "logContext", q.logContext, "columns", columns)
+	slog.Debug("Returned columns", "logContext", q.logContext, "columns", columns)
 	// Create the slice to scan the row into, with strings for keys and float64s for values.
 	dest := make([]any, 0, len(columns))
 	have := make(map[string]bool, len(q.columnTypes))
@@ -164,9 +164,9 @@ func (q *Query) scanDest(rows *sql.Rows) ([]any, errors.WithContext) {
 			have[column] = true
 		default:
 			if column == "" {
-				slog.Info("Unnamed column", "logContext", q.logContext, "column", i)
+				slog.Debug("Unnamed column", "logContext", q.logContext, "column", i)
 			} else {
-				slog.Info("Extra column returned by query", "logContext", q.logContext, "column", column)
+				slog.Debug("Extra column returned by query", "logContext", q.logContext, "column", column)
 			}
 			dest = append(dest, new(any))
 		}
@@ -205,17 +205,17 @@ func (q *Query) scanRow(rows *sql.Rows, dest []any) (map[string]any, errors.With
 		switch q.columnTypes[column] {
 		case columnTypeKey:
 			if !dest[i].(*sql.NullString).Valid {
-				slog.Info("Key column is NULL", "logContext", q.logContext, "column", column)
+				slog.Warn("Key column is NULL", "logContext", q.logContext, "column", column)
 			}
 			result[column] = *dest[i].(*sql.NullString)
 		case columnTypeTime:
 			if !dest[i].(*sql.NullTime).Valid {
-				slog.Info("Time column is NULL", "logContext", q.logContext, "column", column)
+				slog.Warn("Time column is NULL", "logContext", q.logContext, "column", column)
 			}
 			result[column] = *dest[i].(*sql.NullTime)
 		case columnTypeValue:
 			if !dest[i].(*sql.NullFloat64).Valid {
-				slog.Info("Value column is NULL", "logContext", q.logContext, "column", column)
+				slog.Warn("Value column is NULL", "logContext", q.logContext, "column", column)
 			}
 			result[column] = *dest[i].(*sql.NullFloat64)
 		}

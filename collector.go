@@ -64,7 +64,7 @@ func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*
 		logContext: logContext,
 	}
 	if c.config.MinInterval > 0 {
-		slog.Info("Non-zero min_interval, using cached collector.", "logContext", logContext, "min_interval", c.config.MinInterval)
+		slog.Warn("Non-zero min_interval, using cached collector.", "logContext", logContext, "min_interval", c.config.MinInterval)
 		return newCachingCollector(&c), nil
 	}
 	return &c, nil
@@ -114,14 +114,14 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 		ch <- NewInvalidMetric(errors.Wrap(cc.rawColl.logContext, ctx.Err()))
 		return
 	}
-	slog.Info("Cache", "size", len(cc.cache))
+	slog.Debug("Cache", "size", len(cc.cache))
 	collTime := time.Now()
 	select {
 	case cacheTime := <-cc.cacheSem:
 		// Have the lock.
 		if age := collTime.Sub(cacheTime); age > cc.minInterval || len(cc.cache) == 0 {
 			// Cache contents are older than minInterval, collect fresh metrics, cache them and pipe them through.
-			slog.Info("Collecting fresh metrics", "logContext", cc.rawColl.logContext, "min_interval", cc.minInterval.Seconds(), "cache_age", age.Seconds())
+			slog.Debug("Collecting fresh metrics", "logContext", cc.rawColl.logContext, "min_interval", cc.minInterval.Seconds(), "cache_age", age.Seconds())
 			cacheChan := make(chan Metric, capMetricChan)
 			cc.cache = make([]Metric, 0, len(cc.cache))
 			go func() {
@@ -131,7 +131,7 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 			for metric := range cacheChan {
 				// catch invalid metrics and return them immediately, don't cache them
 				if ctx.Err() != nil {
-					slog.Info("Context closed, returning invalid metric", "logContext", cc.rawColl.logContext)
+					slog.Debug("Context closed, returning invalid metric", "logContext", cc.rawColl.logContext)
 					ch <- NewInvalidMetric(errors.Wrap(cc.rawColl.logContext, ctx.Err()))
 					continue
 				}
@@ -141,7 +141,7 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 			}
 			cacheTime = collTime
 		} else {
-			slog.Info("Returning cached metrics", "logContext", cc.rawColl.logContext, "min_interval", cc.minInterval.Seconds(), "cache_age", age.Seconds())
+			slog.Debug("Returning cached metrics", "logContext", cc.rawColl.logContext, "min_interval", cc.minInterval.Seconds(), "cache_age", age.Seconds())
 			for _, metric := range cc.cache {
 				ch <- metric
 			}

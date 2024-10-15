@@ -44,7 +44,7 @@ func resolveCollectorRefs(
 			return nil, fmt.Errorf("unknown collector %q referenced in %s", cref, ctx)
 		}
 	}
-	slog.Info("Resolved collectors", "ctx", ctx, "count", len(resolved))
+	slog.Debug("Resolved collectors", "context", ctx, "count", len(resolved))
 	return resolved, nil
 }
 

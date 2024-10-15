@@ -24,7 +24,7 @@ func Reload(e Exporter, configFile *string) error {
 		configCurrent.Collectors = configCurrent.Collectors[:0]
 	}
 	configCurrent.Collectors = configNext.Collectors
-	slog.Info("Total collector size change", "from", len(configCurrent.Collectors), "to", len(configNext.Collectors))
+	slog.Debug("Total collector size change", "from", len(configCurrent.Collectors), "to", len(configNext.Collectors))
 
 	// Reload targets
 	switch {
@@ -87,7 +87,7 @@ func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 			break
 		}
 		targets = append(targets, job.Targets()...)
-		slog.Info("Recreated Job", "name", jobConfigItem.Name)
+		slog.Debug("Recreated Job", "name", jobConfigItem.Name)
 	}
 
 	if updateErr != nil {

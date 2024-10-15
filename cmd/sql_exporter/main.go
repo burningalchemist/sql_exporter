@@ -18,7 +18,6 @@ import (
 	info "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
-	"github.com/prometheus/common/promslog"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 )
@@ -39,6 +38,7 @@ var (
 	logFormatJSON = flag.Bool("log.json", false, "[DEPRECATED] Set log output format to JSON")
 	logFormat     = flag.String("log.format", "logfmt", "Set log output format")
 	logLevel      = flag.String("log.level", "info", "Set log level")
+	logFile       = flag.String("log.file", "", "Log file to write to, leave empty to write to stderr")
 )
 
 func init() {
@@ -63,13 +63,20 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Setup logging.
-	logger, err := setupLogging(*logLevel, *logFormat, *logFormatJSON)
+	// Setup logging
+	logConfig, err := initLogConfig(*logLevel, *logFormat, *logFormatJSON, *logFile)
 	if err != nil {
 		fmt.Printf("Error initializing exporter: %s\n", err)
 		os.Exit(1)
 	}
-	slog.SetDefault(logger)
+
+	defer func() {
+		if logConfig.LogFileHandler != nil {
+			logConfig.LogFileHandler.Close()
+		}
+	}()
+
+	slog.SetDefault(logConfig.Logger)
 
 	// Override the config.file default with the SQLEXPORTER_CONFIG environment variable if set.
 	if val, ok := os.LookupEnv(cfg.EnvConfigFile); ok {
@@ -105,8 +112,8 @@ func main() {
 	if err := web.ListenAndServe(server, &web.FlagConfig{
 		WebListenAddresses: &([]string{*listenAddress}),
 		WebConfigFile:      webConfigFile, WebSystemdSocket: OfBool(false),
-	}, logger); err != nil {
-		logger.Error("Error starting web server", "error", err)
+	}, logConfig.Logger); err != nil {
+		slog.Error("Error starting web server", "error", err)
 		os.Exit(1)
 
 	}
@@ -151,30 +158,4 @@ func startScrapeErrorsDropTicker(exporter sql_exporter.Exporter, interval model.
 			exporter.DropErrorMetrics()
 		}
 	}()
-}
-
-// setupLogging configures and initializes the logging system.
-func setupLogging(logLevel, logFormat string, logFormatJSON bool) (*slog.Logger, error) {
-	promslogConfig := &promslog.Config{
-		Level:  &promslog.AllowedLevel{},
-		Format: &promslog.AllowedFormat{},
-		Style:  promslog.SlogStyle,
-	}
-
-	if err := promslogConfig.Level.Set(logLevel); err != nil {
-		return nil, err
-	}
-
-	// Override log format if JSON is specified.
-	finalLogFormat := logFormat
-	if logFormatJSON {
-		fmt.Print("Warning: The flag --log.json is deprecated and will be removed in a future release. Please use --log.format=json instead\n")
-		finalLogFormat = "json"
-	}
-	if err := promslogConfig.Format.Set(finalLogFormat); err != nil {
-		return nil, err
-	}
-	// Initialize logger.
-	logger := promslog.New(promslogConfig)
-	return logger, nil
 }

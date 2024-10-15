@@ -67,7 +67,7 @@ func NewTarget(
 	if ep == nil {
 		ep = &config.EnablePing
 	}
-	slog.Info("target ping enabled", "logContext", logContext, "enabled", *ep)
+	slog.Debug("target ping enabled", "logContext", logContext, "enabled", *ep)
 
 	// Sort const labels by name to ensure consistent ordering.
 	constLabelPairs := make([]*dto.LabelPair, 0, len(constLabels))

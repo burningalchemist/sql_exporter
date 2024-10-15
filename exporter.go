@@ -215,7 +215,7 @@ func (e *exporter) SetJobFilters(filters []string) {
 // DropErrorMetrics implements Exporter.
 func (e *exporter) DropErrorMetrics() {
 	scrapeErrorsMetric.Reset()
-	slog.Info("Dropped scrape_errors_total metric")
+	slog.Debug("Dropped scrape_errors_total metric")
 }
 
 // registerScrapeErrorMetric registers the metrics for the exporter itself.

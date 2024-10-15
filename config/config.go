@@ -32,7 +32,7 @@ var (
 
 // Load attempts to parse the given config file and return a Config object.
 func Load(configFile string) (*Config, error) {
-	slog.Info("Loading configuration", "file", configFile)
+	slog.Debug("Loading configuration", "file", configFile)
 	buf, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, err
@@ -185,7 +185,7 @@ func (c *Config) loadCollectorFiles() error {
 
 		// Resolve the glob to actual filenames.
 		cfs, err := filepath.Glob(cfglob)
-		slog.Info("External collector files found", "count", len(cfs), "glob", cfglob)
+		slog.Debug("External collector files found", "count", len(cfs), "glob", cfglob)
 		if err != nil {
 			// The only error can be a bad pattern.
 			return fmt.Errorf("error resolving collector files for %s: %w", cfglob, err)
@@ -205,7 +205,7 @@ func (c *Config) loadCollectorFiles() error {
 			}
 
 			c.Collectors = append(c.Collectors, &cc)
-			slog.Info("Loaded collector", "name", cc.Name, "file", cf)
+			slog.Debug("Loaded collector", "name", cc.Name, "file", cf)
 		}
 	}
 

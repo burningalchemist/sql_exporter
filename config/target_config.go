@@ -77,7 +77,7 @@ func readDSNFromAwsSecretManager(secretName string) Secret {
 		VersionStage: aws.String("AWSCURRENT"), // VersionStage defaults to AWSCURRENT if unspecified
 	}
 
-	slog.Info("reading AWS Secret", "name", secretName)
+	slog.Debug("reading AWS Secret", "name", secretName)
 	result, err := svc.GetSecretValue(context.TODO(), input)
 	if err != nil {
 		// For a list of exceptions thrown, see
