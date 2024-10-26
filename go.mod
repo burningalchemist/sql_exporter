@@ -7,7 +7,6 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.32.2
 	github.com/aws/aws-sdk-go-v2/config v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.2
-	github.com/go-kit/log v0.2.1
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/kardianos/minwinsvc v1.0.2
@@ -16,14 +15,13 @@ require (
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.60.1
-	github.com/prometheus/exporter-toolkit v0.11.0
+	github.com/prometheus/exporter-toolkit v0.13.0
 	github.com/sethvargo/go-envconfig v1.1.0
 	github.com/snowflakedb/gosnowflake v1.11.2
 	github.com/vertica/vertica-sql-go v1.3.3
 	github.com/xo/dburl v0.23.1
 	google.golang.org/protobuf v1.35.1
 	gopkg.in/yaml.v3 v3.0.1
-	k8s.io/klog/v2 v2.70.1
 )
 
 require (
@@ -67,8 +65,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-faster/city v1.0.1 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
-	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
@@ -85,6 +81,8 @@ require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/mdlayher/socket v0.4.1 // indirect
+	github.com/mdlayher/vsock v1.2.1 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
@@ -115,5 +113,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
 )
-
-replace k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v3 v3.4.0

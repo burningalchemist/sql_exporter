@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"os"
 	"time"
 
 	"github.com/xo/dburl"
-	"k8s.io/klog/v2"
 )
 
 // OpenConnection parses a provided DSN, and opens a DB handle ensuring early termination if the context is closed
@@ -52,12 +52,7 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 	conn.SetMaxOpenConns(maxConns)
 	conn.SetConnMaxLifetime(maxConnLifetime)
 
-	if klog.V(1).Enabled() {
-		if len(logContext) > 0 {
-			logContext = fmt.Sprintf("[%s] ", logContext)
-		}
-		klog.Infof("%sDatabase handle successfully opened with '%s' driver", logContext, driver)
-	}
+	slog.Debug("Database handle successfully opened", "logContext", logContext, "driver", driver)
 	return conn, nil
 }
 
@@ -103,7 +98,7 @@ func expandEnv(env string) string {
 		if value, ok := os.LookupEnv(env); ok {
 			return value
 		}
-		klog.Errorf("Environment variable '$%s' is not found, cannot expand", env)
+		slog.Error("Environment variable is not found, cannot expand", "env", env)
 		return fmt.Sprintf("$%s", env)
 	}
 	return os.Expand(env, lookupFunc)

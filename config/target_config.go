@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	"k8s.io/klog/v2"
 )
 
 //
@@ -64,7 +65,8 @@ type AwsSecret struct {
 func readDSNFromAwsSecretManager(secretName string) Secret {
 	config, err := awsConfig.LoadDefaultConfig(context.TODO(), awsConfig.WithEC2IMDSRegion())
 	if err != nil {
-		klog.Fatal(err)
+		slog.Error("unable to load AWS config", "error", err)
+		os.Exit(1)
 	}
 
 	// Create Secrets Manager client
@@ -75,12 +77,13 @@ func readDSNFromAwsSecretManager(secretName string) Secret {
 		VersionStage: aws.String("AWSCURRENT"), // VersionStage defaults to AWSCURRENT if unspecified
 	}
 
-	klog.Infof("reading AWS Secret: %s", secretName)
+	slog.Debug("reading AWS Secret", "name", secretName)
 	result, err := svc.GetSecretValue(context.TODO(), input)
 	if err != nil {
 		// For a list of exceptions thrown, see
 		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-		klog.Fatal(err.Error())
+		slog.Error("unable to read AWS Secret", "error", err)
+		os.Exit(1)
 	}
 
 	// Decrypts secret using the associated KMS key.
@@ -90,7 +93,8 @@ func readDSNFromAwsSecretManager(secretName string) Secret {
 	jsonErr := json.Unmarshal([]byte(secretString), &awsSecret)
 
 	if jsonErr != nil {
-		klog.Fatal(jsonErr)
+		slog.Error("unable to unmarshal AWS Secret")
+		os.Exit(1)
 	}
 	return Secret(awsSecret.DSN)
 }

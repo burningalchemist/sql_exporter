@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,23 +13,19 @@ import (
 
 	"github.com/burningalchemist/sql_exporter"
 	cfg "github.com/burningalchemist/sql_exporter/config"
-	"github.com/go-kit/log"
 	_ "github.com/kardianos/minwinsvc"
 	"github.com/prometheus/client_golang/prometheus"
 	info "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
-	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
-	"k8s.io/klog/v2"
 )
 
 const (
 	appName string = "sql_exporter"
 
 	httpReadHeaderTimeout time.Duration = time.Duration(time.Second * 60)
-	debugMaxLevel         klog.Level    = 3
 )
 
 var (
@@ -40,6 +37,7 @@ var (
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
 	logFormat     = flag.String("log.format", "logfmt", "Set log output format")
 	logLevel      = flag.String("log.level", "info", "Set log level")
+	logFile       = flag.String("log.file", "", "Log file to write to, leave empty to write to stderr")
 )
 
 func init() {
@@ -65,21 +63,30 @@ func main() {
 	}
 
 	// Setup logging.
-	logger, err := setupLogging(*logLevel, *logFormat)
+	logConfig, err := initLogConfig(*logLevel, *logFormat, *logFile)
 	if err != nil {
 		fmt.Printf("Error initializing exporter: %s\n", err)
 		os.Exit(1)
 	}
+
+	defer func() {
+		if logConfig.logFileHandler != nil {
+			logConfig.logFileHandler.Close()
+		}
+	}()
+
+	slog.SetDefault(logConfig.logger)
 
 	// Override the config.file default with the SQLEXPORTER_CONFIG environment variable if set.
 	if val, ok := os.LookupEnv(cfg.EnvConfigFile); ok {
 		*configFile = val
 	}
 
-	klog.Warningf("Starting SQL exporter %s %s", version.Info(), version.BuildContext())
+	slog.Warn("Starting SQL exporter", "versionInfo", version.Info(), "buildContext", version.BuildContext())
 	exporter, err := sql_exporter.NewExporter(*configFile)
 	if err != nil {
-		klog.Fatalf("Error creating exporter: %s", err)
+		slog.Error("Error creating exporter", "error", err)
+		os.Exit(1)
 	}
 
 	// Start the scrape_errors_total metric drop ticker if configured.
@@ -104,16 +111,18 @@ func main() {
 	if err := web.ListenAndServe(server, &web.FlagConfig{
 		WebListenAddresses: &([]string{*listenAddress}),
 		WebConfigFile:      webConfigFile, WebSystemdSocket: OfBool(false),
-	}, logger); err != nil {
-		klog.Fatal(err)
+	}, logConfig.logger); err != nil {
+		slog.Error("Error starting web server", "error", err)
+		os.Exit(1)
+
 	}
 }
 
 // reloadHandler returns a handler that reloads collector and target data.
-func reloadHandler(e sql_exporter.Exporter, configFile string) func(http.ResponseWriter, *http.Request) {
+func reloadHandler(e sql_exporter.Exporter, configFile string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := sql_exporter.Reload(e, &configFile); err != nil {
-			klog.Error(err)
+			slog.Error("Error reloading collector and target data", "error", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -128,7 +137,7 @@ func signalHandler(e sql_exporter.Exporter, configFile string) {
 	go func() {
 		for range c {
 			if err := sql_exporter.Reload(e, &configFile); err != nil {
-				klog.Error(err)
+				slog.Error("Error reloading collector and target data", "error", err)
 			}
 		}
 	}()
@@ -141,33 +150,11 @@ func startScrapeErrorsDropTicker(exporter sql_exporter.Exporter, interval model.
 	}
 
 	ticker := time.NewTicker(time.Duration(interval))
-	klog.Warning("Started scrape_errors_total metrics drop ticker: ", interval)
+	slog.Warn("Started scrape_errors_total metrics drop ticker", "interval", interval)
 	go func() {
 		defer ticker.Stop()
 		for range ticker.C {
 			exporter.DropErrorMetrics()
 		}
 	}()
-}
-
-// setupLogging configures and initializes the logging system.
-func setupLogging(logLevel, logFormat string) (log.Logger, error) {
-	promlogConfig := &promlog.Config{
-		Level:  &promlog.AllowedLevel{},
-		Format: &promlog.AllowedFormat{},
-	}
-
-	if err := promlogConfig.Level.Set(logLevel); err != nil {
-		return nil, err
-	}
-
-	if err := promlogConfig.Format.Set(logFormat); err != nil {
-		return nil, err
-	}
-	// Overriding the default klog with our go-kit klog implementation.
-	logger := promlog.New(promlogConfig)
-	klog.SetLogger(logger)
-	klog.ClampLevel(debugMaxLevel)
-
-	return logger, nil
 }

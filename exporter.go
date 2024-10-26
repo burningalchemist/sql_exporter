@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 	"sync"
 
@@ -12,7 +13,6 @@ import (
 	dto "github.com/prometheus/client_model/go"
 
 	"google.golang.org/protobuf/proto"
-	"k8s.io/klog/v2"
 )
 
 var (
@@ -191,7 +191,7 @@ func (e *exporter) filterTargets(jf []string) {
 			}
 		}
 		if len(filteredTargets) == 0 {
-			klog.Errorf("No targets found for job filters. Nothing to scrape.")
+			slog.Error("No targets found for job filters. Nothing to scrape.")
 		}
 		e.targets = filteredTargets
 	}
@@ -215,7 +215,7 @@ func (e *exporter) SetJobFilters(filters []string) {
 // DropErrorMetrics implements Exporter.
 func (e *exporter) DropErrorMetrics() {
 	scrapeErrorsMetric.Reset()
-	klog.Info("Dropped scrape_errors_total metric")
+	slog.Debug("Dropped scrape_errors_total metric")
 }
 
 // registerScrapeErrorMetric registers the metrics for the exporter itself.
