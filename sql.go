@@ -52,9 +52,6 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 	conn.SetMaxOpenConns(maxConns)
 	conn.SetConnMaxLifetime(maxConnLifetime)
 
-	if len(logContext) > 0 {
-		logContext = fmt.Sprintf("[%s] ", logContext)
-	}
 	slog.Debug("Database handle successfully opened", "logContext", logContext, "driver", driver)
 	return conn, nil
 }

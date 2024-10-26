@@ -114,7 +114,7 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 		ch <- NewInvalidMetric(errors.Wrap(cc.rawColl.logContext, ctx.Err()))
 		return
 	}
-	slog.Debug("Cache", "size", len(cc.cache))
+	slog.Debug("Cache size", "length", len(cc.cache))
 	collTime := time.Now()
 	select {
 	case cacheTime := <-cc.cacheSem:
