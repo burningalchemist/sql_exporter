@@ -39,7 +39,7 @@ func initLogConfig(logLevel, logFormat string, logFile string) (*logConfig, erro
 	promslogConfig := &promslog.Config{
 		Level:  &promslog.AllowedLevel{},
 		Format: &promslog.AllowedFormat{},
-		Style:  promslog.GoKitStyle,
+		Style:  promslog.SlogStyle,
 		Writer: logFileHandler,
 	}
 
