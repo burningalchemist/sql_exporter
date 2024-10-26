@@ -35,7 +35,6 @@ var (
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
 	webConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
-	logFormatJSON = flag.Bool("log.json", false, "[DEPRECATED] Set log output format to JSON")
 	logFormat     = flag.String("log.format", "logfmt", "Set log output format")
 	logLevel      = flag.String("log.level", "info", "Set log level")
 	logFile       = flag.String("log.file", "", "Log file to write to, leave empty to write to stderr")
@@ -63,8 +62,8 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Setup logging
-	logConfig, err := initLogConfig(*logLevel, *logFormat, *logFormatJSON, *logFile)
+	// Setup logging.
+	logger, err := setupLogging(*logLevel, *logFormat, *logFile)
 	if err != nil {
 		fmt.Printf("Error initializing exporter: %s\n", err)
 		os.Exit(1)

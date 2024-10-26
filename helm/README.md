@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.8.0](https://img.shields.io/badge/Version-0.8.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.15.0](https://img.shields.io/badge/AppVersion-0.15.0-informational?style=flat-square)
+![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.16.0](https://img.shields.io/badge/AppVersion-0.16.0-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -50,7 +50,9 @@ helm install sql_exporter/sql-exporter
 | podLabels | object | `{}` | Pod labels |
 | podAnnotations | object | `{}` | Pod annotations |
 | podSecurityContext | object | `{}` | Pod security context |
-| createConfig | bool | `true` |  |
+| createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
+| logLevel | string | `"debug"` | Set log level (info if unset) |
+| logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
 
 ### Prometheus ServiceMonitor
