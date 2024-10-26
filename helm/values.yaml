@@ -115,8 +115,12 @@ serviceMonitor:
 #     mount:
 #       readOnly: true
 #       mountPath: /etc/config
-# Set to true to create a config as a part of the helm chart
+# -- Set to true to create a config as a part of the helm chart
 createConfig: true
+# -- Set log level (info if unset)
+logLevel: debug
+# -- Set log format (logfmt if unset)
+logFormat: logfmt
 # -- Enable reload collector data handler (endpoint /reload)
 reloadEnabled: false
 config:

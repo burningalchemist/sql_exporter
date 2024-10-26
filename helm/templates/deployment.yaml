@@ -55,6 +55,8 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "-config.file=/etc/sql_exporter/sql_exporter.yml"
+            - "-log.level={{ .Values.logLevel | default "info"  }}"
+            - "-log.format={{ .Values.logFormat | default "logfmt" }}"
             {{- if .Values.reloadEnabled }}
             - "-web.enable-reload"
             {{- end }}
