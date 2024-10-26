@@ -9,8 +9,8 @@ import (
 )
 
 type logConfig struct {
-	Logger         *slog.Logger
-	LogFileHandler *os.File
+	logger         *slog.Logger
+	logFileHandler *os.File
 }
 
 // initLogFile opens the log file for writing if a log file is specified.
@@ -26,7 +26,7 @@ func initLogFile(logFile string) (*os.File, error) {
 }
 
 // initLogConfig configures and initializes the logging system.
-func initLogConfig(logLevel, logFormat string, logFormatJSON bool, logFile string) (*logConfig, error) {
+func initLogConfig(logLevel, logFormat string, logFile string) (*logConfig, error) {
 	logFileHandler, err := initLogFile(logFile)
 	if err != nil {
 		return nil, err
@@ -47,20 +47,14 @@ func initLogConfig(logLevel, logFormat string, logFormatJSON bool, logFile strin
 		return nil, err
 	}
 
-	// Override log format if JSON is specified.
-	finalLogFormat := logFormat
-	if logFormatJSON {
-		fmt.Print("Warning: The flag --log.json is deprecated and will be removed in a future release. Please use --log.format=json instead\n")
-		finalLogFormat = "json"
-	}
-	if err := promslogConfig.Format.Set(finalLogFormat); err != nil {
+	if err := promslogConfig.Format.Set(logFormat); err != nil {
 		return nil, err
 	}
 	// Initialize logger.
 	logger := promslog.New(promslogConfig)
 
 	return &logConfig{
-		Logger:         logger,
-		LogFileHandler: logFileHandler,
+		logger:         logger,
+		logFileHandler: logFileHandler,
 	}, nil
 }

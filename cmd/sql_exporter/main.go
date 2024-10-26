@@ -63,19 +63,19 @@ func main() {
 	}
 
 	// Setup logging.
-	logger, err := setupLogging(*logLevel, *logFormat, *logFile)
+	logConfig, err := initLogConfig(*logLevel, *logFormat, *logFile)
 	if err != nil {
 		fmt.Printf("Error initializing exporter: %s\n", err)
 		os.Exit(1)
 	}
 
 	defer func() {
-		if logConfig.LogFileHandler != nil {
-			logConfig.LogFileHandler.Close()
+		if logConfig.logFileHandler != nil {
+			logConfig.logFileHandler.Close()
 		}
 	}()
 
-	slog.SetDefault(logConfig.Logger)
+	slog.SetDefault(logConfig.logger)
 
 	// Override the config.file default with the SQLEXPORTER_CONFIG environment variable if set.
 	if val, ok := os.LookupEnv(cfg.EnvConfigFile); ok {
@@ -111,7 +111,7 @@ func main() {
 	if err := web.ListenAndServe(server, &web.FlagConfig{
 		WebListenAddresses: &([]string{*listenAddress}),
 		WebConfigFile:      webConfigFile, WebSystemdSocket: OfBool(false),
-	}, logConfig.Logger); err != nil {
+	}, logConfig.logger); err != nil {
 		slog.Error("Error starting web server", "error", err)
 		os.Exit(1)
 
