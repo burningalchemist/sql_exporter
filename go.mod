@@ -17,7 +17,7 @@ require (
 	github.com/prometheus/common v0.60.1
 	github.com/prometheus/exporter-toolkit v0.13.0
 	github.com/sethvargo/go-envconfig v1.1.0
-	github.com/snowflakedb/gosnowflake v1.11.2
+	github.com/snowflakedb/gosnowflake v1.12.0
 	github.com/vertica/vertica-sql-go v1.3.3
 	github.com/xo/dburl v0.23.1
 	google.golang.org/protobuf v1.35.1
@@ -33,6 +33,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.8.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.0.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2 // indirect
+	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
 	github.com/JohnCGriffin/overflow v0.0.0-20211019200055-46fa312c352c // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
