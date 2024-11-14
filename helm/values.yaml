@@ -24,6 +24,22 @@ service:
     # example of prometheus usage
     # prometheus.io/scrape: "true"
     # prometheus.io/path: "/metrics"
+ingress:
+  enabled: true
+  # -- Ingress labels
+  labels: {}
+  # -- Ingress annotations
+  annotations: {}
+  # -- Ingress host
+  host: my-host.com
+  # -- Ingress TLS
+  tls:
+    enabled: false
+    # -- Ingress tls.crt
+    # crt: {{.Files.get tls.crt }}
+    # -- Ingress tls.key
+    # key: {{.Files.get tls.key }}
+
 # -- Arbitrary sidecar containers list
 extraContainers: {}
 #   - name: your_sidecar
