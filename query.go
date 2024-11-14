@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/burningalchemist/sql_exporter/errors"
@@ -119,6 +120,13 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 
 // run executes the query on the provided database, in the provided context.
 func (q *Query) run(ctx context.Context, conn *sql.DB) (*sql.Rows, errors.WithContext) {
+	if slog.Default().Enabled(ctx, slog.LevelDebug) {
+		start := time.Now()
+		defer func() {
+			slog.Debug("Query execution time", "logContext", q.logContext, "duration", time.Since(start))
+		}()
+	}
+
 	if q.conn != nil && q.conn != conn {
 		panic(fmt.Sprintf("[%s] Expecting to always run on the same database handle", q.logContext))
 	}
