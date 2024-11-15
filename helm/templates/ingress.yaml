@@ -13,12 +13,12 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if (.Values.ingress.tls).enabled -}}
+  {{- if (.Values.ingress.tls).enabled }}
   tls:
     - hosts:
         - {{ .Values.ingress.host | required "Ingress host is required if tls is enabled!" }}
       secretName: my-secret
-  {{- end -}}
+  {{- end }}
   rules:
   - http:
       paths:
@@ -29,7 +29,7 @@ spec:
               name: {{ include "sql-exporter.fullname" . }}
               port:
                 number: {{ .Values.service.port }}
-    {{- if .Values.ingress.host -}}
+    {{- if .Values.ingress.host }}
     host: {{ .Values.ingress.host }}
-    {{- end -}}
+    {{- end }}
 {{- end -}}
