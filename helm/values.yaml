@@ -35,10 +35,12 @@ ingress:
   # -- Ingress TLS
   tls:
     enabled: false
-    # -- Ingress tls.crt
-    # crt: {{.Files.get tls.crt }}
-    # -- Ingress tls.key
-    # key: {{.Files.get tls.key }}
+    # -- Ingress tls secret if already exists.
+    # secretName: "my-secret"
+    # -- Ingress tls.crt, required if you don't have secret name.
+    # crt: "{{- .Files.Get \"tls.crt\" -}}"
+    # -- Ingress tls.key, required if you don't have secret name.
+    # key: "{{- .Files.Get \"tls.key\" -}}"
 
 # -- Arbitrary sidecar containers list
 extraContainers: {}
