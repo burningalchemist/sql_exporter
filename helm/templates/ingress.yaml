@@ -17,7 +17,7 @@ spec:
   tls:
     - hosts:
         - {{ .Values.ingress.host | required "Ingress host is required if tls is enabled!" }}
-      secretName: my-secret
+      secretName: {{ include "sql-exporter.tls.name" . }}
   {{- end }}
   rules:
   - http:
