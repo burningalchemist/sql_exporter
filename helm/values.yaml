@@ -31,7 +31,7 @@ ingress:
   # -- Ingress annotations
   annotations: {}
   # -- Ingress host
-  host: my-host.com
+  # host: my-host.com
   # -- Ingress TLS
   tls:
     enabled: false
