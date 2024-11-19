@@ -39,6 +39,14 @@ helm install sql_exporter/sql-exporter
 | service.port | int | `80` | Service port |
 | service.labels | object | `{}` | Service labels |
 | service.annotations | object | `{}` | Service annotations |
+| ingress.enabled | bool | `false` | Is the ingress enabled |
+| ingress.labels | object | `{}` | Ingress labels |
+| ingress.annotations | object | `{}` | Ingress annotations |
+| ingress.ingressClassName | string | `nil` | Ingress class name |
+| ingress.host | string | `nil` | Ingress host |
+| ingress.tls.secretName | string | `nil` | Ingress secret name for the tls keys. Can't be configured with `ingress.tls.crt` and `ingress.tls.key` |
+| ingress.tls.crt | string | `nil` | Ingress tls cert. Can't be configured with `ingress.tls.secretName` |
+| ingress.tls.key | string | `nil` | Ingress tls key. Can't be configured with `ingress.tls.secretName` |
 | extraContainers | object | `{}` | Arbitrary sidecar containers list |
 | serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
