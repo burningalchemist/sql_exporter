@@ -31,17 +31,19 @@ ingress:
   # -- Ingress annotations
   annotations: {}
   # -- Ingress class name
-  # ingressClassName: nginx
+  ingressClassName: ""
   # -- Ingress host
-  # host: my-host.com
-  # -- Ingress TLS
+  host: ""
+  # -- Ingress TLS, can be defined by cert secret, or by key and cert.
   tls:
     enabled: false
     # -- Ingress tls secret if already exists.
-    # secretName: "my-secret"
+    secretName: ""
     # -- Ingress tls.crt, required if you don't have secret name.
+    crt: ""
     # crt: "{{- .Files.Get \"tls.crt\" -}}"
     # -- Ingress tls.key, required if you don't have secret name.
+    key: ""
     # key: "{{- .Files.Get \"tls.key\" -}}"
 
 # -- Arbitrary sidecar containers list

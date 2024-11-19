@@ -1,6 +1,8 @@
 # sql-exporter
 
-![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.16.0](https://img.shields.io/badge/AppVersion-0.16.0-informational?style=flat-square)
+
+
+![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.16.0](https://img.shields.io/badge/AppVersion-0.16.0-informational?style=flat-square) 
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -14,6 +16,9 @@ Database-agnostic SQL exporter for Prometheus
 | ---- | ------ | --- |
 | Nikolai Rodionov | <allanger@zohomail.com> | <https://badhouseplants.net> |
 
+
+
+
 ## Installing the Chart
 
 To install the chart with the release name `sql-exporter`:
@@ -22,6 +27,15 @@ To install the chart with the release name `sql-exporter`:
 helm repo add sql_exporter https://burningalchemist.github.io/sql_exporter/
 helm install sql_exporter/sql-exporter
 ```
+
+### Warning on enabling ingress
+
+Please enable the ingress with caution.
+As it exposes you to `DDos` attacks and more.
+If you are conserned, please enable authenitaction in your ingress.
+For example the
+[ngix ingress controller enables that](https://kubernetes.github.io/ingress-nginx/examples/auth/basic/).
+Or apply another method.
 
 ## Chart Values
 
@@ -39,14 +53,15 @@ helm install sql_exporter/sql-exporter
 | service.port | int | `80` | Service port |
 | service.labels | object | `{}` | Service labels |
 | service.annotations | object | `{}` | Service annotations |
-| ingress.enabled | bool | `false` | Is the ingress enabled |
+| ingress.enabled | bool | `false` |  |
 | ingress.labels | object | `{}` | Ingress labels |
 | ingress.annotations | object | `{}` | Ingress annotations |
-| ingress.ingressClassName | string | `nil` | Ingress class name |
-| ingress.host | string | `nil` | Ingress host |
-| ingress.tls.secretName | string | `nil` | Ingress secret name for the tls keys. Would override the `ingress.tls.crt` and `ingress.tls.key` configs |
-| ingress.tls.crt | string | `nil` | Ingress tls cert. Would be ignored if `ingress.tls.secretName` is configured |
-| ingress.tls.key | string | `nil` | Ingress tls key. Would be ignored if `ingress.tls.secretName` is configured |
+| ingress.ingressClassName | string | `""` | Ingress class name |
+| ingress.host | string | `""` | Ingress host |
+| ingress.tls | object | `{"crt":"","enabled":false,"key":"","secretName":""}` | Ingress TLS, can be defined by cert secret, or by key and cert. |
+| ingress.tls.secretName | string | `""` | Ingress tls secret if already exists. |
+| ingress.tls.crt | string | `""` | Ingress tls.crt, required if you don't have secret name. |
+| ingress.tls.key | string | `""` | Ingress tls.key, required if you don't have secret name. |
 | extraContainers | object | `{}` | Arbitrary sidecar containers list |
 | serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
@@ -62,6 +77,7 @@ helm install sql_exporter/sql-exporter
 | logLevel | string | `"debug"` | Set log level (info if unset) |
 | logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
+
 
 ### Prometheus ServiceMonitor
 
