@@ -21,6 +21,15 @@ helm repo add sql_exporter https://burningalchemist.github.io/sql_exporter/
 helm install sql_exporter/sql-exporter
 ```
 
+### Warning on enabling ingress
+
+Please enable the ingress with caution.
+As it exposes you to `DDos` attacks and more.
+If you are conserned, please enable authenitaction in your ingress.
+For example the
+[ngix ingress controller enables that](https://kubernetes.github.io/ingress-nginx/examples/auth/basic/).
+Or apply another method.
+
 ## Chart Values
 
 ### General parameters
