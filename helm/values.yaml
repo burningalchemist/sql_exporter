@@ -25,7 +25,7 @@ service:
     # prometheus.io/scrape: "true"
     # prometheus.io/path: "/metrics"
 ingress:
-  enabled: true
+  enabled: false
   # -- Ingress labels
   labels: {}
   # -- Ingress annotations
