@@ -30,6 +30,8 @@ ingress:
   labels: {}
   # -- Ingress annotations
   annotations: {}
+  # -- Ingress class name
+  # ingressClassName: nginx
   # -- Ingress host
   # host: my-host.com
   # -- Ingress TLS
