@@ -1,8 +1,6 @@
 # sql-exporter
 
-
-
-![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.16.0](https://img.shields.io/badge/AppVersion-0.16.0-informational?style=flat-square) 
+![Version: 0.10.0](https://img.shields.io/badge/Version-0.10.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.16.0](https://img.shields.io/badge/AppVersion-0.16.0-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -16,9 +14,6 @@ Database-agnostic SQL exporter for Prometheus
 | ---- | ------ | --- |
 | Nikolai Rodionov | <allanger@zohomail.com> | <https://badhouseplants.net> |
 
-
-
-
 ## Installing the Chart
 
 To install the chart with the release name `sql-exporter`:
@@ -28,14 +23,26 @@ helm repo add sql_exporter https://burningalchemist.github.io/sql_exporter/
 helm install sql_exporter/sql-exporter
 ```
 
-### Warning on enabling ingress
+### Ingress support
 
-Please enable the ingress with caution.
-As it exposes you to `DDos` attacks and more.
-If you are conserned, please enable authenitaction in your ingress.
-For example the
-[ngix ingress controller enables that](https://kubernetes.github.io/ingress-nginx/examples/auth/basic/).
-Or apply another method.
+It's possible to enable the ingress creation by setting
+
+```yaml
+#Values
+ingress:
+  enabled: true
+```
+
+But as the sql_operator has a direct connection to databases,
+it might expose the database servers to possible DDoS attacks.
+It's not recommended by maintainers to use ingress for accessing the exporter,
+but if there are no other options,
+security measures should be taken.
+
+For example, a user might enable the basic auth on the ingress level.
+Take a look on how it's done at the
+[nginx ingress controller](https://kubernetes.github.io/ingress-nginx/examples/auth/basic/)
+as an example.
 
 ## Chart Values
 
@@ -77,7 +84,6 @@ Or apply another method.
 | logLevel | string | `"debug"` | Set log level (info if unset) |
 | logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
-
 
 ### Prometheus ServiceMonitor
 
