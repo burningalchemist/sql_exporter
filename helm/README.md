@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.16.0](https://img.shields.io/badge/AppVersion-0.16.0-informational?style=flat-square)
+![Version: 0.10.0](https://img.shields.io/badge/Version-0.10.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.16.0](https://img.shields.io/badge/AppVersion-0.16.0-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -23,6 +23,27 @@ helm repo add sql_exporter https://burningalchemist.github.io/sql_exporter/
 helm install sql_exporter/sql-exporter
 ```
 
+### Ingress support
+
+It's possible to enable the ingress creation by setting
+
+```yaml
+#Values
+ingress:
+  enabled: true
+```
+
+But as the sql_operator has a direct connection to databases,
+it might expose the database servers to possible DDoS attacks.
+It's not recommended by maintainers to use ingress for accessing the exporter,
+but if there are no other options,
+security measures should be taken.
+
+For example, a user might enable the basic auth on the ingress level.
+Take a look on how it's done at the
+[nginx ingress controller](https://kubernetes.github.io/ingress-nginx/examples/auth/basic/)
+as an example.
+
 ## Chart Values
 
 ### General parameters
@@ -39,6 +60,15 @@ helm install sql_exporter/sql-exporter
 | service.port | int | `80` | Service port |
 | service.labels | object | `{}` | Service labels |
 | service.annotations | object | `{}` | Service annotations |
+| ingress.enabled | bool | `false` |  |
+| ingress.labels | object | `{}` | Ingress labels |
+| ingress.annotations | object | `{}` | Ingress annotations |
+| ingress.ingressClassName | string | `""` | Ingress class name |
+| ingress.host | string | `""` | Ingress host |
+| ingress.tls | object | `{"crt":"","enabled":false,"key":"","secretName":""}` | Ingress TLS, can be defined by cert secret, or by key and cert. |
+| ingress.tls.secretName | string | `""` | Ingress tls secret if already exists. |
+| ingress.tls.crt | string | `""` | Ingress tls.crt, required if you don't have secret name. |
+| ingress.tls.key | string | `""` | Ingress tls.key, required if you don't have secret name. |
 | extraContainers | object | `{}` | Arbitrary sidecar containers list |
 | serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |

@@ -24,6 +24,28 @@ service:
     # example of prometheus usage
     # prometheus.io/scrape: "true"
     # prometheus.io/path: "/metrics"
+ingress:
+  enabled: false
+  # -- Ingress labels
+  labels: {}
+  # -- Ingress annotations
+  annotations: {}
+  # -- Ingress class name
+  ingressClassName: ""
+  # -- Ingress host
+  host: ""
+  # -- Ingress TLS, can be defined by cert secret, or by key and cert.
+  tls:
+    enabled: false
+    # -- Ingress tls secret if already exists.
+    secretName: ""
+    # -- Ingress tls.crt, required if you don't have secret name.
+    crt: ""
+    # crt: "{{- .Files.Get \"tls.crt\" -}}"
+    # -- Ingress tls.key, required if you don't have secret name.
+    key: ""
+    # key: "{{- .Files.Get \"tls.key\" -}}"
+
 # -- Arbitrary sidecar containers list
 extraContainers: {}
 #   - name: your_sidecar
