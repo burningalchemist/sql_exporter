@@ -190,6 +190,7 @@ config:
 #    - "*.collector.yml"
 # ---------------------------------------------------------------------
 # -- Collector Files
+# (can be dictionaries or yaml strings templates, for example: "{{ .Files.Get \"my_collector.yaml\" }}")
 # ---------------------------------------------------------------------
 # -- Collector files are mounted to /etc/sql_exporter/collectors dir
 # ---------------------------------------------------------------------
@@ -211,3 +212,4 @@ config:
 #           SELECT Market, max(UpdateTime) AS LastUpdateTime
 #           FROM MarketPrices
 #           GROUP BY Market
+#   my_collector.yml: "{{ .Files.Get \"my_collector.yaml\" }}"
