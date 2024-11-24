@@ -100,6 +100,7 @@ as an example.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| config | object | `{"global":{"max_connections":3,"max_idle_connections":3,"min_interval":"0s","scrape_error_drop_interval":"0s","scrape_timeout":"10s","scrape_timeout_offset":"500ms"}}` | SQL Exporter configuration, can be a dictionary, or a template yaml string, for example: "{{ .Files.Get \"config.yaml\" }}". |
 | config.global.scrape_timeout | string | `"10s"` | Scrape timeout |
 | config.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
 | config.global.scrape_error_drop_interval | string | `"0s"` | Interval between dropping scrape_errors_total metric: by default the metric is persistent. |
