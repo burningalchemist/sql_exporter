@@ -9,6 +9,7 @@ monitoring system. Out of the box, it provides support for the following databas
 - MySQL
 - PostgreSQL
 - Microsoft SQL Server
+- Oracle Database
 - Clickhouse
 - Snowflake
 - Vertica
