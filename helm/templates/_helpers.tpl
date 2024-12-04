@@ -31,6 +31,17 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Create tls secret name based on the chart name
+*/}}
+{{- define "sql-exporter.tls.name" -}}
+{{- if ((.Values.ingress).tls).secretName -}}
+{{- .Values.ingress.tls.secretName }}
+{{- else -}}
+{{- printf "%s-%s" (include "sql-exporter.fullname" .) "tls" }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Common labels
 */}}
 {{- define "sql-exporter.labels" -}}
