@@ -77,3 +77,17 @@ Create the name of the service account to use
 {{- false | quote -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "sql_exporter.config.yaml" -}}
+{{- $conf := "" -}}
+{{- if typeIsLike "string" .Values.config -}}
+{{- $conf = (tpl .Values.config .) | fromYaml -}}
+{{- else -}}
+{{- $conf = .Values.config -}}
+{{- end -}}
+{{- /*
+Do the wired "fromYaml | toYaml" to reformat the config.
+Reformat '100s' to 100s for example.
+*/ -}}
+{{- tpl ($conf | toYaml ) . | fromYaml | toYaml -}}
+{{- end -}}
