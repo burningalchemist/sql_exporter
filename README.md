@@ -360,6 +360,23 @@ In case you need a more sophisticated setup (e.g. with logging, environment vari
 </details>
 
 <details>
+<summary>Using WinSSPI/NTLM as the authentication mechanism for MSSQL</summary>
+
+If sql_exporter is running in the same Windows domain as the MSSQL, then you can use the parameter `authenticator=winsspi` within the connection string to authenticate without any additional credentials:
+
+```
+sqlserver://@<HOST>:<PORT>?authenticator=winsspi
+```
+
+If you want to use Windows credentials to authenticate instead of MSSQL credentials, you can use the parameter `authenticator=ntlm` within the connection string. The USERNAME and PASSWORD then corresponds
+to a Windows username and password. The Windows domain may need to be prefixed to the username with a trailing `\`:
+
+```
+sqlserver://<DOMAIN\USERNAME>:<PASSWORD>@<HOST>:<PORT>?authenticator=ntlm
+```
+</details>
+
+<details>
 <summary>TLS and Basic Authentication</summary>
 
 SQL Exporter supports TLS and Basic Authentication. This enables better control of the various HTTP endpoints.
