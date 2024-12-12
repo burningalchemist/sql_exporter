@@ -280,6 +280,19 @@ In case, you connect to a data warehouse (e.g. Snowflake) you don't want to keep
 cost), you might want to disable `ping` by setting `enable_ping: false`.
 </details>
 
+<details>
+<summary>Scraping timestamp value from the result set</summary>
+  
+Some database drivers by default return DATE or DATETIME values as String type, whereas sql_exporter expects it to be Time.
+
+This may result in the following error:
+```
+unsupported Scan, storing driver.Value type []uint8 into type *time.Time
+```
+
+To resolve the issue, make sure to include `parseTime=true` as a parameter on the DSN, so values with TIMESTAMP, DATETIME, TIME, DATE types 
+will end up as `time.Time` type, which is a requirement on the sql_exporter side to process the value correctly.
+</details>
 
 <details>
 <summary>Using AWS Secrets Manager</summary>
