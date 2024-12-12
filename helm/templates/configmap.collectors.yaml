@@ -8,6 +8,13 @@ metadata:
 data:
   {{- range $k, $v := .Values.collectorFiles }}
   {{ $k }}: |-
-    {{- toYaml $v | nindent 4}}
+    {{- if typeIsLike "string" $v -}}
+    {{- $v = (tpl $v $ | fromYaml) -}}
+    {{- end -}}
+    {{- /*
+        Do the wired "fromYaml | toYaml" to reformat the config.
+        Reformat '100s' to 100s for example.
+    */ -}}
+    {{- tpl (toYaml $v) $ | fromYaml | toYaml | nindent 4}}
   {{- end}}
 {{- end }}
