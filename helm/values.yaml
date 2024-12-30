@@ -145,7 +145,7 @@ logLevel: debug
 logFormat: logfmt
 # -- Enable reload collector data handler (endpoint /reload)
 reloadEnabled: false
-# -- SQL Exporter configuration, can be a dictionary, or a template yaml string, for example: "{{ .Files.Get \"config.yaml\" }}".
+# -- SQL Exporter configuration, can be a dictionary, or a template yaml string.
 config:
   global:
     # -- Scrape timeout
@@ -191,7 +191,7 @@ config:
 #    - "*.collector.yml"
 # ---------------------------------------------------------------------
 # -- Collector Files
-# (can be dictionaries or yaml string templates, for example: "{{ .Files.Get \"my_collector.yaml\" }}")
+# (can be dictionaries or yaml string templates)
 # ---------------------------------------------------------------------
 # -- Collector files are mounted to /etc/sql_exporter/collectors dir
 # ---------------------------------------------------------------------
@@ -213,4 +213,3 @@ config:
 #           SELECT Market, max(UpdateTime) AS LastUpdateTime
 #           FROM MarketPrices
 #           GROUP BY Market
-#   my_collector.yml: "{{ .Files.Get \"my_collector.yaml\" }}"
