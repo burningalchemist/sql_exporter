@@ -145,7 +145,7 @@ logLevel: debug
 logFormat: logfmt
 # -- Enable reload collector data handler (endpoint /reload)
 reloadEnabled: false
-# -- SQL Exporter configuration, can be a dictionary, or a template yaml string.
+# -- SQL Exporter configuration, can be a dictionary, or a template yaml string. This parameter is optional!
 config:
   global:
     # -- Scrape timeout
