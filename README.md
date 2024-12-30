@@ -9,6 +9,7 @@ monitoring system. Out of the box, it provides support for the following databas
 - MySQL
 - PostgreSQL
 - Microsoft SQL Server
+- Oracle Database
 - Clickhouse
 - Snowflake
 - Vertica
@@ -279,6 +280,19 @@ In case, you connect to a data warehouse (e.g. Snowflake) you don't want to keep
 cost), you might want to disable `ping` by setting `enable_ping: false`.
 </details>
 
+<details>
+<summary>Scraping timestamp value from the result set</summary>
+  
+Some database drivers by default return DATE or DATETIME values as String type, whereas sql_exporter expects it to be Time.
+
+This may result in the following error:
+```
+unsupported Scan, storing driver.Value type []uint8 into type *time.Time
+```
+
+To resolve the issue, make sure to include `parseTime=true` as a parameter on the DSN, so values with TIMESTAMP, DATETIME, TIME, DATE types 
+will end up as `time.Time` type, which is a requirement on the sql_exporter side to process the value correctly.
+</details>
 
 <details>
 <summary>Using AWS Secrets Manager</summary>
@@ -356,6 +370,23 @@ are in the same location.
 In case you need a more sophisticated setup (e.g. with logging, environment variables, etc), you might want to use [NSSM](https://nssm.cc/) or
 [WinSW](https://github.com/winsw/winsw). Please consult their documentation for more details.
 
+</details>
+
+<details>
+<summary>Using WinSSPI/NTLM as the authentication mechanism for MSSQL</summary>
+
+If sql_exporter is running in the same Windows domain as the MSSQL, then you can use the parameter `authenticator=winsspi` within the connection string to authenticate without any additional credentials:
+
+```
+sqlserver://@<HOST>:<PORT>?authenticator=winsspi
+```
+
+If you want to use Windows credentials to authenticate instead of MSSQL credentials, you can use the parameter `authenticator=ntlm` within the connection string. The USERNAME and PASSWORD then corresponds
+to a Windows username and password. The Windows domain may need to be prefixed to the username with a trailing `\`:
+
+```
+sqlserver://<DOMAIN\USERNAME>:<PASSWORD>@<HOST>:<PORT>?authenticator=ntlm
+```
 </details>
 
 <details>
