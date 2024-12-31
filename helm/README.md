@@ -70,6 +70,7 @@ as an example.
 | ingress.annotations | object | `{}` | Ingress annotations |
 | ingress.ingressClassName | string | `""` | Ingress class name |
 | ingress.host | string | `""` | Ingress host |
+| ingress.path | string | `"/"` | Ingress path |
 | ingress.tls | object | `{"crt":"","enabled":false,"key":"","secretName":""}` | Ingress TLS, can be defined by cert secret, or by key and cert. |
 | ingress.tls.secretName | string | `""` | Ingress tls secret if already exists. |
 | ingress.tls.crt | string | `""` | Ingress tls.crt, required if you don't have secret name. |
