@@ -34,6 +34,8 @@ ingress:
   ingressClassName: ""
   # -- Ingress host
   host: ""
+  # -- Ingress path
+  path: "/"
   # -- Ingress TLS, can be defined by cert secret, or by key and cert.
   tls:
     enabled: false
