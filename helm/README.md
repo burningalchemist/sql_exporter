@@ -1,6 +1,8 @@
 # sql-exporter
 
-![Version: 0.10.2](https://img.shields.io/badge/Version-0.10.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.17.0](https://img.shields.io/badge/AppVersion-0.17.0-informational?style=flat-square)
+
+
+![Version: 0.11.0](https://img.shields.io/badge/Version-0.11.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.17.0](https://img.shields.io/badge/AppVersion-0.17.0-informational?style=flat-square) 
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -13,6 +15,9 @@ Database-agnostic SQL exporter for Prometheus
 | Name | Email | Url |
 | ---- | ------ | --- |
 | Nikolai Rodionov | <allanger@zohomail.com> | <https://badhouseplants.net> |
+
+
+
 
 ## Installing the Chart
 
@@ -86,6 +91,7 @@ as an example.
 | logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
 
+
 ### Prometheus ServiceMonitor
 
 | Key | Type | Default | Description |
@@ -101,6 +107,7 @@ as an example.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| config | object | `{"global":{"max_connections":3,"max_idle_connections":3,"min_interval":"0s","scrape_error_drop_interval":"0s","scrape_timeout":"10s","scrape_timeout_offset":"500ms"}}` | SQL Exporter configuration, can be a dictionary, or a template yaml string. |
 | config.global.scrape_timeout | string | `"10s"` | Scrape timeout |
 | config.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
 | config.global.scrape_error_drop_interval | string | `"0s"` | Interval between dropping scrape_errors_total metric: by default the metric is persistent. |
