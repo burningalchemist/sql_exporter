@@ -1,0 +1,787 @@
+# This example contains two collectors, one to collect server metrics, and a second to collect database level metrics.
+# All metrics are prefixed accoring to which collector they originate from "pg_db_" or "pg_server_".
+# Many of these have been copied from https://github.com/prometheus-community/postgres_exporter
+jobs:
+  - job_name: database
+    collectors: [database]
+    static_configs:
+      - targets:
+          foo: 'postgresql://postgres@/var/run/postgresql/foo?sslmode=disable'
+          bar: 'postgresql://postgres@/var/run/postgresql/bar?sslmode=disable'
+  - job_name: server
+    collectors: [server]
+    static_configs:
+      - targets:
+          server: 'postgresql://postgres@/var/run/postgresql?sslmode=disable'
+
+collectors:
+  - collector_name: database
+    metrics:
+      - metric_name: pg_db_stat_user_tables_seq_scan
+        type: counter
+        help: 'Number of sequential scans initiated on this table'
+        key_labels:
+          - relname
+        values:
+          - seq_scan
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_seq_tup_read
+        type: counter
+        help: 'Number of live rows fetched by sequential scans'
+        key_labels:
+          - relname
+        values:
+          - seq_tup_read
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_idx_scan
+        type: counter
+        help: 'Number of index scans initiated on this table'
+        key_labels:
+          - relname
+        values:
+          - idx_scan
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_idx_tup_fetch
+        type: counter
+        help: 'Number of live rows fetched by index scans'
+        key_labels:
+          - relname
+        values:
+          - idx_tup_fetch
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_tup_ins
+        type: counter
+        help: 'Total number of rows inserted'
+        key_labels:
+          - relname
+        values:
+          - n_tup_ins
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_tup_upd
+        type: counter
+        help: 'Total number of rows updated. (This includes row updates counted in n_tup_hot_upd and n_tup_newpage_upd, and remaining non-HOT updates.)'
+        key_labels:
+          - relname
+        values:
+          - n_tup_upd
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_tup_del
+        type: counter
+        help: 'Total number of rows deleted'
+        key_labels:
+          - relname
+        values:
+          - n_tup_del
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_tup_hot_upd
+        type: counter
+        help: 'Number of rows HOT updated. These are updates where no successor versions are required in indexes.'
+        key_labels:
+          - relname
+        values:
+          - n_tup_hot_upd
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_live_tup
+        type: gauge
+        help: 'Estimated number of live rows'
+        key_labels:
+          - relname
+        values:
+          - n_live_tup
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_dead_tup
+        type: gauge
+        help: 'Estimated number of dead rows'
+        key_labels:
+          - relname
+        values:
+          - n_dead_tup
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_mod_since_analyze
+        type: counter
+        help: 'Estimated number of rows modified since this table was last analyzed'
+        key_labels:
+          - relname
+        values:
+          - n_mod_since_analyze
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_n_ins_since_vacuum
+        type: counter
+        help: 'Estimated number of rows inserted since this table was last vacuumed'
+        key_labels:
+          - relname
+        values:
+          - n_ins_since_vacuum
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_last_vacuum
+        type: gauge
+        help: 'Last time at which this table was manually vacuumed (not counting VACUUM FULL)'
+        key_labels:
+          - relname
+        values:
+          - last_vacuum
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_last_autovacuum
+        type: gauge
+        help: 'Last time at which this table was vacuumed by the autovacuum daemon'
+        key_labels:
+          - relname
+        values:
+          - last_autovacuum
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_last_analyze
+        type: gauge
+        help: 'Last time at which this table was manually analyzed'
+        key_labels:
+          - relname
+        values:
+          - last_analyze
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_last_autoanalyze
+        type: gauge
+        help: 'Last time at which this table was analyzed by the autovacuum daemon'
+        key_labels:
+          - relname
+        values:
+          - last_autoanalyze
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_vacuum_count
+        type: counter
+        help: 'Number of times this table has been manually vacuumed (not counting VACUUM FULL)'
+        key_labels:
+          - relname
+        values:
+          - vacuum_count
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_autovacuum_count
+        type: counter
+        help: 'Number of times this table has been vacuumed by the autovacuum daemon'
+        key_labels:
+          - relname
+        values:
+          - autovacuum_count
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_analyze_count
+        type: counter
+        help: 'Number of times this table has been manually analyzed'
+        key_labels:
+          - relname
+        values:
+          - analyze_count
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_autoanalyze_count
+        type: counter
+        help: 'Number of times this table has been analyzed by the autovacuum daemon'
+        key_labels:
+          - relname
+        values:
+          - autoanalyze_count
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_user_tables_size_bytes
+        type: gauge
+        help: 'Total disk space used by the table, including all indexes and TOAST data. The result is equivalent to pg_table_size + pg_indexes_size.'
+        key_labels:
+          - relname
+        values:
+          - total_size
+        query_ref: _db_pg_stat_user_tables
+
+      - metric_name: pg_db_stat_activity_transactions
+        type: gauge
+        help: 'Number of transactions currently in progress'
+        values:
+          - transactions
+        query_ref: _db_pg_stat_activity
+
+      - metric_name: pg_db_stat_activity_oldest_timestamp_seconds
+        type: gauge
+        help: 'Age of the oldest transaction in seconds'
+        values:
+          - oldest_timestamp_seconds
+        query_ref: _db_pg_stat_activity
+
+      - metric_name: pg_db_statio_user_indexes_idx_blks_read
+        type: counter
+        help: 'Number of disk blocks read from this index'
+        key_labels:
+          - relname
+          - indexrelname
+        values:
+          - idx_blks_read
+        query_ref: _db_pg_statio_user_indexes
+
+      - metric_name: pg_db_statio_user_indexes_idx_blks_hit
+        type: counter
+        help: 'Number of buffer hits in this index'
+        key_labels:
+          - relname
+          - indexrelname
+        values:
+          - idx_blks_hit
+        query_ref: _db_pg_statio_user_indexes
+
+      - metric_name: pg_db_statio_user_tables_heap_blks_read
+        type: counter
+        help: 'Number of disk blocks read from this table'
+        key_labels:
+          - relname
+        values:
+          - heap_blks_read
+        query_ref: _db_pg_statio_user_tables
+
+      - metric_name: pg_db_statio_user_tables_heap_blks_hit
+        type: counter
+        help: 'Number of buffer hits in this table'
+        key_labels:
+          - relname
+        values:
+          - heap_blks_hit
+        query_ref: _db_pg_statio_user_tables
+
+      - metric_name: pg_db_statio_user_tables_idx_blks_read
+        type: counter
+        help: 'Number of disk blocks read from all indexes on this table'
+        key_labels:
+          - relname
+        values:
+          - idx_blks_read
+        query_ref: _db_pg_statio_user_tables
+
+      - metric_name: pg_db_statio_user_tables_idx_blks_hit
+        type: counter
+        help: 'Number of buffer hits in all indexes on this table'
+        key_labels:
+          - relname
+        values:
+          - idx_blks_hit
+        query_ref: _db_pg_statio_user_tables
+
+      - metric_name: pg_db_statio_user_tables_toast_blks_read
+        type: counter
+        help: 'Number of disk blocks read from this table''s TOAST table (if any)'
+        key_labels:
+          - relname
+        values:
+          - toast_blks_read
+        query_ref: _db_pg_statio_user_tables
+
+      - metric_name: pg_db_statio_user_tables_toast_blks_hit
+        type: counter
+        help: 'Number of buffer hits in this table''s TOAST table (if any)'
+        key_labels:
+          - relname
+        values:
+          - toast_blks_hit
+        query_ref: _db_pg_statio_user_tables
+
+      - metric_name: pg_db_statio_user_tables_tidx_blks_read
+        type: counter
+        help: 'Number of disk blocks read from this table''s TOAST table indexes (if any)'
+        key_labels:
+          - relname
+        values:
+          - tidx_blks_read
+        query_ref: _db_pg_statio_user_tables
+
+      - metric_name: pg_db_statio_user_tables_tidx_blks_hit
+        type: counter
+        help: 'Number of buffer hits in this table''s TOAST table indexes (if any)'
+        key_labels:
+          - relname
+        values:
+          - tidx_blks_hit
+        query_ref: _db_pg_statio_user_tables
+
+      - metric_name: pg_db_size_bytes
+        help: 'Disk space used by the database'
+        type: gauge
+        values:
+          - size
+        query_ref: _db_pg_database_size
+
+    queries:
+      - query_name: _db_pg_database_size
+        query: |
+          select pg_database_size(current_database()) as size
+      - query_name: _db_pg_stat_user_tables
+        query: |
+          SELECT
+            relname,
+
+            COALESCE(seq_scan,0) as seq_scan,
+            COALESCE(seq_tup_read,0) as seq_tup_read,
+
+            COALESCE(idx_scan,0) as idx_scan,
+            COALESCE(idx_tup_fetch,0) as idx_tup_fetch,
+
+            COALESCE(n_tup_ins,0) as n_tup_ins,
+            COALESCE(n_tup_upd,0) as n_tup_upd,
+            COALESCE(n_tup_del,0) as n_tup_del,
+            COALESCE(n_tup_hot_upd,0) as n_tup_hot_upd,
+
+            COALESCE(n_live_tup,0) as n_live_tup,
+            COALESCE(n_dead_tup,0) as n_dead_tup,
+
+            COALESCE(n_mod_since_analyze,0) as n_mod_since_analyze,
+            COALESCE(n_ins_since_vacuum,0) as n_ins_since_vacuum,
+
+            COALESCE(EXTRACT(EPOCH FROM last_vacuum), 0) as last_vacuum,
+            COALESCE(EXTRACT(EPOCH FROM last_autovacuum), 0) as last_autovacuum,
+            COALESCE(EXTRACT(EPOCH FROM last_analyze), 0) as last_analyze,
+            COALESCE(EXTRACT(EPOCH FROM last_autoanalyze), 0) as last_autoanalyze,
+
+            COALESCE(vacuum_count,0) as vacuum_count,
+            COALESCE(autovacuum_count,0) as autovacuum_count,
+            COALESCE(analyze_count,0) as analyze_count,
+            COALESCE(autoanalyze_count,0) as autoanalyze_count,
+
+            pg_total_relation_size(relid) as total_size
+          FROM
+            pg_stat_user_tables
+
+      - query_name: _db_pg_stat_activity
+        query: |
+          SELECT
+              COUNT(*) as transactions,
+              MAX(EXTRACT(EPOCH FROM clock_timestamp() - pg_stat_activity.xact_start)) AS oldest_timestamp_seconds
+          FROM pg_stat_activity
+          WHERE state IS DISTINCT FROM 'idle'
+          AND query NOT LIKE 'autovacuum:%'
+          AND pg_stat_activity.xact_start IS NOT NULL;
+
+      - query_name: _db_pg_statio_user_indexes
+        query: |
+          SELECT
+            relname,
+            indexrelname,
+            idx_blks_read,
+            idx_blks_hit
+          FROM pg_statio_user_indexes
+
+      - query_name: _db_pg_statio_user_tables
+        query: |
+          SELECT
+            relname,
+            -- Number of disk blocks read from this table
+            coalesce(heap_blks_read,0) as heap_blks_read,
+            -- Number of buffer hits in this table
+            coalesce(heap_blks_hit,0) as heap_blks_hit,
+            -- Number of disk blocks read from all indexes on this table
+            coalesce(idx_blks_read,0) as idx_blks_read,
+            -- Number of buffer hits in all indexes on this table
+            coalesce(idx_blks_hit,0) as idx_blks_hit,
+            -- Number of disk blocks read from this table's TOAST table (if any)
+            coalesce(toast_blks_read, 0) as toast_blks_read,
+            -- Number of buffer hits in this table's TOAST table (if any)
+            coalesce(toast_blks_hit, 0) as toast_blks_hit,
+            -- Number of disk blocks read from this table's TOAST table indexes (if any)
+            coalesce(tidx_blks_read, 0) as tidx_blks_read,
+            -- Number of buffer hits in this table's TOAST table indexes (if any)
+            coalesce(tidx_blks_hit, 0) as tidx_blks_hit
+          FROM pg_statio_user_tables
+
+  - collector_name: server
+    metrics:
+
+      - metric_name: pg_server_wal_segments
+        type: gauge
+        help: 'Number of segments in the WAL directory'
+        values:
+          - segments
+        query_ref: _srv_pg_ls_waldir
+
+      - metric_name: pg_server_wal_size_bytes
+        type: gauge
+        help: 'Size of the WAL directory'
+        values:
+          - size
+        query_ref: _srv_pg_ls_waldir
+
+      - metric_name: pg_server_stat_bgwriter_checkpoints_timed
+        type: counter
+        help: 'Number of scheduled checkpoints that have been performed'
+        values:
+          - checkpoints_timed
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_bgwriter_checkpoints_req
+        type: counter
+        help: 'Number of requested checkpoints that have been performed'
+        values:
+          - checkpoints_req
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_bgwriter_checkpoint_write_time
+        type: counter
+        help: 'Total amount of time that has been spent in the portion of checkpoint processing where files are written to disk, in milliseconds'
+        values:
+          - checkpoint_write_time
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_bgwriter_checkpoint_sync_time
+        type: counter
+        help: 'Total amount of time that has been spent in the portion of checkpoint processing where files are synchronized to disk, in milliseconds'
+        values:
+          - checkpoint_sync_time
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_bgwriter_buffers_checkpoint
+        type: counter
+        help: 'Number of buffers written during checkpoints'
+        values:
+          - buffers_checkpoint
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_bgwriter_buffers_clean
+        type: counter
+        help: 'Number of buffers written by the background writer'
+        values:
+          - buffers_clean
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_bgwriter_maxwritten_clean
+        type: counter
+        help: 'Number of times the background writer stopped a cleaning scan because it had written too many buffers'
+        values:
+          - maxwritten_clean
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_bgwriter_buffers_backend
+        type: counter
+        help: 'Number of buffers written directly by a backend'
+        values:
+          - buffers_backend
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_bgwriter_buffers_backend_fsync
+        type: counter
+        help: 'Number of times a backend had to execute its own fsync call (normally the background writer handles those even when the backend does its own write)'
+        values:
+          - buffers_backend_fsync
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_bgwriter_buffers_alloc
+        type: counter
+        help: 'Number of buffers allocated'
+        values:
+          - buffers_alloc
+        query_ref: _srv_bgwriter
+
+      - metric_name: pg_server_stat_database_numbackends
+        type: gauge
+        help: 'Number of backends currently connected to this database'
+        key_labels:
+          - datname
+        values:
+          - numbackends
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_xact_commit
+        type: counter
+        help: 'Number of transactions in this database that have been committed'
+        key_labels:
+          - datname
+        values:
+          - xact_commit
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_xact_rollback
+        type: counter
+        help: 'Number of transactions in this database that have been rolled back'
+        key_labels:
+          - datname
+        values:
+          - xact_rollback
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_blks_read
+        type: counter
+        help: 'Number of disk blocks read in this database'
+        key_labels:
+          - datname
+        values:
+          - blks_read
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_blks_hit
+        type: counter
+        help: 'Number of times disk blocks were found already in the buffer cache'
+        key_labels:
+          - datname
+        values:
+          - blks_hit
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_tup_returned
+        type: counter
+        help: 'Number of live rows fetched by sequential scans and index entries returned by index scans in this database'
+        key_labels:
+          - datname
+        values:
+          - tup_returned
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_tup_fetched
+        type: counter
+        help: 'Number of live rows fetched by index scans in this database'
+        key_labels:
+          - datname
+        values:
+          - tup_fetched
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_tup_inserted
+        type: counter
+        help: 'Number of rows inserted by queries in this database'
+        key_labels:
+          - datname
+        values:
+          - tup_inserted
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_tup_updated
+        type: counter
+        help: 'Number of rows updated by queries in this database'
+        key_labels:
+          - datname
+        values:
+          - tup_updated
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_tup_deleted
+        type: counter
+        help: 'Number of rows deleted by queries in this database'
+        key_labels:
+          - datname
+        values:
+          - tup_deleted
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_temp_files
+        type: counter
+        help: 'Number of temporary files created by queries in this database'
+        key_labels:
+          - datname
+        values:
+          - temp_files
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_temp_bytes
+        type: counter
+        help: 'Total amount of data written to temporary files by queries in this database'
+        key_labels:
+          - datname
+        values:
+          - temp_bytes
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_deadlocks
+        type: counter
+        help: 'Number of deadlocks detected in this database'
+        key_labels:
+          - datname
+        values:
+          - deadlocks
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_blk_read_time
+        type: counter
+        help: 'Time spent reading data file blocks by backends in this database, in milliseconds'
+        key_labels:
+          - datname
+        values:
+          - blk_read_time
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_blk_write_time
+        type: counter
+        help: 'Time spent writing data file blocks by backends in this database, in milliseconds'
+        key_labels:
+          - datname
+        values:
+          - blk_write_time
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_session_time
+        type: counter
+        help: 'Time spent by database sessions in this database, in milliseconds'
+        key_labels:
+          - datname
+        values:
+          - session_time
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_active_time
+        type: counter
+        help: 'Time spent executing SQL statements in this database, in milliseconds'
+        key_labels:
+          - datname
+        values:
+          - active_time
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_idle_in_transaction_time
+        type: counter
+        help: 'Time spent idling while in a transaction in this database, in milliseconds'
+        key_labels:
+          - datname
+        values:
+          - idle_in_transaction_time
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_sessions
+        type: gauge
+        help: 'Total number of sessions established to this database'
+        key_labels:
+          - datname
+        values:
+          - sessions
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_sessions_abandoned
+        type: counter
+        help: 'Number of database sessions to this database that were terminated because connection to the client was lost'
+        key_labels:
+          - datname
+        values:
+          - sessions_abandoned
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_sessions_fatal
+        type: counter
+        help: 'Number of database sessions to this database that were terminated by fatal errors'
+        key_labels:
+          - datname
+        values:
+          - sessions_fatal
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_stat_database_sessions_killed
+        type: counter
+        help: 'Number of database sessions to this database that were terminated by operator intervention'
+        key_labels:
+          - datname
+        values:
+          - sessions_killed
+        query_ref: _srv_pg_stat_database
+
+      - metric_name: pg_server_locks
+        type: gauge
+        help: 'Number of locks held in this database'
+        key_labels:
+          - datname
+          - mode
+        values:
+          - count
+        query_ref: _srv_pg_locks
+
+    queries:
+      - query_name: _srv_pg_locks
+        query: |
+          SELECT
+            pg_database.datname as datname,
+            -- Name of the lock mode
+            tmp.mode as mode,
+            COALESCE(count, 0) as count
+          FROM
+            (
+              VALUES
+                ('accesssharelock'),
+                ('rowsharelock'),
+                ('rowexclusivelock'),
+                ('shareupdateexclusivelock'),
+                ('sharelock'),
+                ('sharerowexclusivelock'),
+                ('exclusivelock'),
+                ('accessexclusivelock'),
+                ('sireadlock')
+            ) AS tmp(mode)
+            CROSS JOIN pg_database
+            LEFT JOIN (
+              SELECT
+                database,
+                lower(mode) AS mode,
+                count(*) AS count
+              FROM
+                pg_locks
+              WHERE
+                database IS NOT NULL
+              GROUP BY
+                database,
+                lower(mode)
+            ) AS tmp2 ON tmp.mode = tmp2.mode
+            and pg_database.oid = tmp2.database
+
+      - query_name: _srv_bgwriter
+        query: |
+          SELECT
+            /* The following 5 are moved to pg_stat_checkpointer in postgres 17 */
+
+            checkpoints_timed
+            ,checkpoints_req
+            ,checkpoint_write_time
+            ,checkpoint_sync_time
+            ,buffers_checkpoint
+
+            ,buffers_clean
+            ,maxwritten_clean
+            ,buffers_backend
+            ,buffers_backend_fsync
+            ,buffers_alloc
+          FROM pg_stat_bgwriter;
+
+      - query_name: _srv_pg_stat_database
+        query: |
+          SELECT
+            COALESCE(datname, 'shared-objects') as datname,
+            COALESCE(numbackends, 0) as numbackends,
+            xact_commit,
+            xact_rollback,
+            blks_read,
+            blks_hit,
+            tup_returned,
+            tup_fetched,
+            tup_inserted,
+            tup_updated,
+            tup_deleted,
+            temp_files,
+            temp_bytes,
+            deadlocks,
+            blk_read_time,
+            blk_write_time,
+            session_time,
+            active_time,
+            idle_in_transaction_time,
+            sessions,
+            sessions_abandoned,
+            sessions_fatal,
+            sessions_killed
+          FROM pg_stat_database
+
+      - query_name: _srv_pg_ls_waldir
+        query: |
+          SELECT
+            COUNT(*) AS segments,
+            SUM(size) AS size
+          FROM pg_ls_waldir()
+
