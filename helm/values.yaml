@@ -47,6 +47,7 @@ ingress:
     # -- Ingress tls.key, required if you don't have secret name.
     key: ""
     # key: "{{- .Files.Get \"tls.key\" -}}"
+
 # -- Arbitrary sidecar containers list
 extraContainers: {}
 #   - name: your_sidecar
@@ -54,8 +55,10 @@ extraContainers: {}
 #     args:
 #     resources:
 #       requests:{}
+
 # -- Arbitrary sidecar containers list for 1.29+ kubernetes
 initContainers: {}
+
 serviceAccount:
   # -- Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless
   # overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the
