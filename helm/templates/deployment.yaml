@@ -47,6 +47,10 @@ spec:
         - name: {{ $v.name }}
           {{- toYaml $v.volume | nindent 10 }}
       {{- end }}
+{{- if .Values.initContainers }}
+      initContainers:
+{{ toYaml .Values.initContainers | nindent 8 }}
+{{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
