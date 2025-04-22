@@ -71,6 +71,7 @@ as an example.
 | ingress.tls.crt | string | `""` | Ingress tls.crt, required if you don't have secret name. |
 | ingress.tls.key | string | `""` | Ingress tls.key, required if you don't have secret name. |
 | extraContainers | object | `{}` | Arbitrary sidecar containers list |
+| initContainers | object | `{}` | Arbitrary sidecar containers list for 1.29+ kubernetes |
 | serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
 | livenessProbe.initialDelaySeconds | int | `5` |  |
