@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.11.1](https://img.shields.io/badge/Version-0.11.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.17.1](https://img.shields.io/badge/AppVersion-0.17.1-informational?style=flat-square)
+![Version: 0.12.1](https://img.shields.io/badge/Version-0.12.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.17.1](https://img.shields.io/badge/AppVersion-0.17.1-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -95,6 +95,7 @@ as an example.
 | serviceMonitor.interval | string | `"15s"` | ServiceMonitor interval |
 | serviceMonitor.path | string | `"/metrics"` | ServiceMonitor path |
 | serviceMonitor.metricRelabelings | object | `{}` | ServiceMonitor metric relabelings |
+| serviceMonitor.relabelings | object | `{}` | ServiceMonitor relabelings |
 | serviceMonitor.namespace | string | `nil` | ServiceMonitor namespace override (default is .Release.Namespace) |
 | serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout |
 

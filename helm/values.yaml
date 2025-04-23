@@ -115,6 +115,8 @@ serviceMonitor:
   # scrapeTimeout: 10s
   # -- ServiceMonitor metric relabelings
   metricRelabelings: {}
+  # -- ServiceMonitor relabelings
+  relabelings: {}
   # -- ServiceMonitor namespace override (default is .Release.Namespace)
   namespace: ~
 # Additional env variables
