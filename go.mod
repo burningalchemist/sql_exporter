@@ -2,8 +2,6 @@ module github.com/burningalchemist/sql_exporter
 
 go 1.23.0
 
-toolchain go1.24.1
-
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.34.0
 	github.com/aws/aws-sdk-go-v2 v1.36.3
