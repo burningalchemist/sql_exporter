@@ -35,6 +35,7 @@ var (
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
 	webConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
+	configCheck   = flag.Bool("config.check", false, "Check configuration and exit")
 	logFormat     = flag.String("log.format", "logfmt", "Set log output format")
 	logLevel      = flag.String("log.level", "info", "Set log level")
 	logFile       = flag.String("log.file", "", "Log file to write to, leave empty to write to stderr")
@@ -80,6 +81,16 @@ func main() {
 	// Override the config.file default with the SQLEXPORTER_CONFIG environment variable if set.
 	if val, ok := os.LookupEnv(cfg.EnvConfigFile); ok {
 		*configFile = val
+	}
+
+	if *configCheck {
+		slog.Info("Checking configuration file", "configFile", *configFile)
+		if _, err := cfg.Load(*configFile); err != nil {
+			slog.Error("Configuration check failed", "error", err)
+			os.Exit(1)
+		}
+		slog.Info("Configuration check successful")
+		os.Exit(0)
 	}
 
 	slog.Warn("Starting SQL exporter", "versionInfo", version.Info(), "buildContext", version.BuildContext())
