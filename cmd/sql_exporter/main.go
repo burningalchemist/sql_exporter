@@ -35,7 +35,7 @@ var (
 	enableReload  = flag.Bool("web.enable-reload", false, "Enable reload collector data handler")
 	webConfigFile = flag.String("web.config.file", "", "[EXPERIMENTAL] TLS/BasicAuth configuration file path")
 	configFile    = flag.String("config.file", "sql_exporter.yml", "SQL Exporter configuration file path")
-	checkConfig   = flag.Bool("check-config", false, "Check configuration and exit")
+	configCheck   = flag.Bool("config.check", false, "Check configuration and exit")
 	logFormat     = flag.String("log.format", "logfmt", "Set log output format")
 	logLevel      = flag.String("log.level", "info", "Set log level")
 	logFile       = flag.String("log.file", "", "Log file to write to, leave empty to write to stderr")
@@ -83,7 +83,7 @@ func main() {
 		*configFile = val
 	}
 
-	if *checkConfig {
+	if *configCheck {
 		slog.Info("Checking configuration file", "configFile", *configFile)
 		if _, err := cfg.Load(*configFile); err != nil {
 			slog.Error("Configuration check failed", "error", err)
