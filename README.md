@@ -201,6 +201,15 @@ For additional details please refer to [xo/dburl](https://github.com/xo/dburl) d
 ## Miscellaneous
 
 <details>
+<summary>Handling NULL values</summary>
+
+Queries that return `NULL` values are supported, but they are not rendered as metrics. It's useful for situations, when
+the result set depends on some conditions, so it may be empty. Whenever a query returns `NULL` values, the exporter
+logs a message at the `Debug` level. If your query constantly returns `NULL` values, it most likely means that you need
+to revisit your query logic.
+</details>
+
+<details>
 <summary>Multiple database connections</summary>
 
 It is possible to run a single exporter instance against multiple database connections. In this case we need to
