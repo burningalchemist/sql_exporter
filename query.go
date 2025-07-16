@@ -213,17 +213,17 @@ func (q *Query) scanRow(rows *sql.Rows, dest []any) (map[string]any, errors.With
 		switch q.columnTypes[column] {
 		case columnTypeKey:
 			if !dest[i].(*sql.NullString).Valid {
-				slog.Warn("Key column is NULL", "logContext", q.logContext, "column", column)
+				slog.Debug("Key column is NULL", "logContext", q.logContext, "column", column)
 			}
 			result[column] = *dest[i].(*sql.NullString)
 		case columnTypeTime:
 			if !dest[i].(*sql.NullTime).Valid {
-				slog.Warn("Time column is NULL", "logContext", q.logContext, "column", column)
+				slog.Debug("Time column is NULL", "logContext", q.logContext, "column", column)
 			}
 			result[column] = *dest[i].(*sql.NullTime)
 		case columnTypeValue:
 			if !dest[i].(*sql.NullFloat64).Valid {
-				slog.Warn("Value column is NULL", "logContext", q.logContext, "column", column)
+				slog.Debug("Value column is NULL", "logContext", q.logContext, "column", column)
 			}
 			result[column] = *dest[i].(*sql.NullFloat64)
 		}
