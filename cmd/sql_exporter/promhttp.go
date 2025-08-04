@@ -47,7 +47,6 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 				for _, err := range t {
 					if errors.Is(err, context.DeadlineExceeded) {
 						slog.Error("Timeout while collecting metrics", "error", err)
-
 					} else {
 						slog.Error("Error gathering metrics", "error", err)
 					}
@@ -76,7 +75,11 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 			}
 		}
 		if closer, ok := writer.(io.Closer); ok {
-			closer.Close()
+			err := closer.Close()
+			if err != nil {
+				errs = append(errs, err)
+				slog.Error("Error closing encoder", "error", err)
+			}
 		}
 		if errs.MaybeUnwrap() != nil && buf.Len() == 0 {
 			slog.Error("No metrics encoded", "error", errs)
