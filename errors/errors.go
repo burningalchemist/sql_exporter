@@ -24,7 +24,7 @@ type withContext struct {
 
 // New creates a new WithContext.
 func New(context string, err string) WithContext {
-	return &withContext{context, fmt.Errorf(err)}
+	return &withContext{context, fmt.Errorf("%s", err)}
 }
 
 // Errorf formats according to a format specifier and returns a new WithContext.

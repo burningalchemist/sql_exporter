@@ -72,7 +72,10 @@ func main() {
 
 	defer func() {
 		if logConfig.logFileHandler != nil {
-			logConfig.logFileHandler.Close()
+			err := logConfig.logFileHandler.Close()
+			if err != nil {
+				fmt.Printf("Error closing log file: %s\n", err)
+			}
 		}
 	}()
 

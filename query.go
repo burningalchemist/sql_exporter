@@ -92,7 +92,12 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 		ch <- NewInvalidMetric(err)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			slog.Error("Failed to close rows", "logContext", q.logContext, "error", err)
+			ch <- NewInvalidMetric(errors.Wrap(q.logContext, err))
+		}
+	}()
 
 	dest, err := q.scanDest(rows)
 	if err != nil {

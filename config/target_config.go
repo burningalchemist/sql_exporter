@@ -87,7 +87,7 @@ func readDSNFromAwsSecretManager(secretName string) Secret {
 	}
 
 	// Decrypts secret using the associated KMS key.
-	var secretString string = *result.SecretString
+	secretString := *result.SecretString
 
 	var awsSecret AwsSecret
 	jsonErr := json.Unmarshal([]byte(secretString), &awsSecret)
