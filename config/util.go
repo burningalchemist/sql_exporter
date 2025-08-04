@@ -15,8 +15,8 @@ func checkCollectorRefs(collectorRefs []string, ctx string) error {
 	}
 	for i, ci := range collectorRefs {
 		if slices.Contains(collectorRefs[i+1:], ci) {
-				return fmt.Errorf("duplicate collector reference %q in %s", ci, ctx)
-			}
+			return fmt.Errorf("duplicate collector reference %q in %s", ci, ctx)
+		}
 	}
 	return nil
 }
