@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 	"sync"
 
@@ -187,11 +188,8 @@ func (e *exporter) filterTargets(jf []string) {
 	if len(jf) > 0 {
 		var filteredTargets []Target
 		for _, target := range e.targets {
-			for _, jobFilter := range jf {
-				if jobFilter == target.JobGroup() {
-					filteredTargets = append(filteredTargets, target)
-					break
-				}
+			if slices.Contains(jf, target.JobGroup()) {
+				filteredTargets = append(filteredTargets, target)
 			}
 		}
 		if len(filteredTargets) == 0 {

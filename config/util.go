@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -13,11 +14,9 @@ func checkCollectorRefs(collectorRefs []string, ctx string) error {
 		return fmt.Errorf("no collectors defined for %s", ctx)
 	}
 	for i, ci := range collectorRefs {
-		for _, cj := range collectorRefs[i+1:] {
-			if ci == cj {
+		if slices.Contains(collectorRefs[i+1:], ci) {
 				return fmt.Errorf("duplicate collector reference %q in %s", ci, ctx)
 			}
-		}
 	}
 	return nil
 }
