@@ -28,7 +28,7 @@ func resolveCollectorRefs(
 	resolved := make([]*CollectorConfig, 0, len(collectorRefs))
 	found := make(map[*CollectorConfig]bool)
 	for _, cref := range collectorRefs {
-		cref_resolved := false
+		crefResolved := false
 		for k, c := range collectors {
 			matched, err := filepath.Match(cref, k)
 			if err != nil {
@@ -37,10 +37,10 @@ func resolveCollectorRefs(
 			if matched && !found[c] {
 				resolved = append(resolved, c)
 				found[c] = true
-				cref_resolved = true
+				crefResolved = true
 			}
 		}
-		if !cref_resolved {
+		if !crefResolved {
 			return nil, fmt.Errorf("unknown collector %q referenced in %s", cref, ctx)
 		}
 	}
