@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -13,10 +14,8 @@ func checkCollectorRefs(collectorRefs []string, ctx string) error {
 		return fmt.Errorf("no collectors defined for %s", ctx)
 	}
 	for i, ci := range collectorRefs {
-		for _, cj := range collectorRefs[i+1:] {
-			if ci == cj {
-				return fmt.Errorf("duplicate collector reference %q in %s", ci, ctx)
-			}
+		if slices.Contains(collectorRefs[i+1:], ci) {
+			return fmt.Errorf("duplicate collector reference %q in %s", ci, ctx)
 		}
 	}
 	return nil
@@ -28,7 +27,7 @@ func resolveCollectorRefs(
 	resolved := make([]*CollectorConfig, 0, len(collectorRefs))
 	found := make(map[*CollectorConfig]bool)
 	for _, cref := range collectorRefs {
-		cref_resolved := false
+		crefResolved := false
 		for k, c := range collectors {
 			matched, err := filepath.Match(cref, k)
 			if err != nil {
@@ -37,10 +36,10 @@ func resolveCollectorRefs(
 			if matched && !found[c] {
 				resolved = append(resolved, c)
 				found[c] = true
-				cref_resolved = true
+				crefResolved = true
 			}
 		}
-		if !cref_resolved {
+		if !crefResolved {
 			return nil, fmt.Errorf("unknown collector %q referenced in %s", cref, ctx)
 		}
 	}
