@@ -1,3 +1,7 @@
+// Package sql_exporter provides a Prometheus exporter for SQL metrics. It
+// gathers metrics from SQL databases and exposes them in a format suitable for
+// Prometheus scraping. The package supports multiple targets, collectors, and
+// queries, and allows for flexible configuration through YAML files.
 package sql_exporter
 
 import (
@@ -238,8 +242,8 @@ func parseContextLog(list string) map[string]string {
 	return m
 }
 
+// TrimMissingCtx trims the leading comma and space from the log context string.
 // Leading comma appears when previous parameter is undefined, which is a side-effect of running in single target mode.
-// Let's trim to avoid confusions.
 func TrimMissingCtx(logContext string) string {
 	if strings.HasPrefix(logContext, ",") {
 		logContext = strings.TrimLeft(logContext, ", ")

@@ -57,7 +57,7 @@ func (t *TargetConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	return checkOverflow(t.XXX, "target")
 }
 
-// AWS Secret
+// AwsSecret is a struct that represents the structure of the secret stored in AWS Secrets Manager.
 type AwsSecret struct {
 	DSN Secret `json:"data_source_name"`
 }

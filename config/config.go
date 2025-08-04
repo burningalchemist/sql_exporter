@@ -1,3 +1,5 @@
+// Package config provides the configuration structures and functions for
+// sql_exporter.
 package config
 
 import (
