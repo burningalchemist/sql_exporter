@@ -11,7 +11,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/kardianos/minwinsvc v1.0.2
 	github.com/lib/pq v1.10.9
-	github.com/microsoft/go-mssqldb v1.9.2
+	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/prometheus/client_golang v1.23.0
 	github.com/prometheus/client_model v0.6.2
 	github.com/prometheus/common v0.65.0
