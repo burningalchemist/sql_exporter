@@ -59,6 +59,9 @@ extraContainers: {}
 # -- Arbitrary sidecar containers list for 1.29+ kubernetes
 initContainers: {}
 
+# -- Add any generic manifests here
+extraManifests: []
+
 serviceAccount:
   # -- Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless
   # overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the
