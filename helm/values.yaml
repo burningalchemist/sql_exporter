@@ -59,7 +59,7 @@ extraContainers: {}
 # -- Arbitrary sidecar containers list for 1.29+ kubernetes
 initContainers: {}
 
-# -- Add any generic manifests here
+# -- Arbitrary manifests list
 extraManifests: []
 
 serviceAccount:
