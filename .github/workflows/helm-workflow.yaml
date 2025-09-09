@@ -77,7 +77,9 @@ jobs:
         run: ct lint --target-branch "${TARGET_BRANCH}" --remote "${TARGET_REMOTE}" --validate-maintainers=false --chart-dirs .
       - name: Setup helmfile
         if: steps.list-changed.outputs.changed == 'true'
-        uses: mamezou-tech/setup-helmfile@v2.0.0
+        uses: mamezou-tech/setup-helmfile@v2.1.0
+        with:
+          helm-version: "v${{ env.HELM_VERSION }}"
       - name: Create kind cluster
         if: steps.list-changed.outputs.changed == 'true'
         uses: helm/kind-action@v1.9.0
