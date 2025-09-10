@@ -2,8 +2,8 @@ apiVersion: v2
 name: sql-exporter
 description: Database-agnostic SQL exporter for Prometheus
 type: application
-version: 0.13.0
-appVersion: 0.18.1
+version: 0.13.1
+appVersion: 0.18.2
 keywords:
   - exporter
   - servicemonitor
