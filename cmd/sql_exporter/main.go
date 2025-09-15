@@ -110,7 +110,7 @@ func main() {
 	signalHandler(exporter, *configFile)
 
 	// Setup and start webserver.
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { http.Error(w, "OK", http.StatusOK) })
+	http.HandleFunc("/healthz", healthzHandler(exporter))
 	http.HandleFunc("/", HomeHandlerFunc(*metricsPath))
 	http.HandleFunc("/config", ConfigHandlerFunc(*metricsPath, exporter))
 	http.Handle(*metricsPath, promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, ExporterHandlerFor(exporter)))
@@ -129,6 +129,16 @@ func main() {
 		slog.Error("Error starting web server", "error", err)
 		os.Exit(1)
 
+	}
+}
+
+func healthzHandler(exporter sql_exporter.Exporter) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if exporter.GetHealthz() {
+			http.Error(w, "OK", http.StatusOK)
+		} else {
+			http.Error(w, "Unhealthy: Too many scrape errors", http.StatusInternalServerError)
+		}
 	}
 }
 

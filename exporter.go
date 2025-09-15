@@ -24,6 +24,7 @@ var (
 	SvcRegistry        = prometheus.NewRegistry()
 	svcMetricLabels    = []string{"job", "target", "collector", "query"}
 	scrapeErrorsMetric *prometheus.CounterVec
+	scrapeErrorsInternalCounter int
 )
 
 // Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the default registry.
@@ -40,12 +41,15 @@ type Exporter interface {
 	SetJobFilters([]string)
 	// DropErrorMetrics resets the scrape_errors_total metric
 	DropErrorMetrics()
+	// GetHealthz returns the healthy status of the exporter
+	GetHealthz() bool
 }
 
 type exporter struct {
 	config     *config.Config
 	targets    []Target
 	jobFilters []string
+	healthz    *bool
 
 	ctx context.Context
 }
@@ -87,11 +91,13 @@ func NewExporter(configFile string) (Exporter, error) {
 	}
 
 	scrapeErrorsMetric = registerScrapeErrorMetric()
+	healthz := true
 
 	return &exporter{
 		config:     c,
 		targets:    targets,
 		jobFilters: []string{},
+		healthz:    &healthz,
 		ctx:        context.Background(),
 	}, nil
 }
@@ -101,6 +107,7 @@ func (e *exporter) WithContext(ctx context.Context) Exporter {
 		config:     e.config,
 		targets:    e.targets,
 		jobFilters: e.jobFilters,
+		healthz:    e.healthz,
 		ctx:        ctx,
 	}
 }
@@ -153,9 +160,11 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 					values[i] = ctxLabels[label]
 				}
 				scrapeErrorsMetric.WithLabelValues(values...).Inc()
+				scrapeErrorsInternalCounter++
 			}
 			continue
 		}
+
 		metricDesc := metric.Desc()
 		dtoMetricFamily, ok := dtoMetricFamilies[metricDesc.Name()]
 		if !ok {
@@ -174,6 +183,11 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 			dtoMetricFamilies[metricDesc.Name()] = dtoMetricFamily
 		}
 		dtoMetricFamily.Metric = append(dtoMetricFamily.Metric, dtoMetric)
+	}
+
+	if scrapeErrorsInternalCounter > e.config.Globals.ScrapeErrorThreshold && e.config.Globals.ScrapeErrorThreshold > 0 {
+		slog.Error("Too many scrape errors, marking exporter as unhealthy", "scrapeErrors", scrapeErrorsInternalCounter)
+		*e.healthz = false
 	}
 
 	// No need to sort metric families, prometheus.Gatherers will do that for us when merging.
@@ -214,9 +228,16 @@ func (e *exporter) SetJobFilters(filters []string) {
 	e.jobFilters = filters
 }
 
+// GetHealthz returns the healthy status of the exporter
+func (e *exporter) GetHealthz() bool {
+	return *e.healthz
+}
+
 // DropErrorMetrics implements Exporter.
 func (e *exporter) DropErrorMetrics() {
 	scrapeErrorsMetric.Reset()
+	scrapeErrorsInternalCounter = 0
+	*e.healthz = true
 	slog.Debug("Dropped scrape_errors_total metric")
 }
 

@@ -13,6 +13,7 @@ type GlobalConfig struct {
 	ScrapeTimeout           model.Duration `yaml:"scrape_timeout" env:"SCRAPE_TIMEOUT"`                         // per-scrape timeout, global
 	TimeoutOffset           model.Duration `yaml:"scrape_timeout_offset" env:"SCRAPE_TIMEOUT_OFFSET"`           // offset to subtract from timeout in seconds
 	ScrapeErrorDropInterval model.Duration `yaml:"scrape_error_drop_interval" env:"SCRAPE_ERROR_DROP_INTERVAL"` // interval to drop scrape errors from the error counter, default is 0
+	ScrapeErrorThreshold    int            `yaml:"scrape_error_threshold" env:"SCRAPE_ERROR_THRESHOLD"`         // threshold of scrape errors to mark exporter as unhealthy, default is 0 (always healthy)
 	MaxConnLifetime         time.Duration  `yaml:"max_connection_lifetime" env:"MAX_CONNECTION_LIFETIME"`       // maximum amount of time a connection may be reused to any one target
 
 	MaxConns     int `yaml:"max_connections" env:"MAX_CONNECTIONS"`           // maximum number of open connections to any one target
@@ -30,6 +31,8 @@ func (g *GlobalConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	g.ScrapeTimeout = model.Duration(10 * time.Second)
 	// Default to 0 for scrape error drop interval.
 	g.ScrapeErrorDropInterval = model.Duration(0)
+	// Default to 0 for scrape error threshold (always healthy).
+	g.ScrapeErrorThreshold = 0
 	// Default to .5 seconds.
 	g.TimeoutOffset = model.Duration(500 * time.Millisecond)
 	g.MaxConns = 3
