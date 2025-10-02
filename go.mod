@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
-	github.com/aws/aws-sdk-go-v2 v1.39.0
+	github.com/aws/aws-sdk-go-v2 v1.39.2
 	github.com/aws/aws-sdk-go-v2/config v1.31.7
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.3
 	github.com/go-sql-driver/mysql v1.9.3
