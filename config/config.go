@@ -82,13 +82,13 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		return err
 	}
 
-	// Load any externally defined collectors.
-	if err := c.loadCollectorFiles(); err != nil {
+	// Process environment variables.
+	if err := c.processEnvConfig(); err != nil {
 		return err
 	}
 
-	// Process environment variables.
-	if err := c.processEnvConfig(); err != nil {
+	// Load any externally defined collectors.
+	if err := c.loadCollectorFiles(); err != nil {
 		return err
 	}
 
