@@ -81,7 +81,6 @@ func PingDB(ctx context.Context, conn *sql.DB) error {
 // if underlying url parse failed. By default it returns a raw url string in error message,
 // which most likely contains a password. It's undesired here.
 func safeParse(rawURL string) (*dburl.URL, error) {
-
 	parsed, err := dburl.Parse(expandEnv(rawURL))
 	if err != nil {
 		if uerr := new(url.Error); errors.As(err, &uerr) {
