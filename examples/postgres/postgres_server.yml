@@ -1,0 +1,385 @@
+collector_name: server
+
+metrics:
+  - metric_name: pg_server_wal_segments
+    type: gauge
+    help: 'Number of segments in the WAL directory'
+    values:
+      - segments
+    query_ref: _srv_pg_ls_waldir
+
+  - metric_name: pg_server_wal_size_bytes
+    type: gauge
+    help: 'Size of the WAL directory'
+    values:
+      - size
+    query_ref: _srv_pg_ls_waldir
+
+  - metric_name: pg_server_stat_bgwriter_checkpoints_timed
+    type: counter
+    help: 'Number of scheduled checkpoints that have been performed'
+    values:
+      - checkpoints_timed
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_bgwriter_checkpoints_req
+    type: counter
+    help: 'Number of requested checkpoints that have been performed'
+    values:
+      - checkpoints_req
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_bgwriter_checkpoint_write_time
+    type: counter
+    help: 'Total amount of time that has been spent in the portion of checkpoint processing where files are written to disk, in milliseconds'
+    values:
+      - checkpoint_write_time
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_bgwriter_checkpoint_sync_time
+    type: counter
+    help: 'Total amount of time that has been spent in the portion of checkpoint processing where files are synchronized to disk, in milliseconds'
+    values:
+      - checkpoint_sync_time
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_bgwriter_buffers_checkpoint
+    type: counter
+    help: 'Number of buffers written during checkpoints'
+    values:
+      - buffers_checkpoint
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_bgwriter_buffers_clean
+    type: counter
+    help: 'Number of buffers written by the background writer'
+    values:
+      - buffers_clean
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_bgwriter_maxwritten_clean
+    type: counter
+    help: 'Number of times the background writer stopped a cleaning scan because it had written too many buffers'
+    values:
+      - maxwritten_clean
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_bgwriter_buffers_backend
+    type: counter
+    help: 'Number of buffers written directly by a backend'
+    values:
+      - buffers_backend
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_bgwriter_buffers_backend_fsync
+    type: counter
+    help: 'Number of times a backend had to execute its own fsync call (normally the background writer handles those even when the backend does its own write)'
+    values:
+      - buffers_backend_fsync
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_bgwriter_buffers_alloc
+    type: counter
+    help: 'Number of buffers allocated'
+    values:
+      - buffers_alloc
+    query_ref: _srv_bgwriter
+
+  - metric_name: pg_server_stat_database_numbackends
+    type: gauge
+    help: 'Number of backends currently connected to this database'
+    key_labels:
+      - datname
+    values:
+      - numbackends
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_xact_commit
+    type: counter
+    help: 'Number of transactions in this database that have been committed'
+    key_labels:
+      - datname
+    values:
+      - xact_commit
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_xact_rollback
+    type: counter
+    help: 'Number of transactions in this database that have been rolled back'
+    key_labels:
+      - datname
+    values:
+      - xact_rollback
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_blks_read
+    type: counter
+    help: 'Number of disk blocks read in this database'
+    key_labels:
+      - datname
+    values:
+      - blks_read
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_blks_hit
+    type: counter
+    help: 'Number of times disk blocks were found already in the buffer cache'
+    key_labels:
+      - datname
+    values:
+      - blks_hit
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_tup_returned
+    type: counter
+    help: 'Number of live rows fetched by sequential scans and index entries returned by index scans in this database'
+    key_labels:
+      - datname
+    values:
+      - tup_returned
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_tup_fetched
+    type: counter
+    help: 'Number of live rows fetched by index scans in this database'
+    key_labels:
+      - datname
+    values:
+      - tup_fetched
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_tup_inserted
+    type: counter
+    help: 'Number of rows inserted by queries in this database'
+    key_labels:
+      - datname
+    values:
+      - tup_inserted
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_tup_updated
+    type: counter
+    help: 'Number of rows updated by queries in this database'
+    key_labels:
+      - datname
+    values:
+      - tup_updated
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_tup_deleted
+    type: counter
+    help: 'Number of rows deleted by queries in this database'
+    key_labels:
+      - datname
+    values:
+      - tup_deleted
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_temp_files
+    type: counter
+    help: 'Number of temporary files created by queries in this database'
+    key_labels:
+      - datname
+    values:
+      - temp_files
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_temp_bytes
+    type: counter
+    help: 'Total amount of data written to temporary files by queries in this database'
+    key_labels:
+      - datname
+    values:
+      - temp_bytes
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_deadlocks
+    type: counter
+    help: 'Number of deadlocks detected in this database'
+    key_labels:
+      - datname
+    values:
+      - deadlocks
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_blk_read_time
+    type: counter
+    help: 'Time spent reading data file blocks by backends in this database, in milliseconds'
+    key_labels:
+      - datname
+    values:
+      - blk_read_time
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_blk_write_time
+    type: counter
+    help: 'Time spent writing data file blocks by backends in this database, in milliseconds'
+    key_labels:
+      - datname
+    values:
+      - blk_write_time
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_session_time
+    type: counter
+    help: 'Time spent by database sessions in this database, in milliseconds'
+    key_labels:
+      - datname
+    values:
+      - session_time
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_active_time
+    type: counter
+    help: 'Time spent executing SQL statements in this database, in milliseconds'
+    key_labels:
+      - datname
+    values:
+      - active_time
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_idle_in_transaction_time
+    type: counter
+    help: 'Time spent idling while in a transaction in this database, in milliseconds'
+    key_labels:
+      - datname
+    values:
+      - idle_in_transaction_time
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_sessions
+    type: gauge
+    help: 'Total number of sessions established to this database'
+    key_labels:
+      - datname
+    values:
+      - sessions
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_sessions_abandoned
+    type: counter
+    help: 'Number of database sessions to this database that were terminated because connection to the client was lost'
+    key_labels:
+      - datname
+    values:
+      - sessions_abandoned
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_sessions_fatal
+    type: counter
+    help: 'Number of database sessions to this database that were terminated by fatal errors'
+    key_labels:
+      - datname
+    values:
+      - sessions_fatal
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_stat_database_sessions_killed
+    type: counter
+    help: 'Number of database sessions to this database that were terminated by operator intervention'
+    key_labels:
+      - datname
+    values:
+      - sessions_killed
+    query_ref: _srv_pg_stat_database
+
+  - metric_name: pg_server_locks
+    type: gauge
+    help: 'Number of locks held in this database'
+    key_labels:
+      - datname
+      - mode
+    values:
+      - count
+    query_ref: _srv_pg_locks
+
+queries:
+  - query_name: _srv_pg_locks
+    query: |
+      SELECT
+        pg_database.datname as datname,
+        -- Name of the lock mode
+        tmp.mode as mode,
+        COALESCE(count, 0) as count
+      FROM
+        (
+          VALUES
+            ('accesssharelock'),
+            ('rowsharelock'),
+            ('rowexclusivelock'),
+            ('shareupdateexclusivelock'),
+            ('sharelock'),
+            ('sharerowexclusivelock'),
+            ('exclusivelock'),
+            ('accessexclusivelock'),
+            ('sireadlock')
+        ) AS tmp(mode)
+        CROSS JOIN pg_database
+        LEFT JOIN (
+          SELECT
+            database,
+            lower(mode) AS mode,
+            count(*) AS count
+          FROM
+            pg_locks
+          WHERE
+            database IS NOT NULL
+          GROUP BY
+            database,
+            lower(mode)
+        ) AS tmp2 ON tmp.mode = tmp2.mode
+        and pg_database.oid = tmp2.database
+
+  - query_name: _srv_bgwriter
+    query: |
+      SELECT
+        /* The following 5 are moved to pg_stat_checkpointer in postgres 17 */
+
+        checkpoints_timed
+        ,checkpoints_req
+        ,checkpoint_write_time
+        ,checkpoint_sync_time
+        ,buffers_checkpoint
+
+        ,buffers_clean
+        ,maxwritten_clean
+        ,buffers_backend
+        ,buffers_backend_fsync
+        ,buffers_alloc
+      FROM pg_stat_bgwriter;
+
+  - query_name: _srv_pg_stat_database
+    query: |
+      SELECT
+        COALESCE(datname, 'shared-objects') as datname,
+        COALESCE(numbackends, 0) as numbackends,
+        xact_commit,
+        xact_rollback,
+        blks_read,
+        blks_hit,
+        tup_returned,
+        tup_fetched,
+        tup_inserted,
+        tup_updated,
+        tup_deleted,
+        temp_files,
+        temp_bytes,
+        deadlocks,
+        blk_read_time,
+        blk_write_time,
+        session_time,
+        active_time,
+        idle_in_transaction_time,
+        sessions,
+        sessions_abandoned,
+        sessions_fatal,
+        sessions_killed
+      FROM pg_stat_database
+
+  - query_name: _srv_pg_ls_waldir
+    query: |
+      SELECT
+        COUNT(*) AS segments,
+        SUM(size) AS size
+      FROM pg_ls_waldir()
+

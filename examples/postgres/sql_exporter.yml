@@ -1,0 +1,17 @@
+# This example contains two collectors, one to collect server metrics, and a second to collect database level metrics.
+# All metrics are prefixed according to which collector they originate from "pg_db_" or "pg_server_".
+# Many of these have been copied from https://github.com/prometheus-community/postgres_exporter
+jobs:
+  - job_name: database
+    collectors: [database]
+    static_configs:
+      - targets:
+          foo: 'postgresql://postgres@/var/run/postgresql/foo?sslmode=disable'
+          bar: 'postgresql://postgres@/var/run/postgresql/bar?sslmode=disable'
+  - job_name: server
+    collectors: [server]
+    static_configs:
+      - targets:
+          server: 'postgresql://postgres@/var/run/postgresql?sslmode=disable'
+
+collector_files: ['postgres_database.yml','postgres_server.yml']
