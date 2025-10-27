@@ -82,13 +82,13 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		return err
 	}
 
-	// Load any externally defined collectors.
-	if err := c.loadCollectorFiles(); err != nil {
+	// Process environment variables.
+	if err := c.processEnvConfig(); err != nil {
 		return err
 	}
 
-	// Process environment variables.
-	if err := c.processEnvConfig(); err != nil {
+	// Load any externally defined collectors.
+	if err := c.loadCollectorFiles(); err != nil {
 		return err
 	}
 
@@ -200,12 +200,42 @@ func (c *Config) loadCollectorFiles() error {
 				return err
 			}
 
-			cc := CollectorConfig{}
-			err = yaml.Unmarshal(buf, &cc)
-			if err != nil {
-				return err
+			// Inspect yaml to ensure strict parsing and expect an object, not a list.
+			var node yaml.Node
+			if err := yaml.Unmarshal(buf, &node); err != nil {
+				return fmt.Errorf("error parsing collector file %s: %w", cf, err)
+			}
+			if node.Kind != yaml.DocumentNode || len(node.Content) == 0 {
+				return fmt.Errorf("collector file %s is not a valid YAML document", cf)
 			}
 
+			top := node.Content[0]
+			if top.Kind != yaml.MappingNode {
+				return fmt.Errorf("collector file %s must define a single YAML map/object at the top level", cf)
+			}
+
+			// Check for 'collectors' key with a sequence value
+			for i := 0; i < len(top.Content); i += 2 {
+				keyNode := top.Content[i]
+				valNode := top.Content[i+1]
+				if keyNode.Value == "collectors" && valNode.Kind == yaml.SequenceNode {
+					return fmt.Errorf(
+						"collector file %s contains a 'collectors' list. Each file must define a single collector object",
+						cf,
+					)
+				}
+			}
+
+			// Now unmarshal into a CollectorConfig.
+			cc := CollectorConfig{}
+			if err := node.Decode(&cc); err != nil {
+				return fmt.Errorf("error parsing collector file %s: %w", cf, err)
+			}
+			if cc.Name == "" {
+				return fmt.Errorf("collector file %s must define a collector with a name", cf)
+			}
+
+			// Append to the config's collectors.
 			c.Collectors = append(c.Collectors, &cc)
 			slog.Debug("Loaded collector", "name", cc.Name, "file", cf)
 		}
