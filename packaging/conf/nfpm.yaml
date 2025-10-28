@@ -15,10 +15,10 @@ contents:
 - src: .build/linux-amd64/sql_exporter
   dst: /usr/bin/sql_exporter
 
-- src: ./examples/sql_exporter.yml
+- src: ./examples/mssql/sql_exporter.yml
   dst: /usr/share/sql_exporter/sql_exporter.yml
   type: config
-- src: ./examples/mssql_standard.collector.yml
+- src: ./examples/mssql/mssql_standard.collector.yml
   dst: /usr/share/sql_exporter/mssql_example.collector.yml
   type: config
 
