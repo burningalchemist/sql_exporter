@@ -411,6 +411,26 @@ The format of the file is described in the
 
 </details>
 
+<details>
+<summary>Rate Limiting</summary>
+
+Since v0.18.5 SQL Exporter supports rate limiting for incoming requests to the HTTP endpoints.
+
+To use rate limiting for incoming requests, you need to pass a configuration file using the `--web.config.file`
+parameter. In the configuration file you need to specify rate limiting settings as in the example below:
+```yaml
+...
+rate_limit:
+  interval: "1s" # time interval between two requests, set to 0 to disable rate limiter
+  burst: 20 # and permits a burst of up to 20 requests.
+...
+```
+
+The format of the file is described in the
+[exporter-toolkit](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md) repository.
+</details>
+
+
 If you have an issue using sql_exporter, please check [Discussions](https://github.com/burningalchemist/sql_exporter/discussions) or
 closed [Issues](https://github.com/burningalchemist/sql_exporter/issues?q=is%3Aissue+is%3Aclosed) first. Chances are
 someone else has already encountered the same problem and there is a solution. If not, feel free to create a new
