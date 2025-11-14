@@ -60,7 +60,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.6.0 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
-	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
+	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
 	github.com/elastic/go-sysinfo v1.8.1 // indirect
 	github.com/elastic/go-windows v1.0.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.7 // indirect
