@@ -18,7 +18,7 @@ require (
 	github.com/prometheus/exporter-toolkit v0.15.0
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/sijms/go-ora/v2 v2.9.0
-	github.com/snowflakedb/gosnowflake v1.17.1
+	github.com/snowflakedb/gosnowflake v1.18.0
 	github.com/vertica/vertica-sql-go v1.3.4
 	github.com/xo/dburl v0.23.8
 	google.golang.org/protobuf v1.36.10
@@ -61,7 +61,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.6.0 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
-	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
+	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
 	github.com/elastic/go-sysinfo v1.8.1 // indirect
 	github.com/elastic/go-windows v1.0.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.7 // indirect
