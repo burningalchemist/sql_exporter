@@ -20,8 +20,8 @@ tarball:
     files:
       - LICENSE
       - README.md
-      - examples/sql_exporter.yml
-      - examples/mssql_standard.collector.yml
+      - examples/mssql/sql_exporter.yml
+      - examples/mssql/mssql_standard.collector.yml
 crossbuild:
     platforms:
         - linux/amd64
