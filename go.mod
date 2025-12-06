@@ -1,6 +1,6 @@
 module github.com/burningalchemist/sql_exporter
 
-go 1.25.3
+go 1.24.0
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.41.0
@@ -120,3 +120,5 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
 )
+
+replace github.com/ClickHouse/clickhouse-go/v2 => github.com/ClickHouse/clickhouse-go/v2 v2.0.0-20251124204633-83741a3b2d5b
