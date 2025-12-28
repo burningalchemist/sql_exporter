@@ -69,13 +69,23 @@ Create the name of the service account to use
 {{- end }}
 
 {{- define "sql-exporter.volumes" -}}
-{{- if or .Values.createConfig .Values.collectorFiles -}}
+{{- if or .Values.createConfig .Values.collectorFiles .Values.webConfig.enabled -}}
 {{- true | quote -}}
 {{- else if .Values.extraVolumes -}}
 {{- true | quote -}}
 {{- else -}}
 {{- false | quote -}}
 {{- end -}}
+{{- end -}}
+
+{{- define "sql-exporter.webconfig.yaml" -}}
+{{- $conf := "" -}}
+{{- if typeIsLike "string" .Values.webConfig.template -}}
+{{- $conf = tpl .Values.webConfig.template . | fromYaml -}}
+{{- else -}}
+{{- $conf = .Values.webConfig.template -}}
+{{- end -}}
+{{- tpl ($conf | toYaml ) . | fromYaml | toYaml -}}
 {{- end -}}
 
 {{- define "sql_exporter.config.yaml" -}}

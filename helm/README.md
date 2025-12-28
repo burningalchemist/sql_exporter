@@ -86,6 +86,15 @@ as an example.
 | createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
 | logLevel | string | `"debug"` | Set log level (info if unset) |
 | logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
+| webConfig.enabled | bool | `false` | Enable passing --web.config.file and mounting a generated web-config secret |
+| webConfig.mountPath | string | `"/etc/sql_exporter/web-config"` | Mount path for the web config and TLS files |
+| webConfig.fileName | string | `"web-config.yml"` | File name used for --web.config.file |
+| webConfig.template | string | `"tls_server_config:\n  cert_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.certFile }}\n  key_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.keyFile }}\n  min_version: TLS13\n  prefer_server_cipher_suites: true\n  cipher_suites:\n    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256\n    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"` | Template for web-config content |
+| webConfig.tls.secretName | string | `""` | Optional secret holding tls.crt/tls.key; when set it is mounted for the web-config |
+| webConfig.tls.certKey | string | `"tls.crt"` | Secret key that contains the TLS certificate |
+| webConfig.tls.keyKey | string | `"tls.key"` | Secret key that contains the TLS private key |
+| webConfig.tls.certFile | string | `"tls.crt"` | Filename projected for the TLS certificate |
+| webConfig.tls.keyFile | string | `"tls.key"` | Filename projected for the TLS private key |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
 
 ### Prometheus ServiceMonitor

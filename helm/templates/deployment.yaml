@@ -37,6 +37,21 @@ spec:
           secret:
             secretName: {{ include "sql-exporter.fullname" . }}
         {{- end }}
+        {{- if .Values.webConfig.enabled }}
+        - name: web-config
+          secret:
+            secretName: {{ include "sql-exporter.fullname" . }}-web-config
+        {{- if .Values.webConfig.tls.secretName }}
+        - name: web-config-tls
+          secret:
+            secretName: {{ .Values.webConfig.tls.secretName }}
+            items:
+              - key: {{ .Values.webConfig.tls.certKey }}
+                path: {{ .Values.webConfig.tls.certFile }}
+              - key: {{ .Values.webConfig.tls.keyKey }}
+                path: {{ .Values.webConfig.tls.keyFile }}
+        {{- end }}
+        {{- end }}
         {{- if .Values.collectorFiles }}
         - name: sql-collector
           configMap:
@@ -61,6 +76,9 @@ spec:
             - "-config.file=/etc/sql_exporter/sql_exporter.yml"
             - "-log.level={{ .Values.logLevel | default "info"  }}"
             - "-log.format={{ .Values.logFormat | default "logfmt" }}"
+            {{- if .Values.webConfig.enabled }}
+            - "-web.config.file={{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.fileName }}"
+            {{- end }}
             {{- if .Values.reloadEnabled }}
             - "-web.enable-reload"
             {{- end }}
@@ -70,6 +88,22 @@ spec:
           - name: sql-exporter
             readOnly: true
             mountPath: /etc/sql_exporter/
+          {{- end }}
+          {{- if .Values.webConfig.enabled }}
+          - name: web-config
+            readOnly: true
+            mountPath: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.fileName }}
+            subPath: {{ .Values.webConfig.fileName }}
+          {{- if .Values.webConfig.tls.secretName }}
+          - name: web-config-tls
+            readOnly: true
+            mountPath: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.certFile }}
+            subPath: {{ .Values.webConfig.tls.certFile }}
+          - name: web-config-tls
+            readOnly: true
+            mountPath: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.keyFile }}
+            subPath: {{ .Values.webConfig.tls.keyFile }}
+          {{- end }}
           {{- end }}
           {{- if .Values.collectorFiles }}
           - name: sql-collector
