@@ -7,10 +7,11 @@ metadata:
     {{- with .Values.service.labels }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with .Values.service.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "sql-exporter.annotations" . | nindent 4 }}
+    {{- with .Values.service.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   type: {{ .Values.service.type }}
   ports:
