@@ -68,9 +68,11 @@ spec:
             name: {{ include "sql-exporter.fullname" . }}
         {{- end }}
       {{- end }}
+      {{- if .Values.extraVolumes }}
       {{- range $v := .Values.extraVolumes }}
         - name: {{ $v.name }}
           {{- toYaml $v.volume | nindent 10 }}
+      {{- end }}
       {{- end }}
 {{- if or .Values.initContainers .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
       initContainers:
@@ -197,9 +199,11 @@ AUTHCONFIG
             readOnly: true
             mountPath: /etc/sql_exporter/collectors/
           {{- end }}
+          {{- if .Values.extraVolumes }}
           {{- range $v := .Values.extraVolumes }}
           - name: {{ $v.name }}
             {{- toYaml $v.mount | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- end }}
           {{- with .Values.envFrom }}
@@ -229,26 +233,15 @@ AUTHCONFIG
           {{ if not .Values.overrideLivenessProbe }}
           {{- /* Auto-generate probe based on TLS configuration */ -}}
           livenessProbe:
-            {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
-            {{- /* TLS enabled: use exec with wget */ -}}
-            exec:
-              command:
-              - wget
-              - -q
-              - -O-
-              - https://localhost:9399/healthz
-            {{ else }}
-            {{- /* TLS disabled: use HTTP probe */ -}}
             httpGet:
               path: /healthz
               port: 9399
-              scheme: HTTP
-            {{- end }}
-          initialDelaySeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
-          timeoutSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
-          periodSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}
-          failureThreshold: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.failureThreshold | default 3 }}{{ else }}3{{ end }}
-          successThreshold: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.successThreshold | default 1 }}{{ else }}1{{ end }}
+              scheme: {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}HTTPS{{ else }}HTTP{{ end }}
+            initialDelaySeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
+            timeoutSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
+            periodSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}
+            failureThreshold: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.failureThreshold | default 3 }}{{ else }}3{{ end }}
+            successThreshold: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.successThreshold | default 1 }}{{ else }}1{{ end }}
           {{- else if .Values.livenessProbe }}
           {{- /* Complete override: use exact configuration from values */ -}}
           livenessProbe:
@@ -257,26 +250,15 @@ AUTHCONFIG
           {{ if not .Values.overrideReadinessProbe }}
           {{- /* Auto-generate probe based on TLS configuration */ -}}
           readinessProbe:
-            {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
-            {{- /* TLS enabled: use exec with wget */ -}}
-            exec:
-              command:
-              - wget
-              - -q
-              - -O-
-              - https://localhost:9399/healthz
-            {{ else }}
-            {{- /* TLS disabled: use simple HTTP GET */ -}}
             httpGet:
               path: /healthz
               port: 9399
-              scheme: HTTP
-            {{- end }}
-          initialDelaySeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
-          timeoutSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
-          periodSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}
-          failureThreshold: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.failureThreshold | default 3 }}{{ else }}3{{ end }}
-          successThreshold: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.successThreshold | default 1 }}{{ else }}1{{ end }}
+              scheme: {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}HTTPS{{ else }}HTTP{{ end }}
+            initialDelaySeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
+            timeoutSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
+            periodSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}
+            failureThreshold: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.failureThreshold | default 3 }}{{ else }}3{{ end }}
+            successThreshold: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.successThreshold | default 1 }}{{ else }}1{{ end }}
           {{- else if .Values.readinessProbe }}
           {{- /* Complete override: use exact configuration from values */ -}}
           readinessProbe:
