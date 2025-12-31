@@ -37,19 +37,29 @@ spec:
           secret:
             secretName: {{ include "sql-exporter.fullname" . }}
         {{- end }}
+        {{- if .Values.dynamicConfig.enabled }}
+        - name: {{ include "sql-exporter.dynamicConfig.volumeName" . }}
+          emptyDir: {}
+        - name: {{ include "sql-exporter.dynamicConfig.secretVolumeName" . }}
+          secret:
+            secretName: {{ required "dynamicConfig.secretName is required when dynamicConfig.enabled is true" .Values.dynamicConfig.secretName }}
+        {{- end }}
         {{- if .Values.webConfig.enabled }}
+        {{- if .Values.webConfig.basicAuth.initFromSecret.enabled }}
+        - name: web-config
+          emptyDir: {}
+        - name: web-config-secret
+          secret:
+            secretName: {{ required "webConfig.basicAuth.initFromSecret.secretName is required when initFromSecret is enabled" .Values.webConfig.basicAuth.initFromSecret.secretName }}
+        {{- else }}
         - name: web-config
           secret:
-            secretName: {{ include "sql-exporter.fullname" . }}-web-config
+            secretName: {{ include "sql-exporter.webconfig.secretName" . }}
+        {{- end }}
         {{- if .Values.webConfig.tls.secretName }}
         - name: web-config-tls
           secret:
             secretName: {{ .Values.webConfig.tls.secretName }}
-            items:
-              - key: {{ .Values.webConfig.tls.certKey }}
-                path: {{ .Values.webConfig.tls.certFile }}
-              - key: {{ .Values.webConfig.tls.keyKey }}
-                path: {{ .Values.webConfig.tls.keyFile }}
         {{- end }}
         {{- end }}
         {{- if .Values.collectorFiles }}
@@ -62,9 +72,88 @@ spec:
         - name: {{ $v.name }}
           {{- toYaml $v.volume | nindent 10 }}
       {{- end }}
-{{- if .Values.initContainers }}
+{{- if or .Values.initContainers .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
       initContainers:
+{{- if .Values.dynamicConfig.enabled }}
+        - name: sql-exporter-config-from-secret
+          image: alpine:3.19
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PARTIAL_DSN_FILE
+              value: /dsn/{{ .Values.dynamicConfig.secretKey }}
+            - name: TYPE_SCHEME
+              value: {{ .Values.dynamicConfig.type | quote }}
+            {{- if .Values.dynamicConfig.useApplicationName }}
+            - name: USE_APPLICATION_NAME
+              value: "true"
+            - name: APPLICATION_NAME
+              value: {{ include "sql-exporter.fullname" . | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: {{ include "sql-exporter.dynamicConfig.volumeName" . }}
+              mountPath: /config-out
+            - name: {{ include "sql-exporter.dynamicConfig.secretVolumeName" . }}
+              readOnly: true
+              mountPath: /dsn
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -euo pipefail
+              DSN=$(cat "$PARTIAL_DSN_FILE")
+              {{- if .Values.dynamicConfig.useApplicationName }}
+              # Add application_name to DSN if enabled
+              if [ "${USE_APPLICATION_NAME:-false}" = "true" ] && [ -n "${APPLICATION_NAME:-}" ]; then
+                if echo "$DSN" | grep -q '?'; then
+                  # DSN already has query parameters, use &
+                  DSN="${DSN}&application_name=${APPLICATION_NAME}"
+                else
+                  # DSN has no query parameters, use ?
+                  DSN="${DSN}?application_name=${APPLICATION_NAME}"
+                fi
+              fi
+              {{- end }}
+              echo '{{ .Values.dynamicConfig.template | b64enc }}' | base64 -d | sed "s|__TYPE__|$TYPE_SCHEME|g; s|__DSN__|$DSN|g" > /config-out/sql_exporter.yml
+{{- end }}
+{{- if .Values.webConfig.enabled }}
+{{- if .Values.webConfig.basicAuth.initFromSecret.enabled }}
+        - name: webconfig-bcrypt
+          image: {{ .Values.webConfig.basicAuth.initFromSecret.image }}
+          imagePullPolicy: {{ .Values.webConfig.basicAuth.initFromSecret.imagePullPolicy }}
+          env:
+            - name: WC_USERNAME
+              value: {{ required "webConfig.basicAuth.username is required when initFromSecret is enabled" .Values.webConfig.basicAuth.username | quote }}
+            - name: WC_BCRYPT_COST
+              value: {{ .Values.webConfig.basicAuth.bcryptCost | quote }}
+          volumeMounts:
+            - name: web-config
+              mountPath: /web-config
+            - name: web-config-secret
+              readOnly: true
+              mountPath: /secret-src
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -euo pipefail
+              # Use htpasswd from httpd:alpine at known location
+              HTPASSWD=/usr/local/apache2/bin/htpasswd
+              PASS=$(cat /secret-src/{{ .Values.webConfig.basicAuth.initFromSecret.secretKey }})
+              HASH=$($HTPASSWD -nbBC "$WC_BCRYPT_COST" "$WC_USERNAME" "$PASS" | cut -d: -f2)
+              # Generate base config from helper template
+              cat > /web-config/{{ .Values.webConfig.fileName }} <<'WEBCONFIG'
+{{ include "sql-exporter.webconfig.yaml" . }}
+              WEBCONFIG
+              # Append basic auth with the generated hash
+              cat >> /web-config/{{ .Values.webConfig.fileName }} <<AUTHCONFIG
+basic_auth_users:
+  {{ .Values.webConfig.basicAuth.username }}: $HASH
+AUTHCONFIG
+{{- end }}
+{{- end }}
+{{- if .Values.initContainers }}
 {{ toYaml .Values.initContainers | nindent 8 }}
+{{- end }}
 {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -84,7 +173,11 @@ spec:
             {{- end }}
           {{- if eq (include "sql-exporter.volumes" .) "\"true\"" }}
           volumeMounts:
-          {{- if .Values.createConfig }}
+          {{- if .Values.dynamicConfig.enabled }}
+          - name: {{ include "sql-exporter.dynamicConfig.volumeName" . }}
+            readOnly: true
+            mountPath: /etc/sql_exporter/
+          {{- else if .Values.createConfig }}
           - name: sql-exporter
             readOnly: true
             mountPath: /etc/sql_exporter/
@@ -92,17 +185,11 @@ spec:
           {{- if .Values.webConfig.enabled }}
           - name: web-config
             readOnly: true
-            mountPath: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.fileName }}
-            subPath: {{ .Values.webConfig.fileName }}
+            mountPath: {{ .Values.webConfig.mountPath }}
           {{- if .Values.webConfig.tls.secretName }}
           - name: web-config-tls
             readOnly: true
-            mountPath: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.certFile }}
-            subPath: {{ .Values.webConfig.tls.certFile }}
-          - name: web-config-tls
-            readOnly: true
-            mountPath: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.keyFile }}
-            subPath: {{ .Values.webConfig.tls.keyFile }}
+            mountPath: /tls
           {{- end }}
           {{- end }}
           {{- if .Values.collectorFiles }}
@@ -139,18 +226,62 @@ spec:
               {{- end }}
             {{- end }}
             {{- end }}
+          {{ if not .Values.overrideLivenessProbe }}
+          {{- /* Auto-generate probe based on TLS configuration */ -}}
           livenessProbe:
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
+            {{- /* TLS enabled: use exec with wget */ -}}
+            exec:
+              command:
+              - wget
+              - -q
+              - -O-
+              - https://localhost:9399/healthz
+            {{ else }}
+            {{- /* TLS disabled: use HTTP probe */ -}}
             httpGet:
               path: /healthz
               port: 9399
+              scheme: HTTP
+            {{- end }}
+          initialDelaySeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
+          timeoutSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
+          periodSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}
+          failureThreshold: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.failureThreshold | default 3 }}{{ else }}3{{ end }}
+          successThreshold: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.successThreshold | default 1 }}{{ else }}1{{ end }}
+          {{- else if .Values.livenessProbe }}
+          {{- /* Complete override: use exact configuration from values */ -}}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{ if not .Values.overrideReadinessProbe }}
+          {{- /* Auto-generate probe based on TLS configuration */ -}}
           readinessProbe:
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
+            {{- /* TLS enabled: use exec with wget */ -}}
+            exec:
+              command:
+              - wget
+              - -q
+              - -O-
+              - https://localhost:9399/healthz
+            {{ else }}
+            {{- /* TLS disabled: use simple HTTP GET */ -}}
             httpGet:
               path: /healthz
               port: 9399
+              scheme: HTTP
+            {{- end }}
+          initialDelaySeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
+          timeoutSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
+          periodSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}
+          failureThreshold: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.failureThreshold | default 3 }}{{ else }}3{{ end }}
+          successThreshold: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.successThreshold | default 1 }}{{ else }}1{{ end }}
+          {{- else if .Values.readinessProbe }}
+          {{- /* Complete override: use exact configuration from values */ -}}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 9399

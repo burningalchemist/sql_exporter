@@ -1,6 +1,8 @@
 # sql-exporter
 
-![Version: 0.13.5](https://img.shields.io/badge/Version-0.13.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.18.6](https://img.shields.io/badge/AppVersion-0.18.6-informational?style=flat-square)
+
+
+![Version: 0.13.5](https://img.shields.io/badge/Version-0.13.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.18.6](https://img.shields.io/badge/AppVersion-0.18.6-informational?style=flat-square) 
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -13,6 +15,9 @@ Database-agnostic SQL exporter for Prometheus
 | Name | Email | Url |
 | ---- | ------ | --- |
 | Nikolai Rodionov | <allanger@zohomail.com> | <https://badhouseplants.net> |
+
+
+
 
 ## Installing the Chart
 
@@ -86,16 +91,28 @@ as an example.
 | createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
 | logLevel | string | `"debug"` | Set log level (info if unset) |
 | logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
-| webConfig.enabled | bool | `false` | Enable passing --web.config.file and mounting a generated web-config secret |
-| webConfig.mountPath | string | `"/etc/sql_exporter/web-config"` | Mount path for the web config and TLS files |
-| webConfig.fileName | string | `"web-config.yml"` | File name used for --web.config.file |
-| webConfig.template | string | `"tls_server_config:\n  cert_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.certFile }}\n  key_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.keyFile }}\n  min_version: TLS13\n  prefer_server_cipher_suites: true\n  cipher_suites:\n    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256\n    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"` | Template for web-config content |
-| webConfig.tls.secretName | string | `""` | Optional secret holding tls.crt/tls.key; when set it is mounted for the web-config |
-| webConfig.tls.certKey | string | `"tls.crt"` | Secret key that contains the TLS certificate |
-| webConfig.tls.keyKey | string | `"tls.key"` | Secret key that contains the TLS private key |
-| webConfig.tls.certFile | string | `"tls.crt"` | Filename projected for the TLS certificate |
-| webConfig.tls.keyFile | string | `"tls.key"` | Filename projected for the TLS private key |
+| dynamicConfig | object | `{"enabled":false,"secretKey":"dsn","secretName":"","template":"global:\n  scrape_timeout: 10s\n  scrape_timeout_offset: 500ms\n  scrape_error_drop_interval: 0s\n  min_interval: 0s\n  max_connections: 3\n  max_idle_connections: 3\ntarget:\n  data_source_name: \"__TYPE__://__DSN__\"\n  collectors: []\n","type":"postgres"}` | Generate sql_exporter.yml from a secret-held partial DSN via initContainer |
+| dynamicConfig.enabled | bool | `false` | Enable dynamic config generation from secret |
+| dynamicConfig.secretName | string | `""` | Secret name that holds partial DSN (without scheme), e.g. user:pass@host:port/db |
+| dynamicConfig.secretKey | string | `"dsn"` | Key in the secret that holds the partial DSN |
+| dynamicConfig.type | string | `"postgres"` | Driver scheme to prepend (e.g. postgres, mysql, sqlserver) |
+| dynamicConfig.template | string | `"global:\n  scrape_timeout: 10s\n  scrape_timeout_offset: 500ms\n  scrape_error_drop_interval: 0s\n  min_interval: 0s\n  max_connections: 3\n  max_idle_connections: 3\ntarget:\n  data_source_name: \"__TYPE__://__DSN__\"\n  collectors: []\n"` | Template used to write sql_exporter.yml; __TYPE__ and __DSN__ are replaced |
+| webConfig | object | `{"basicAuth":{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"alpine:3.19","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}},"enabled":false,"fileName":"web-config.yml","mountPath":"/etc/sql_exporter/web-config","template":"tls_server_config:\n  cert_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.certFile }}\n  key_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.keyFile }}\n  min_version: TLS13\n  prefer_server_cipher_suites: true\n  cipher_suites:\n    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256\n    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384\n{{- if .Values.webConfig.basicAuth.enabled }}\nbasic_auth_users:\n{{- range $user, $hash := .Values.webConfig.basicAuth.users }}\n  {{ $user }}: {{ $hash | quote }}\n{{- end }}\n{{- end }}\n","tls":{"certFile":"tls.crt","certKey":"tls.crt","keyFile":"tls.key","keyKey":"tls.key","secretName":""}}` | Enable and configure Prometheus web config file support |
+| webConfig.mountPath | string | `"/etc/sql_exporter/web-config"` | Mount path where the web config and TLS files will be available |
+| webConfig.template | string | `"tls_server_config:\n  cert_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.certFile }}\n  key_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.keyFile }}\n  min_version: TLS13\n  prefer_server_cipher_suites: true\n  cipher_suites:\n    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256\n    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384\n{{- if .Values.webConfig.basicAuth.enabled }}\nbasic_auth_users:\n{{- range $user, $hash := .Values.webConfig.basicAuth.users }}\n  {{ $user }}: {{ $hash | quote }}\n{{- end }}\n{{- end }}\n"` | Template for web-config content (Exporter Toolkit format). Defaults to TLS 1.3 and AES-GCM ciphers. |
+| webConfig.tls.secretName | string | `""` | Optional secret that holds tls.crt/tls.key. When set, it is mounted and used by web-config. |
+| webConfig.tls.certKey | string | `"tls.crt"` | Key names within the secret for certificate and key |
+| webConfig.tls.certFile | string | `"tls.crt"` | Filenames to project into the container; defaults match certKey/keyKey |
+| webConfig.basicAuth.enabled | bool | `false` | Enable basic auth in web-config; passwords must be bcrypt hashes |
+| webConfig.basicAuth.username | string | `"prometheus"` | Username to protect /metrics |
+| webConfig.basicAuth.bcryptCost | int | `12` | Bcrypt cost used when hashing via initFromSecret |
+| webConfig.basicAuth.users | object | `{}` | Map of username: bcryptHash (when not using initFromSecret) |
+| webConfig.basicAuth.initFromSecret.enabled | bool | `false` | Use an initContainer to read plaintext from a secret and bcrypt it into web-config |
+| webConfig.basicAuth.initFromSecret.secretName | string | `""` | Secret name containing plaintext password |
+| webConfig.basicAuth.initFromSecret.secretKey | string | `"password"` | Key in the secret that contains plaintext password |
+| webConfig.basicAuth.initFromSecret.image | string | `"alpine:3.19"` | Image used for bcrypt hashing (needs apache2-utils for htpasswd) |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
+
 
 ### Prometheus ServiceMonitor
 

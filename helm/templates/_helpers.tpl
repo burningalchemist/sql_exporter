@@ -65,11 +65,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "sql-exporter.serviceAccountName" -}}
-{{- default "default" .Values.serviceAccount.name }}
+{{- dig "serviceAccount" "name" "default" .Values }}
 {{- end }}
 
 {{- define "sql-exporter.volumes" -}}
-{{- if or .Values.createConfig .Values.collectorFiles .Values.webConfig.enabled -}}
+{{- if or .Values.createConfig .Values.collectorFiles .Values.webConfig.enabled .Values.dynamicConfig.enabled -}}
 {{- true | quote -}}
 {{- else if .Values.extraVolumes -}}
 {{- true | quote -}}
@@ -78,14 +78,53 @@ Create the name of the service account to use
 {{- end -}}
 {{- end -}}
 
+{{- define "sql-exporter.webconfig.secretName" -}}
+{{- printf "%s-%s" (include "sql-exporter.fullname" .) "web-config" -}}
+{{- end -}}
+
+{{- define "sql-exporter.basicAuth.secretName" -}}
+{{- if .Values.webConfig.basicAuth.initFromSecret.secretName -}}
+{{- .Values.webConfig.basicAuth.initFromSecret.secretName -}}
+{{- else -}}
+{{- printf "%s-%s" (include "sql-exporter.fullname" .) "web-basic-auth" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "sql-exporter.dynamicConfig.volumeName" -}}
+{{- printf "%s-dynamic-config" (include "sql-exporter.name" .) -}}
+{{- end -}}
+
+{{- define "sql-exporter.dynamicConfig.secretVolumeName" -}}
+{{- printf "%s-dsn" (include "sql-exporter.name" .) -}}
+{{- end -}}
+
 {{- define "sql-exporter.webconfig.yaml" -}}
 {{- $conf := "" -}}
+{{- if and .Values.webConfig.template (ne .Values.webConfig.template "") -}}
+{{- /* User provided custom template */ -}}
 {{- if typeIsLike "string" .Values.webConfig.template -}}
 {{- $conf = tpl .Values.webConfig.template . | fromYaml -}}
 {{- else -}}
 {{- $conf = .Values.webConfig.template -}}
 {{- end -}}
 {{- tpl ($conf | toYaml ) . | fromYaml | toYaml -}}
+{{- else -}}
+{{- /* Generate default template */ -}}
+tls_server_config:
+  cert_file: /tls/{{ .Values.webConfig.tls.certFile }}
+  key_file: /tls/{{ .Values.webConfig.tls.keyFile }}
+  min_version: TLS13
+  prefer_server_cipher_suites: true
+  cipher_suites:
+    - TLS_AES_128_GCM_SHA256
+    - TLS_AES_256_GCM_SHA384
+{{- if .Values.webConfig.basicAuth.enabled }}
+basic_auth_users:
+{{- range $user, $hash := .Values.webConfig.basicAuth.users }}
+  {{ $user }}: {{ $hash | quote }}
+{{- end }}
+{{- end }}
+{{- end -}}
 {{- end -}}
 
 {{- define "sql_exporter.config.yaml" -}}

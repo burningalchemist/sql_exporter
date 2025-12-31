@@ -77,13 +77,44 @@ serviceAccount:
   # -- Defines if token is automatically mounted to the pod after it has been created
   # automountServiceAccountToken: false
 # Liveness and readiness probes for the application controller pods
-livenessProbe:
-  initialDelaySeconds: 5
-  timeoutSeconds: 30
-
-readinessProbe:
-  initialDelaySeconds: 5
-  timeoutSeconds: 30
+# deployment.yaml auto-generates the correct probe based on TLS configuration:
+#   - TLS enabled: httpGet probe with HTTPS scheme (K8s skips certificate validation)
+#   - TLS disabled: httpGet probe with HTTP scheme
+#
+# Fine-tune timing parameters without full override (uses auto-generated probe type):
+# Each parameter can be overridden individually - you don't need to specify all of them.
+# Only the parameters you specify will be overridden; others will use defaults.
+# livenessProbe:
+#   initialDelaySeconds: 15  # Default: 10 - override just this one if needed
+#   timeoutSeconds: 10       # Default: 5
+#   periodSeconds: 20        # Default: 10
+#   failureThreshold: 5      # Default: 3
+#   successThreshold: 1      # Default: 1
+# readinessProbe:
+#   initialDelaySeconds: 15  # Default: 10 - or override only this parameter
+#   timeoutSeconds: 10       # Default: 5
+#   periodSeconds: 20        # Default: 10
+#   failureThreshold: 5      # Default: 3
+#
+# Or completely replace auto-generated probes with custom configuration:
+#   1. Set overrideLivenessProbe: true or overrideReadinessProbe: true
+#   2. Define livenessProbe: or readinessProbe: with your complete probe configuration
+# Example custom liveness probe override:
+# overrideLivenessProbe: true
+# livenessProbe:
+#   tcpSocket:
+#     port: 9399
+#   initialDelaySeconds: 10
+#   timeoutSeconds: 5
+# Example custom readiness probe override:
+# overrideReadinessProbe: true
+# readinessProbe:
+#   httpGet:
+#     path: /healthz
+#     port: 9399
+#     scheme: HTTP
+#   initialDelaySeconds: 10
+#   timeoutSeconds: 5
 # -- Resource limits and requests for the application controller pods
 resources: {}
   # limits:
@@ -151,27 +182,46 @@ serviceMonitor:
 # -- Set to true to create a config as a part of the helm chart
 createConfig: true
 # -- Set log level (info if unset)
-logLevel: debug
+logLevel: info
 # -- Set log format (logfmt if unset)
 logFormat: logfmt
+# -- Generate sql_exporter.yml from a secret-held partial DSN via initContainer
+dynamicConfig:
+  # -- Enable dynamic config generation from secret
+  enabled: false
+  # -- Secret name that holds partial DSN (without scheme), e.g. user:pass@host:port/db
+  secretName: ""
+  # -- Key in the secret that holds the partial DSN
+  secretKey: dsn
+  # -- Driver scheme to prepend (e.g. postgres, mysql, sqlserver)
+  type: postgres
+  # -- Automatically add application_name parameter to DSN using chart fullname
+  useApplicationName: false
+  # -- Template used to write sql_exporter.yml; __TYPE__ and __DSN__ are replaced
+  template: |
+    global:
+      scrape_timeout: 10s
+      scrape_timeout_offset: 500ms
+      scrape_error_drop_interval: 0s
+      min_interval: 0s
+      max_connections: 3
+      max_idle_connections: 3
+    target:
+      data_source_name: "__TYPE__://__DSN__"
+      collectors: []
 # -- Enable and configure Prometheus web config file support
 webConfig:
   # -- Enable passing --web.config.file and mounting a generated web-config secret
   enabled: false
   # -- Mount path where the web config and TLS files will be available
-  mountPath: /etc/sql_exporter/web-config
+  mountPath: /etc/web-config
   # -- File name used for --web.config.file
   fileName: web-config.yml
-  # -- Template for web-config content (Exporter Toolkit format). Defaults to TLS 1.3 and AES-GCM ciphers.
-  template: |
-    tls_server_config:
-      cert_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.certFile }}
-      key_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.keyFile }}
-      min_version: TLS13
-      prefer_server_cipher_suites: true
-      cipher_suites:
-        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+  # -- Template for web-config content (Exporter Toolkit format).
+  # Set to empty string to use default template (defined in _helpers.tpl)
+  # Default: TLS 1.3 with AES-GCM cipher suites, uses cert from webConfig.tls.secretName
+  # You can override with your own YAML string here if needed
+  template: ""
   tls:
     # -- Optional secret that holds tls.crt/tls.key. When set, it is mounted and used by web-config.
     secretName: ""
@@ -181,6 +231,25 @@ webConfig:
     # -- Filenames to project into the container; defaults match certKey/keyKey
     certFile: tls.crt
     keyFile: tls.key
+  basicAuth:
+    # -- Enable basic auth in web-config; passwords must be bcrypt hashes
+    enabled: false
+    # -- Username to protect /metrics
+    username: prometheus
+    # -- Bcrypt cost used when hashing via initFromSecret
+    bcryptCost: 12
+    # -- Map of username: bcryptHash (when not using initFromSecret)
+    users: {}
+    initFromSecret:
+      # -- Use an initContainer to read plaintext from a secret and bcrypt it into web-config
+      enabled: false
+      # -- Secret name containing plaintext password
+      secretName: ""
+      # -- Key in the secret that contains plaintext password
+      secretKey: password
+      # -- Image used for bcrypt hashing (httpd:alpine has htpasswd at /usr/local/apache2/bin/htpasswd)
+      image: httpd:alpine
+      imagePullPolicy: IfNotPresent
 # -- Enable reload collector data handler (endpoint /reload)
 reloadEnabled: false
 # -- SQL Exporter configuration, can be a dictionary, or a template yaml string.
