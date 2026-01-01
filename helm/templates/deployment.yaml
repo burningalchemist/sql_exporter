@@ -151,14 +151,18 @@ spec:
             - "-log.level={{ .Values.logLevel | default "info"  }}"
             - "-log.format={{ .Values.logFormat | default "logfmt" }}"
             {{- if .Values.webConfig.enabled }}
+            {{- if .Values.webConfig.basicAuth.initFromSecret.enabled }}
+            - "-web.config.file=/etc/web-config/web-config.yml"
+            {{- else }}
             - "-web.config.file=/etc/sql_exporter/web-config.yml"
+            {{- end }}
             {{- end }}
             {{- if .Values.reloadEnabled }}
             - "-web.enable-reload"
             {{- end }}
           {{- if eq (include "sql-exporter.volumes" .) "\"true\"" }}
           volumeMounts:
-          {{- if .Values.dynamicConfig.enabled }}
+          {{ if .Values.dynamicConfig.enabled }}
           {{- /* DynamicConfig: init container generates sql_exporter.yml to emptyDir */ -}}
           - name: {{ include "sql-exporter.dynamicConfig.volumeName" . }}
             readOnly: true
@@ -176,26 +180,25 @@ spec:
             readOnly: true
             mountPath: /etc/sql_exporter/
           {{- end }}
-          {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
+          {{ if and .Values.webConfig.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
           {{- /* InitContainer writes web-config.yml with bcrypt hash to emptyDir overlay */ -}}
           - name: web-config-overlay
             readOnly: true
-            mountPath: /etc/sql_exporter/web-config.yml
-            subPath: web-config.yml
+            mountPath: /etc/web-config
           {{- end }}
-          {{- if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
+          {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
           {{- /* TLS cert/key from separate secret */ -}}
           - name: web-config-tls
             readOnly: true
             mountPath: /tls
           {{- end }}
-          {{- if .Values.collectorFiles }}
+          {{ if .Values.collectorFiles }}
           - name: sql-collector
             readOnly: true
             mountPath: /etc/sql_exporter/collectors/
           {{- end }}
-          {{- if .Values.extraVolumes }}
-          {{- range $v := .Values.extraVolumes }}
+          {{ if .Values.extraVolumes }}
+          {{ range $v := .Values.extraVolumes }}
           - name: {{ $v.name }}
             {{- toYaml $v.mount | nindent 12 }}
           {{- end }}
