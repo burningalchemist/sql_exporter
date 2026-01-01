@@ -49,6 +49,17 @@ Take a look on how it's done at the
 [nginx ingress controller](https://kubernetes.github.io/ingress-nginx/examples/auth/basic/)
 as an example.
 
+## Security Features
+
+This chart supports TLS/HTTPS encryption and basic authentication for the metrics endpoint:
+
+- **TLS Encryption**: Configure `webConfig.tls.secretName` to enable HTTPS with TLS 1.3 support and configurable cipher suites
+- **Basic Authentication**: Set `webConfig.basicAuth.enabled` to protect metrics with bcrypt-hashed passwords (automatically hashed from plaintext secrets via init container)
+- **Separate Secrets**: TLS certificates and authentication passwords can use the same secret or separate secrets for flexibility
+- **ServiceMonitor Integration**: Prometheus ServiceMonitor automatically configures HTTPS and authentication when enabled
+
+See the [examples directory](../examples/) for complete configuration examples: `tls-only`, `auth-only`, `dynamic-config-only`, and `tls-auth-dynamic`.
+
 ## Chart Values
 
 ### General parameters
@@ -142,6 +153,25 @@ To generate the config as a part of a helm release, please set the `.Values.crea
 To configure `target`, `jobs`, `collector_files` please refer to the [documentation](https://github.com/burningalchemist/sql_exporter/blob/master/documentation/sql_exporter.yml) in the source repository. These values are not set by default.
 
 It's also possible to define collectors (i.e. metrics and queries) in separate files, and specify the filenames in the `collector_files` list. For that we can use `CollectorFiles` field (check `values.yaml` for the available example).
+
+### Dynamic Configuration
+
+The chart supports loading DSN (Data Source Name) from external Kubernetes secrets at runtime, providing secure and flexible database connection management:
+
+```yaml
+dynamicConfig:
+  enabled: true
+  secretName: "my-database-secret"
+  secretKey: "dsn"
+  type: "postgres"  # postgres, mssql, sqlserver
+```
+
+This approach separates database credentials from the Helm chart, allowing you to:
+- Manage secrets independently from application configuration
+- Use existing database secrets created by operators or other tools
+- Rotate credentials without redeploying the chart
+
+See the [dynamic-config-only example](../examples/dynamic-config-only/) for complete configuration.
 
 ### Using application_name with dynamicConfig
 

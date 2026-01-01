@@ -32,6 +32,12 @@ spec:
       serviceAccountName: {{ if .Values.serviceAccount.create }}{{ template "sql-exporter.fullname" . }}{{ else }}{{ include "sql-exporter.serviceAccountName" . }}{{end}}
       {{- if eq (include "sql-exporter.volumes" .)  "\"true\"" }}
       volumes:
+        {{- if or .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
+        - name: init-script
+          configMap:
+            name: {{ include "sql-exporter.fullname" . }}-init-script
+            defaultMode: 0755
+        {{- end }}
         {{- if or .Values.createConfig (and .Values.webConfig.enabled (not .Values.webConfig.basicAuth.initFromSecret.enabled)) }}
         - name: sql-exporter
           secret:
@@ -75,57 +81,51 @@ spec:
       {{- end }}
 {{- if or .Values.initContainers .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
       initContainers:
-{{- if .Values.dynamicConfig.enabled }}
-        - name: sql-exporter-config-from-secret
-          image: alpine:3.19
-          imagePullPolicy: IfNotPresent
+{{- if or .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
+        - name: sql-exporter-init
+          image: {{ if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}{{ .Values.webConfig.basicAuth.initFromSecret.image }}{{ else }}alpine:3.19{{ end }}
+          imagePullPolicy: {{ if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}{{ .Values.webConfig.basicAuth.initFromSecret.imagePullPolicy }}{{ else }}IfNotPresent{{ end }}
           env:
+            {{- if .Values.dynamicConfig.enabled }}
+            - name: ENABLE_DYNAMIC_CONFIG
+              value: "true"
             - name: PARTIAL_DSN_FILE
               value: /dsn/{{ .Values.dynamicConfig.secretKey }}
             - name: TYPE_SCHEME
               value: {{ .Values.dynamicConfig.type | quote }}
+            - name: DYNAMIC_CONFIG_TEMPLATE_B64
+              value: {{ .Values.dynamicConfig.template | b64enc | quote }}
             {{- if .Values.dynamicConfig.useApplicationName }}
             - name: USE_APPLICATION_NAME
               value: "true"
             - name: APPLICATION_NAME
               value: {{ include "sql-exporter.fullname" . | quote }}
             {{- end }}
+            {{- end }}
+            {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
+            - name: ENABLE_BCRYPT
+              value: "true"
+            - name: WC_USERNAME
+              value: {{ required "webConfig.basicAuth.username is required when initFromSecret is enabled" .Values.webConfig.basicAuth.username | quote }}
+            - name: WC_BCRYPT_COST
+              value: {{ .Values.webConfig.basicAuth.bcryptCost | quote }}
+            - name: WC_PASSWORD_KEY
+              value: {{ .Values.webConfig.basicAuth.initFromSecret.secretKey | quote }}
+            - name: WEBCONFIG_TEMPLATE_B64
+              value: {{ include "sql-exporter.webconfig.yaml" . | b64enc | quote }}
+            {{- end }}
           volumeMounts:
+            - name: init-script
+              mountPath: /scripts
+              readOnly: true
+            {{- if .Values.dynamicConfig.enabled }}
             - name: {{ include "sql-exporter.dynamicConfig.volumeName" . }}
               mountPath: /config-out
             - name: {{ include "sql-exporter.dynamicConfig.secretVolumeName" . }}
               readOnly: true
               mountPath: /dsn
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -euo pipefail
-              DSN=$(cat "$PARTIAL_DSN_FILE")
-              {{- if .Values.dynamicConfig.useApplicationName }}
-              # Add application_name to DSN if enabled
-              if [ "${USE_APPLICATION_NAME:-false}" = "true" ] && [ -n "${APPLICATION_NAME:-}" ]; then
-                if echo "$DSN" | grep -q '?'; then
-                  # DSN already has query parameters, use &
-                  DSN="${DSN}&application_name=${APPLICATION_NAME}"
-                else
-                  # DSN has no query parameters, use ?
-                  DSN="${DSN}?application_name=${APPLICATION_NAME}"
-                fi
-              fi
-              {{- end }}
-              echo '{{ .Values.dynamicConfig.template | b64enc }}' | base64 -d | sed "s|__TYPE__|$TYPE_SCHEME|g; s|__DSN__|$DSN|g" > /config-out/sql_exporter.yml
-{{- end }}
-{{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
-        - name: webconfig-bcrypt
-          image: {{ .Values.webConfig.basicAuth.initFromSecret.image }}
-          imagePullPolicy: {{ .Values.webConfig.basicAuth.initFromSecret.imagePullPolicy }}
-          env:
-            - name: WC_USERNAME
-              value: {{ required "webConfig.basicAuth.username is required when initFromSecret is enabled" .Values.webConfig.basicAuth.username | quote }}
-            - name: WC_BCRYPT_COST
-              value: {{ .Values.webConfig.basicAuth.bcryptCost | quote }}
-          volumeMounts:
+            {{- end }}
+            {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
             - name: web-config-overlay
               mountPath: /web-config
             {{- /* Mount auth secret or TLS secret (if shared) */ -}}
@@ -140,18 +140,10 @@ spec:
               readOnly: true
               mountPath: /secret-src
             {{- end }}
+            {{- end }}
           command:
             - /bin/sh
-            - -c
-            - |
-              set -euo pipefail
-              # Use htpasswd from httpd:alpine at known location
-              HTPASSWD=/usr/local/apache2/bin/htpasswd
-              PASS=$(cat /secret-src/{{ .Values.webConfig.basicAuth.initFromSecret.secretKey }})
-              HASH=$($HTPASSWD -nbBC "$WC_BCRYPT_COST" "$WC_USERNAME" "$PASS" | cut -d: -f2)
-              # Decode base web-config and append basic auth
-              echo '{{ include "sql-exporter.webconfig.yaml" . | b64enc }}' | base64 -d > /web-config/web-config.yml
-              printf "\nbasic_auth_users:\n  {{ .Values.webConfig.basicAuth.username }}: %s\n" "$HASH" >> /web-config/web-config.yml
+            - /scripts/init.sh
 {{- end }}
 {{- if .Values.initContainers }}
 {{ toYaml .Values.initContainers | nindent 8 }}
