@@ -213,13 +213,10 @@ dynamicConfig:
       data_source_name: "__TYPE__://__DSN__"
       collectors: []
 # -- Enable and configure Prometheus web config file support
+# web-config.yml is automatically placed at /etc/sql_exporter/web-config.yml
 webConfig:
-  # -- Enable passing --web.config.file and mounting a generated web-config secret
+  # -- Enable passing --web.config.file and mounting a generated web-config
   enabled: false
-  # -- Mount path where the web config and TLS files will be available
-  mountPath: /etc/web-config
-  # -- File name used for --web.config.file
-  fileName: web-config.yml
   # -- Template for web-config content (Exporter Toolkit format).
   # Set to empty string to use default template (defined in _helpers.tpl)
   # Default: TLS 1.3 with AES-GCM cipher suites, uses cert from webConfig.tls.secretName

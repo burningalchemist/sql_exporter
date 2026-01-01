@@ -80,26 +80,22 @@ as an example.
 | extraManifests | list | `[]` | Arbitrary manifests list |
 | serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
-| livenessProbe.initialDelaySeconds | int | `5` |  |
-| livenessProbe.timeoutSeconds | int | `30` |  |
-| readinessProbe.initialDelaySeconds | int | `5` |  |
-| readinessProbe.timeoutSeconds | int | `30` |  |
 | resources | object | `{}` | Resource limits and requests for the application controller pods |
 | podLabels | object | `{}` | Pod labels |
 | podAnnotations | object | `{}` | Pod annotations |
 | podSecurityContext | object | `{}` | Pod security context |
 | createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
-| logLevel | string | `"debug"` | Set log level (info if unset) |
+| logLevel | string | `"info"` | Set log level (info if unset) |
 | logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
-| dynamicConfig | object | `{"enabled":false,"secretKey":"dsn","secretName":"","template":"global:\n  scrape_timeout: 10s\n  scrape_timeout_offset: 500ms\n  scrape_error_drop_interval: 0s\n  min_interval: 0s\n  max_connections: 3\n  max_idle_connections: 3\ntarget:\n  data_source_name: \"__TYPE__://__DSN__\"\n  collectors: []\n","type":"postgres"}` | Generate sql_exporter.yml from a secret-held partial DSN via initContainer |
+| dynamicConfig | object | `{"enabled":false,"secretKey":"dsn","secretName":"","template":"global:\n  scrape_timeout: 10s\n  scrape_timeout_offset: 500ms\n  scrape_error_drop_interval: 0s\n  min_interval: 0s\n  max_connections: 3\n  max_idle_connections: 3\ntarget:\n  data_source_name: \"__TYPE__://__DSN__\"\n  collectors: []\n","type":"postgres","useApplicationName":false}` | Generate sql_exporter.yml from a secret-held partial DSN via initContainer |
 | dynamicConfig.enabled | bool | `false` | Enable dynamic config generation from secret |
 | dynamicConfig.secretName | string | `""` | Secret name that holds partial DSN (without scheme), e.g. user:pass@host:port/db |
 | dynamicConfig.secretKey | string | `"dsn"` | Key in the secret that holds the partial DSN |
 | dynamicConfig.type | string | `"postgres"` | Driver scheme to prepend (e.g. postgres, mysql, sqlserver) |
+| dynamicConfig.useApplicationName | bool | `false` | Automatically add application_name parameter to DSN using chart fullname |
 | dynamicConfig.template | string | `"global:\n  scrape_timeout: 10s\n  scrape_timeout_offset: 500ms\n  scrape_error_drop_interval: 0s\n  min_interval: 0s\n  max_connections: 3\n  max_idle_connections: 3\ntarget:\n  data_source_name: \"__TYPE__://__DSN__\"\n  collectors: []\n"` | Template used to write sql_exporter.yml; __TYPE__ and __DSN__ are replaced |
-| webConfig | object | `{"basicAuth":{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"alpine:3.19","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}},"enabled":false,"fileName":"web-config.yml","mountPath":"/etc/sql_exporter/web-config","template":"tls_server_config:\n  cert_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.certFile }}\n  key_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.keyFile }}\n  min_version: TLS13\n  prefer_server_cipher_suites: true\n  cipher_suites:\n    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256\n    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384\n{{- if .Values.webConfig.basicAuth.enabled }}\nbasic_auth_users:\n{{- range $user, $hash := .Values.webConfig.basicAuth.users }}\n  {{ $user }}: {{ $hash | quote }}\n{{- end }}\n{{- end }}\n","tls":{"certFile":"tls.crt","certKey":"tls.crt","keyFile":"tls.key","keyKey":"tls.key","secretName":""}}` | Enable and configure Prometheus web config file support |
-| webConfig.mountPath | string | `"/etc/sql_exporter/web-config"` | Mount path where the web config and TLS files will be available |
-| webConfig.template | string | `"tls_server_config:\n  cert_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.certFile }}\n  key_file: {{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.tls.keyFile }}\n  min_version: TLS13\n  prefer_server_cipher_suites: true\n  cipher_suites:\n    - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256\n    - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384\n{{- if .Values.webConfig.basicAuth.enabled }}\nbasic_auth_users:\n{{- range $user, $hash := .Values.webConfig.basicAuth.users }}\n  {{ $user }}: {{ $hash | quote }}\n{{- end }}\n{{- end }}\n"` | Template for web-config content (Exporter Toolkit format). Defaults to TLS 1.3 and AES-GCM ciphers. |
+| webConfig | object | `{"basicAuth":{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}},"enabled":false,"template":"","tls":{"certFile":"tls.crt","certKey":"tls.crt","keyFile":"tls.key","keyKey":"tls.key","secretName":""}}` | Enable and configure Prometheus web config file support web-config.yml is automatically placed at /etc/sql_exporter/web-config.yml |
+| webConfig.template | string | `""` | Template for web-config content (Exporter Toolkit format). Set to empty string to use default template (defined in _helpers.tpl) Default: TLS 1.3 with AES-GCM cipher suites, uses cert from webConfig.tls.secretName You can override with your own YAML string here if needed |
 | webConfig.tls.secretName | string | `""` | Optional secret that holds tls.crt/tls.key. When set, it is mounted and used by web-config. |
 | webConfig.tls.certKey | string | `"tls.crt"` | Key names within the secret for certificate and key |
 | webConfig.tls.certFile | string | `"tls.crt"` | Filenames to project into the container; defaults match certKey/keyKey |
@@ -110,7 +106,7 @@ as an example.
 | webConfig.basicAuth.initFromSecret.enabled | bool | `false` | Use an initContainer to read plaintext from a secret and bcrypt it into web-config |
 | webConfig.basicAuth.initFromSecret.secretName | string | `""` | Secret name containing plaintext password |
 | webConfig.basicAuth.initFromSecret.secretKey | string | `"password"` | Key in the secret that contains plaintext password |
-| webConfig.basicAuth.initFromSecret.image | string | `"alpine:3.19"` | Image used for bcrypt hashing (needs apache2-utils for htpasswd) |
+| webConfig.basicAuth.initFromSecret.image | string | `"httpd:alpine"` | Image used for bcrypt hashing (httpd:alpine has htpasswd at /usr/local/apache2/bin/htpasswd) |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
 
 
@@ -124,6 +120,7 @@ as an example.
 | serviceMonitor.metricRelabelings | object | `{}` | ServiceMonitor metric relabelings |
 | serviceMonitor.relabelings | object | `{}` | ServiceMonitor relabelings |
 | serviceMonitor.namespace | string | `nil` | ServiceMonitor namespace override (default is .Release.Namespace) |
+| serviceMonitor.selector | object | `{}` | Additional labels for ServiceMonitor (for Prometheus serviceMonitorSelector matching) Example: selector: { monitored: dox-prometheus } |
 | serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout |
 
 ### Configuration
@@ -146,6 +143,23 @@ To generate the config as a part of a helm release, please set the `.Values.crea
 To configure `target`, `jobs`, `collector_files` please refer to the [documentation](https://github.com/burningalchemist/sql_exporter/blob/master/documentation/sql_exporter.yml) in the source repository. These values are not set by default.
 
 It's also possible to define collectors (i.e. metrics and queries) in separate files, and specify the filenames in the `collector_files` list. For that we can use `CollectorFiles` field (check `values.yaml` for the available example).
+
+### Using application_name with dynamicConfig
+
+When using `dynamicConfig` to generate DSN from secrets, you can automatically add the `application_name` parameter to identify connections in PostgreSQL. This is useful for DBAs to track which SQL statements are issued by sql_exporter.
+
+```yaml
+dynamicConfig:
+  enabled: true
+  secretName: "my-postgres-dsn"
+  secretKey: "dsn"
+  type: "postgres"
+  useApplicationName: true  # Automatically adds application_name to DSN
+```
+
+When `useApplicationName: true`, the chart will automatically append `application_name=<release-name>-sql-exporter` to your DSN. The application name will be visible in PostgreSQL's `pg_stat_activity` view and logs, making it easy to identify connections from this exporter instance.
+
+Example: If your release name is `myapp`, DBAs will see connections with `application_name: myapp-sql-exporter` in `pg_stat_activity`.
 
 ## Dev Notes
 

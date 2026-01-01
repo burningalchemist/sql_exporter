@@ -78,10 +78,6 @@ Create the name of the service account to use
 {{- end -}}
 {{- end -}}
 
-{{- define "sql-exporter.webconfig.secretName" -}}
-{{- printf "%s-%s" (include "sql-exporter.fullname" .) "web-config" -}}
-{{- end -}}
-
 {{- define "sql-exporter.basicAuth.secretName" -}}
 {{- if .Values.webConfig.basicAuth.initFromSecret.secretName -}}
 {{- .Values.webConfig.basicAuth.initFromSecret.secretName -}}

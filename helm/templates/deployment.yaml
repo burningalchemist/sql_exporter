@@ -44,23 +44,17 @@ spec:
           secret:
             secretName: {{ required "dynamicConfig.secretName is required when dynamicConfig.enabled is true" .Values.dynamicConfig.secretName }}
         {{- end }}
-        {{- if .Values.webConfig.enabled }}
-        {{- if and .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
-        - name: web-config
+        {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
+        - name: web-config-overlay
           emptyDir: {}
         - name: web-config-secret
           secret:
             secretName: {{ required "webConfig.basicAuth.initFromSecret.secretName is required when initFromSecret is enabled" .Values.webConfig.basicAuth.initFromSecret.secretName }}
-        {{- else }}
-        - name: web-config
-          secret:
-            secretName: {{ include "sql-exporter.webconfig.secretName" . }}
         {{- end }}
-        {{- if .Values.webConfig.tls.secretName }}
+        {{- if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
         - name: web-config-tls
           secret:
             secretName: {{ .Values.webConfig.tls.secretName }}
-        {{- end }}
         {{- end }}
         {{- if .Values.collectorFiles }}
         - name: sql-collector
@@ -127,7 +121,7 @@ spec:
             - name: WC_BCRYPT_COST
               value: {{ .Values.webConfig.basicAuth.bcryptCost | quote }}
           volumeMounts:
-            - name: web-config
+            - name: web-config-overlay
               mountPath: /web-config
             - name: web-config-secret
               readOnly: true
@@ -142,8 +136,8 @@ spec:
               PASS=$(cat /secret-src/{{ .Values.webConfig.basicAuth.initFromSecret.secretKey }})
               HASH=$($HTPASSWD -nbBC "$WC_BCRYPT_COST" "$WC_USERNAME" "$PASS" | cut -d: -f2)
               # Decode base web-config and append basic auth
-              echo '{{ include "sql-exporter.webconfig.yaml" . | b64enc }}' | base64 -d > /web-config/{{ .Values.webConfig.fileName }}
-              printf "\nbasic_auth_users:\n  {{ .Values.webConfig.basicAuth.username }}: %s\n" "$HASH" >> /web-config/{{ .Values.webConfig.fileName }}
+              echo '{{ include "sql-exporter.webconfig.yaml" . | b64enc }}' | base64 -d > /web-config/web-config.yml
+              printf "\nbasic_auth_users:\n  {{ .Values.webConfig.basicAuth.username }}: %s\n" "$HASH" >> /web-config/web-config.yml
 {{- end }}
 {{- if .Values.initContainers }}
 {{ toYaml .Values.initContainers | nindent 8 }}
@@ -160,7 +154,7 @@ spec:
             - "-log.level={{ .Values.logLevel | default "info"  }}"
             - "-log.format={{ .Values.logFormat | default "logfmt" }}"
             {{- if .Values.webConfig.enabled }}
-            - "-web.config.file={{ .Values.webConfig.mountPath }}/{{ .Values.webConfig.fileName }}"
+            - "-web.config.file=/etc/sql_exporter/web-config.yml"
             {{- end }}
             {{- if .Values.reloadEnabled }}
             - "-web.enable-reload"
@@ -168,23 +162,35 @@ spec:
           {{- if eq (include "sql-exporter.volumes" .) "\"true\"" }}
           volumeMounts:
           {{- if .Values.dynamicConfig.enabled }}
+          {{- /* DynamicConfig: init container generates sql_exporter.yml to emptyDir */ -}}
           - name: {{ include "sql-exporter.dynamicConfig.volumeName" . }}
             readOnly: true
             mountPath: /etc/sql_exporter/
+          {{- if and .Values.webConfig.enabled (not .Values.webConfig.basicAuth.initFromSecret.enabled) }}
+          {{- /* Also mount web-config.yml from main secret as subPath */ -}}
+          - name: sql-exporter
+            readOnly: true
+            mountPath: /etc/sql_exporter/web-config.yml
+            subPath: web-config.yml
+          {{- end }}
           {{- else if .Values.createConfig }}
+          {{- /* Static config: main secret contains sql_exporter.yml and optionally web-config.yml */ -}}
           - name: sql-exporter
             readOnly: true
             mountPath: /etc/sql_exporter/
           {{- end }}
-          {{- if .Values.webConfig.enabled }}
-          - name: web-config
+          {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
+          {{- /* InitContainer writes web-config.yml with bcrypt hash to emptyDir overlay */ -}}
+          - name: web-config-overlay
             readOnly: true
-            mountPath: {{ .Values.webConfig.mountPath }}
-          {{- if .Values.webConfig.tls.secretName }}
+            mountPath: /etc/sql_exporter/web-config.yml
+            subPath: web-config.yml
+          {{- end }}
+          {{- if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
+          {{- /* TLS cert/key from separate secret */ -}}
           - name: web-config-tls
             readOnly: true
             mountPath: /tls
-          {{- end }}
           {{- end }}
           {{- if .Values.collectorFiles }}
           - name: sql-collector
