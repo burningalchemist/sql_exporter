@@ -118,7 +118,7 @@ tls_server_config:
   cipher_suites:
     - TLS_AES_128_GCM_SHA256
     - TLS_AES_256_GCM_SHA384
-{{- if .Values.webConfig.basicAuth.enabled }}
+{{- if and .Values.webConfig.basicAuth.enabled (not .Values.webConfig.basicAuth.initFromSecret.enabled) }}
 basic_auth_users:
 {{- range $user, $hash := .Values.webConfig.basicAuth.users }}
   {{ $user }}: {{ $hash | quote }}

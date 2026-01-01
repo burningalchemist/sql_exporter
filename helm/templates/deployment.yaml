@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "sql-exporter.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.replicaCount | default 1 }}
   selector:
     matchLabels:
       {{- include "sql-exporter.selectorLabels" . | nindent 6 }}
@@ -45,7 +45,7 @@ spec:
             secretName: {{ required "dynamicConfig.secretName is required when dynamicConfig.enabled is true" .Values.dynamicConfig.secretName }}
         {{- end }}
         {{- if .Values.webConfig.enabled }}
-        {{- if .Values.webConfig.basicAuth.initFromSecret.enabled }}
+        {{- if and .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
         - name: web-config
           emptyDir: {}
         - name: web-config-secret
@@ -74,7 +74,7 @@ spec:
           {{- toYaml $v.volume | nindent 10 }}
       {{- end }}
       {{- end }}
-{{- if or .Values.initContainers .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
+{{- if or .Values.initContainers .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
       initContainers:
 {{- if .Values.dynamicConfig.enabled }}
         - name: sql-exporter-config-from-secret
@@ -117,8 +117,7 @@ spec:
               {{- end }}
               echo '{{ .Values.dynamicConfig.template | b64enc }}' | base64 -d | sed "s|__TYPE__|$TYPE_SCHEME|g; s|__DSN__|$DSN|g" > /config-out/sql_exporter.yml
 {{- end }}
-{{- if .Values.webConfig.enabled }}
-{{- if .Values.webConfig.basicAuth.initFromSecret.enabled }}
+{{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
         - name: webconfig-bcrypt
           image: {{ .Values.webConfig.basicAuth.initFromSecret.image }}
           imagePullPolicy: {{ .Values.webConfig.basicAuth.initFromSecret.imagePullPolicy }}
@@ -142,16 +141,9 @@ spec:
               HTPASSWD=/usr/local/apache2/bin/htpasswd
               PASS=$(cat /secret-src/{{ .Values.webConfig.basicAuth.initFromSecret.secretKey }})
               HASH=$($HTPASSWD -nbBC "$WC_BCRYPT_COST" "$WC_USERNAME" "$PASS" | cut -d: -f2)
-              # Generate base config from helper template
-              cat > /web-config/{{ .Values.webConfig.fileName }} <<'WEBCONFIG'
-{{ include "sql-exporter.webconfig.yaml" . }}
-              WEBCONFIG
-              # Append basic auth with the generated hash
-              cat >> /web-config/{{ .Values.webConfig.fileName }} <<AUTHCONFIG
-basic_auth_users:
-  {{ .Values.webConfig.basicAuth.username }}: $HASH
-AUTHCONFIG
-{{- end }}
+              # Decode base web-config and append basic auth
+              echo '{{ include "sql-exporter.webconfig.yaml" . | b64enc }}' | base64 -d > /web-config/{{ .Values.webConfig.fileName }}
+              printf "\nbasic_auth_users:\n  {{ .Values.webConfig.basicAuth.username }}: %s\n" "$HASH" >> /web-config/{{ .Values.webConfig.fileName }}
 {{- end }}
 {{- if .Values.initContainers }}
 {{ toYaml .Values.initContainers | nindent 8 }}
@@ -231,12 +223,17 @@ AUTHCONFIG
             {{- end }}
             {{- end }}
           {{ if not .Values.overrideLivenessProbe }}
-          {{- /* Auto-generate probe based on TLS configuration */ -}}
+          {{- /* Auto-generate probe: tcpSocket if basic auth enabled, httpGet otherwise */ -}}
           livenessProbe:
+            {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled }}
+            tcpSocket:
+              port: 9399
+            {{- else }}
             httpGet:
               path: /healthz
               port: 9399
               scheme: {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}HTTPS{{ else }}HTTP{{ end }}
+            {{- end }}
             initialDelaySeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
             timeoutSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
             periodSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}
@@ -248,12 +245,17 @@ AUTHCONFIG
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           {{- end }}
           {{ if not .Values.overrideReadinessProbe }}
-          {{- /* Auto-generate probe based on TLS configuration */ -}}
+          {{- /* Auto-generate probe: tcpSocket if basic auth enabled, httpGet otherwise */ -}}
           readinessProbe:
+            {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled }}
+            tcpSocket:
+              port: 9399
+            {{- else }}
             httpGet:
               path: /healthz
               port: 9399
               scheme: {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}HTTPS{{ else }}HTTP{{ end }}
+            {{- end }}
             initialDelaySeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
             timeoutSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
             periodSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}

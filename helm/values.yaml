@@ -153,6 +153,9 @@ serviceMonitor:
   relabelings: {}
   # -- ServiceMonitor namespace override (default is .Release.Namespace)
   namespace: ~
+  # -- Additional labels for ServiceMonitor (for Prometheus serviceMonitorSelector matching)
+  # Example: selector: { monitored: dox-prometheus }
+  selector: {}
 # Additional env variables
 # - kind should be either Secret or ConfigMap
 # - name is the name of the Secret or ConfigMap that should be used
