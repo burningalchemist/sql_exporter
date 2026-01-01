@@ -20,7 +20,7 @@ require (
 	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/snowflakedb/gosnowflake v1.18.0
 	github.com/vertica/vertica-sql-go v1.3.4
-	github.com/xo/dburl v0.23.8
+	github.com/xo/dburl v0.24.2
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/yaml.v3 v3.0.1
 )
