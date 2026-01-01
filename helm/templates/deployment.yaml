@@ -32,7 +32,7 @@ spec:
       serviceAccountName: {{ if .Values.serviceAccount.create }}{{ template "sql-exporter.fullname" . }}{{ else }}{{ include "sql-exporter.serviceAccountName" . }}{{end}}
       {{- if eq (include "sql-exporter.volumes" .)  "\"true\"" }}
       volumes:
-        {{- if .Values.createConfig }}
+        {{- if or .Values.createConfig (and .Values.webConfig.enabled (not .Values.webConfig.basicAuth.initFromSecret.enabled)) }}
         - name: sql-exporter
           secret:
             secretName: {{ include "sql-exporter.fullname" . }}
@@ -47,9 +47,6 @@ spec:
         {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
         - name: web-config-overlay
           emptyDir: {}
-        - name: web-config-secret
-          secret:
-            secretName: {{ required "webConfig.basicAuth.initFromSecret.secretName is required when initFromSecret is enabled" .Values.webConfig.basicAuth.initFromSecret.secretName }}
         {{- end }}
         {{- if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
         - name: web-config-tls
@@ -123,7 +120,7 @@ spec:
           volumeMounts:
             - name: web-config-overlay
               mountPath: /web-config
-            - name: web-config-secret
+            - name: web-config-tls
               readOnly: true
               mountPath: /secret-src
           command:
