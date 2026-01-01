@@ -47,6 +47,14 @@ spec:
         {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
         - name: web-config-overlay
           emptyDir: {}
+        {{- /* Auth secret volume - only if different from TLS secret or TLS not enabled */ -}}
+        {{- $authSecret := .Values.webConfig.basicAuth.initFromSecret.secretName -}}
+        {{- $tlsSecret := .Values.webConfig.tls.secretName | default "" -}}
+        {{- if ne $authSecret $tlsSecret }}
+        - name: web-config-auth
+          secret:
+            secretName: {{ $authSecret }}
+        {{- end }}
         {{- end }}
         {{- if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
         - name: web-config-tls
@@ -120,9 +128,18 @@ spec:
           volumeMounts:
             - name: web-config-overlay
               mountPath: /web-config
+            {{- /* Mount auth secret or TLS secret (if shared) */ -}}
+            {{- $authSecret := .Values.webConfig.basicAuth.initFromSecret.secretName -}}
+            {{- $tlsSecret := .Values.webConfig.tls.secretName | default "" -}}
+            {{- if ne $authSecret $tlsSecret }}
+            - name: web-config-auth
+              readOnly: true
+              mountPath: /secret-src
+            {{- else }}
             - name: web-config-tls
               readOnly: true
               mountPath: /secret-src
+            {{- end }}
           command:
             - /bin/sh
             - -c

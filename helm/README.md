@@ -62,7 +62,6 @@ as an example.
 | image.tag | string | `appVersion` value from `Chart.yaml` | Image tag |
 | imagePullSecrets | list | `[]` | Secrets with credentials to pull images from a private registry |
 | service.type | string | `"ClusterIP"` | Service type |
-| service.port | int | `80` | Service port |
 | service.labels | object | `{}` | Service labels |
 | service.annotations | object | `{}` | Service annotations |
 | ingress.enabled | bool | `false` |  |

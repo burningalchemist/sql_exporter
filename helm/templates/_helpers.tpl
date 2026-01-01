@@ -136,3 +136,16 @@ Reformat '100s' to 100s for example.
 */ -}}
 {{- tpl ($conf | toYaml ) . | fromYaml | toYaml -}}
 {{- end -}}
+
+{{/*
+Service port - use explicit value if set, otherwise 443 for TLS, 80 for HTTP
+*/}}
+{{- define "sql-exporter.servicePort" -}}
+{{- if .Values.service.port -}}
+{{ .Values.service.port }}
+{{- else if and .Values.webConfig.enabled .Values.webConfig.tls.secretName -}}
+443
+{{- else -}}
+80
+{{- end -}}
+{{- end -}}

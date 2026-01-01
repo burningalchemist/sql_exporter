@@ -15,12 +15,12 @@ imagePullSecrets: []
 service:
   # -- Service type
   type: ClusterIP
-  # -- Service port
-  port: 80
   # -- Service labels
   labels: {}
   # -- Service annotations
   annotations: {}
+  # Note: Service port defaults to 80 (HTTP) or 443 (HTTPS) based on TLS configuration.
+  # You can override by setting service.port explicitly in your values override file.
     # example of prometheus usage
     # prometheus.io/scrape: "true"
     # prometheus.io/path: "/metrics"

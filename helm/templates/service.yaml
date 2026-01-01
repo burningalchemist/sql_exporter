@@ -14,7 +14,7 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
+    - port: {{ include "sql-exporter.servicePort" . }}
       targetPort: http
       protocol: TCP
       name: http
