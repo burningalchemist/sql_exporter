@@ -8,10 +8,11 @@ metadata:
     {{- with .Values.ingress.labels }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with .Values.ingress.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "sql-exporter.annotations" . | nindent 4 }}
+    {{- with .Values.ingress.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   {{- if .Values.ingress.ingressClassName }}
   ingressClassName: {{ .Values.ingress.ingressClassName }}

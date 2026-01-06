@@ -2,6 +2,10 @@
 nameOverride: ""
 # -- String to fully override "sql-exporter.fullname"
 fullnameOverride: ""
+# -- Common labels to add to all deployed resources
+commonLabels: {}
+# -- Common annotations to add to all the deployed resources
+commonAnnotations: {}
 image:
   # -- Image repository
   repository: burningalchemist/sql_exporter
