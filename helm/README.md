@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.13.5](https://img.shields.io/badge/Version-0.13.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.18.6](https://img.shields.io/badge/AppVersion-0.18.6-informational?style=flat-square)
+![Version: 0.14.0](https://img.shields.io/badge/Version-0.14.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.18.6](https://img.shields.io/badge/AppVersion-0.18.6-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -52,6 +52,8 @@ as an example.
 |-----|------|---------|-------------|
 | nameOverride | string | `""` | Provide a name in place of `sql-exporter` |
 | fullnameOverride | string | `""` | String to fully override "sql-exporter.fullname" |
+| commonLabels | object | `{}` | Common labels to add to all deployed resources |
+| commonAnnotations | object | `{}` | Common annotations to add to all the deployed resources |
 | image.repository | string | `"burningalchemist/sql_exporter"` | Image repository |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | image.tag | string | `appVersion` value from `Chart.yaml` | Image tag |
