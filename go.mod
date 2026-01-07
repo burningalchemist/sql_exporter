@@ -18,7 +18,7 @@ require (
 	github.com/prometheus/exporter-toolkit v0.15.1
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/sijms/go-ora/v2 v2.9.0
-	github.com/snowflakedb/gosnowflake v1.18.0
+	github.com/snowflakedb/gosnowflake v1.18.1
 	github.com/vertica/vertica-sql-go v1.3.4
 	github.com/xo/dburl v0.24.2
 	google.golang.org/protobuf v1.36.11
