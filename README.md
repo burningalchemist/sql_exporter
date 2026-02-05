@@ -176,14 +176,15 @@ metrics:
       GROUP BY Market
 ```
 
-### Data Source Names (DSN)
+### Database URLs (URL-format DSNs)
 
-To keep things simple and yet allow fully configurable database connections, SQL Exporter uses DSNs (like
-`sqlserver://prom_user:prom_password@dbserver1.example.com:1433`) to refer to database instances.
+To keep things simple and yet allow fully configurable database connections, SQL Exporter uses database URLs
+(URL-format DSNs) (like `sqlserver://prom_user:prom_password@dbserver1.example.com:1433`) to refer to database
+instances.
 
-This exporter relies on `xo/dburl` package for parsing Data Source Names (DSN). The goal is to have a
-unified way to specify DSNs across all supported databases. This can potentially affect your connection to certain
-databases like MySQL, so you might want to adjust your connection string accordingly:
+This exporter relies on `xo/dburl` package for parsing URL-format DSNs. The goal is to have a unified way to specify
+DSNs across all supported databases. This can potentially affect your connection to certain databases like MySQL, so
+you might want to adjust your connection string accordingly:
 
 ```plaintext
 mysql://user:pass@localhost/dbname - for TCP connection
@@ -192,8 +193,8 @@ mysql:/var/run/mysqld/mysqld.sock - for Unix socket connection
 
 > [!IMPORTANT]
 > If your DSN contains special characters in any part of your connection string (including passwords), you might need to
-apply [URL encoding](https://en.wikipedia.org/wiki/URL_encoding#Reserved_characters) (percent-encoding) to them.
-For example, `p@$$w0rd#abc` then becomes `p%40%24%24w0rd%23abc`.
+> apply [URL encoding](https://en.wikipedia.org/wiki/URL_encoding#Reserved_characters) (percent-encoding) to them.
+> For example, `p@$$w0rd#abc` then becomes `p%40%24%24w0rd%23abc`.
 
 For additional details please refer to [xo/dburl](https://github.com/xo/dburl) documentation.
 
@@ -301,8 +302,9 @@ This may result in the following error:
 unsupported Scan, storing driver.Value type []uint8 into type *time.Time
 ```
 
-To resolve the issue, make sure to include `parseTime=true` as a parameter on the DSN, so values with TIMESTAMP, DATETIME, TIME, DATE types 
-will end up as `time.Time` type, which is a requirement on the sql_exporter side to process the value correctly.
+To resolve the issue, make sure to include `parseTime=true` as a parameter on the DSN, so values with TIMESTAMP,
+DATETIME, TIME, DATE types will end up as `time.Time` type, which is a requirement on the sql_exporter side to process
+the value correctly.
 </details>
 
 <details>
