@@ -36,7 +36,11 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 
 		// Parse the query params and set the job filters if any
 		jobFilters := req.URL.Query()["jobs[]"]
-		exporter.SetJobFilters(jobFilters)
+		if err := exporter.SetJobFilters(jobFilters); err != nil {
+			slog.Warn("Error setting job filters, ignoring", "error", err)
+			http.Error(w, "Error setting job filters: "+err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		// Go through prometheus.Gatherers to sanitize and sort metrics.
 		gatherer := prometheus.Gatherers{exporter.WithContext(ctx), sql_exporter.SvcRegistry}
@@ -60,6 +64,9 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 				return
 			}
 		}
+
+		// Filter the scrape_errors_total metric family to only include metrics for the jobs in the jobFilters list.
+		mfs = exporter.FilterScrapeErrorsTotal(mfs)
 
 		contentType := expfmt.Negotiate(req.Header)
 		buf := getBuf()
@@ -115,7 +122,8 @@ func contextFor(req *http.Request, exporter sql_exporter.Exporter) (context.Cont
 			// Subtract the timeout offset, unless the result would be negative or zero.
 			timeoutOffset := time.Duration(exporter.Config().Globals.TimeoutOffset)
 			if timeoutOffset > timeout {
-				slog.Error("global.scrape_timeout_offset is greater than Prometheus' scraping timeout, ignoring", "timeout", timeout, "timeoutOffset", timeoutOffset)
+				slog.Error("global.scrape_timeout_offset is greater than Prometheus' scraping timeout, ignoring",
+					"timeout", timeout, "timeoutOffset", timeoutOffset)
 			} else {
 				timeout -= timeoutOffset
 			}

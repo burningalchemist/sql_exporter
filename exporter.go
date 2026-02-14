@@ -37,9 +37,12 @@ type Exporter interface {
 	// UpdateTarget updates the targets field
 	UpdateTarget([]Target)
 	// SetJobFilters sets the jobFilters field
-	SetJobFilters([]string)
+	SetJobFilters([]string) error
 	// DropErrorMetrics resets the scrape_errors_total metric
 	DropErrorMetrics()
+	// FilterScrapeErrorsTotal filters the scrape_errors_total metric family to only include metrics for the jobs in
+	// the jobFilters list.
+	FilterScrapeErrorsTotal([]*dto.MetricFamily) []*dto.MetricFamily
 }
 
 type exporter struct {
@@ -67,7 +70,8 @@ func NewExporter(configFile string) (Exporter, error) {
 
 	var targets []Target
 	if c.Target != nil {
-		target, err := NewTarget("", c.Target.Name, "", string(c.Target.DSN), c.Target.Collectors(), nil, c.Globals, c.Target.EnablePing)
+		target, err := NewTarget("", c.Target.Name, "", string(c.Target.DSN),
+			c.Target.Collectors(), nil, c.Globals, c.Target.EnablePing)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +95,7 @@ func NewExporter(configFile string) (Exporter, error) {
 	return &exporter{
 		config:     c,
 		targets:    targets,
-		jobFilters: []string{},
+		jobFilters: nil,
 		ctx:        context.Background(),
 	}, nil
 }
@@ -181,6 +185,7 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 	for _, mf := range dtoMetricFamilies {
 		result = append(result, mf)
 	}
+
 	return result, errs
 }
 
@@ -192,11 +197,47 @@ func (e *exporter) filterTargets(jf []string) {
 				filteredTargets = append(filteredTargets, target)
 			}
 		}
-		if len(filteredTargets) == 0 {
-			slog.Error("No targets found for job filters. Nothing to scrape.")
-		}
 		e.targets = filteredTargets
 	}
+}
+
+// FilterScrapeErrorsTotal filters the scrape_errors_total metric family to only include metrics for the jobs in the
+// jobFilters list. If jobFilters is empty it returns the original metric families unmodified.
+func (e *exporter) FilterScrapeErrorsTotal(mfs []*dto.MetricFamily) []*dto.MetricFamily {
+	if len(e.jobFilters) == 0 {
+		return mfs
+	}
+
+	result := make([]*dto.MetricFamily, 0, len(mfs))
+	for _, mf := range mfs {
+		if mf.GetName() != "scrape_errors_total" {
+			result = append(result, mf)
+			continue
+		}
+
+		// Filter metrics in this family to only include those with a job label in the jobFilters list.
+		filtered := make([]*dto.Metric, 0, len(mf.Metric))
+		for _, metric := range mf.Metric {
+			for _, label := range metric.Label {
+				if label.GetName() == "job" {
+					if slices.Contains(e.jobFilters, label.GetValue()) {
+						filtered = append(filtered, metric)
+					}
+					break
+				}
+			}
+		}
+
+		if len(filtered) > 0 {
+			result = append(result, &dto.MetricFamily{
+				Name:   mf.Name,
+				Help:   mf.Help,
+				Type:   mf.Type,
+				Metric: filtered,
+			})
+		}
+	}
+	return result
 }
 
 // Config implements Exporter.
@@ -210,8 +251,31 @@ func (e *exporter) UpdateTarget(target []Target) {
 }
 
 // SetJobFilters implements Exporter.
-func (e *exporter) SetJobFilters(filters []string) {
+func (e *exporter) SetJobFilters(filters []string) error {
+	// If the filters list contains a single empty string, treat it as no filters.
+	if len(filters) == 0 || (len(filters) == 1 && filters[0] == "") {
+		slog.Debug("Received empty job filter, treating as no filters")
+		e.jobFilters = nil
+		return nil
+	}
+
+	// Single target mode has no jobs - filters are not applicable
+	if len(e.config.Jobs) == 0 {
+		slog.Warn("Job filters are not applicable in single target mode, ignoring", "filters", filters)
+		e.jobFilters = nil
+		return nil
+	}
+
+	for _, name := range filters {
+		if !slices.ContainsFunc(e.config.Jobs, func(j *config.JobConfig) bool {
+			return j.Name == name
+		}) {
+			return fmt.Errorf("invalid job name: %s", name)
+		}
+	}
+
 	e.jobFilters = filters
+	return nil
 }
 
 // DropErrorMetrics implements Exporter.
@@ -233,8 +297,12 @@ func registerScrapeErrorMetric() *prometheus.CounterVec {
 // split comma separated list of key=value pairs and return a map of key value pairs
 func parseContextLog(list string) map[string]string {
 	m := make(map[string]string)
-	for _, item := range strings.Split(list, ",") {
+	for item := range strings.SplitSeq(list, ",") {
 		parts := strings.SplitN(item, "=", 2)
+		if len(parts) != 2 {
+			slog.Warn("Invalid context log item, ignoring", "item", item)
+			continue
+		}
 		m[parts[0]] = parts[1]
 	}
 	return m
@@ -243,8 +311,5 @@ func parseContextLog(list string) map[string]string {
 // TrimMissingCtx trims the leading comma and space from the log context string.
 // Leading comma appears when previous parameter is undefined, which is a side-effect of running in single target mode.
 func TrimMissingCtx(logContext string) string {
-	if strings.HasPrefix(logContext, ",") {
-		logContext = strings.TrimLeft(logContext, ", ")
-	}
-	return logContext
+	return strings.TrimPrefix(logContext, ", ")
 }
