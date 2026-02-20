@@ -7,6 +7,9 @@ import (
 	"net/url"
 )
 
+// There are no TLS parameters to strip when MySQL support is disabled, but we need to define the variable to avoid compilation errors in sql.go.
+var mysqlTLSParams = []string{}
+
 // registerMySQLTLSConfig is a stub function that returns an error indicating that MySQL TLS support is disabled when the "no_mysql" build tag is used.
 func registerMySQLTLSConfig(_ url.Values) error {
 	return errors.New("MySQL TLS support disabled (built with -tags no_mysql)")

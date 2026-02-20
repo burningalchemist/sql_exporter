@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
+	"sync"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -21,11 +22,24 @@ const (
 )
 
 // mysqlTLSParams holds all custom TLS DSN parameters that must be stripped before passing the DSN to the MySQL driver.
-var mysqlTLSParams = []string{mysqlTLSParamCACert, mysqlTLSParamClientCert, mysqlTLSParamClientKey}
+var (
+	mysqlTLSParams     = []string{mysqlTLSParamCACert, mysqlTLSParamClientCert, mysqlTLSParamClientKey}
+	mysqlTLSConfigOnce sync.Once
+)
+
+func registerMySQLTLSConfig(params url.Values) error {
+	mysqlTLSConfigOnce.Do(func() {
+		err := buildConfig(params)
+		if err != nil {
+			slog.Error("Failed to register MySQL TLS config", "error", err)
+		}
+	})
+	return nil
+}
 
 // registerMySQLTLSConfig registers a custom TLS configuration for MySQL if the "tls" parameter is set to "custom" in
 // the provided URL parameters.
-func registerMySQLTLSConfig(params url.Values) error {
+func buildConfig(params url.Values) error {
 	caCert := params.Get(mysqlTLSParamCACert)
 	clientCert := params.Get(mysqlTLSParamClientCert)
 	clientKey := params.Get(mysqlTLSParamClientKey)
