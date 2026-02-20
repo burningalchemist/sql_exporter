@@ -45,7 +45,7 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 		for _, param := range mysqlTLSParams {
 			q.Del(param)
 		}
-		url.URL.RawQuery = q.Encode()
+		url.RawQuery = q.Encode()
 		// Regenerate the DSN without TLS parameters for logging and connection purposes
 		tlsStripped, _, err := dburl.GenMysql(url)
 		if err != nil {

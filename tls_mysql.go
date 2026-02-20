@@ -29,7 +29,7 @@ var (
 
 func registerMySQLTLSConfig(params url.Values) error {
 	mysqlTLSConfigOnce.Do(func() {
-		err := buildConfig(params)
+		err := buildTLSConfig(params)
 		if err != nil {
 			slog.Error("Failed to register MySQL TLS config", "error", err)
 		}
@@ -39,7 +39,7 @@ func registerMySQLTLSConfig(params url.Values) error {
 
 // registerMySQLTLSConfig registers a custom TLS configuration for MySQL if the "tls" parameter is set to "custom" in
 // the provided URL parameters.
-func buildConfig(params url.Values) error {
+func buildTLSConfig(params url.Values) error {
 	caCert := params.Get(mysqlTLSParamCACert)
 	clientCert := params.Get(mysqlTLSParamClientCert)
 	clientKey := params.Get(mysqlTLSParamClientKey)
