@@ -33,6 +33,14 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 		driver = url.GoDriver
 	}
 
+	// Register custom TLS config for MySQL if needed
+	if driver == "mysql" && url.Query().Get("tls") == "custom" {
+		err := registerMySQLTLSConfig(url.Query())
+		if err != nil {
+			return nil, fmt.Errorf("failed to register MySQL TLS config: %w", err)
+		}
+	}
+
 	// Open the DB handle in a separate goroutine so we can terminate early if the context closes.
 	go func() {
 		conn, err = sql.Open(driver, url.DSN)
