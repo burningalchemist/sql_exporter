@@ -35,10 +35,23 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 
 	// Register custom TLS config for MySQL if needed
 	if driver == "mysql" && url.Query().Get("tls") == "custom" {
-		err := registerMySQLTLSConfig(url.Query())
-		if err != nil {
+		if err := registerMySQLTLSConfig(url.Query()); err != nil {
 			return nil, fmt.Errorf("failed to register MySQL TLS config: %w", err)
 		}
+
+		// Strip TLS parameters from the URL as they are interpreted as system variables by the MySQL driver which
+		// causes connection failure. The TLS configuration is already registered globally.
+		q := url.Query()
+		for _, param := range mysqlTLSParams {
+			q.Del(param)
+		}
+		url.URL.RawQuery = q.Encode()
+		// Regenerate the DSN without TLS parameters for logging and connection purposes
+		tlsStripped, _, err := dburl.GenMysql(url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate MySQL DSN: %w", err)
+		}
+		url.DSN = tlsStripped
 	}
 
 	// Open the DB handle in a separate goroutine so we can terminate early if the context closes.

@@ -7,17 +7,34 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"os"
 
 	"github.com/go-sql-driver/mysql"
 )
 
+const (
+	mysqlTLSParamCACert     = "tls-ca-cert"
+	mysqlTLSParamClientCert = "tls-client-cert"
+	mysqlTLSParamClientKey  = "tls-client-key"
+)
+
+// mysqlTLSParams holds all custom TLS DSN parameters that must be stripped
+// before passing the DSN to the MySQL driver.
+var mysqlTLSParams = []string{mysqlTLSParamCACert, mysqlTLSParamClientCert, mysqlTLSParamClientKey}
+
 // registerMySQLTLSConfig registers a custom TLS configuration for MySQL if the "tls" parameter is set to "custom" in the provided URL parameters.
 func registerMySQLTLSConfig(params url.Values) error {
-	caCert := params.Get("tls-ca-cert")
-	clientCert := params.Get("tls-client-cert")
-	clientKey := params.Get("tls-client-key")
+	caCert := params.Get(mysqlTLSParamCACert)
+	clientCert := params.Get(mysqlTLSParamClientCert)
+	clientKey := params.Get(mysqlTLSParamClientKey)
+	slog.Debug("params", params)
+
+	slog.Debug("Registering MySQL TLS configuration")
+	slog.Debug("CA Certificate", "path", caCert)
+	slog.Debug("Client Certificate", "path", clientCert)
+	slog.Debug("Client Key", "path", clientKey)
 
 	var rootCertPool *x509.CertPool
 	if caCert != "" {
@@ -48,5 +65,8 @@ func registerMySQLTLSConfig(params url.Values) error {
 		Certificates: certs,
 		MinVersion:   tls.VersionTLS12,
 	}
+
+	slog.Debug("MySQL TLS configuration registered successfully")
+	slog.Debug("TLS Config", "RootCAs", rootCertPool, "Certificates", certs)
 	return mysql.RegisterTLSConfig("custom", tlsConfig)
 }
