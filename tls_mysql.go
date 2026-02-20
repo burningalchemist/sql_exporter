@@ -13,7 +13,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-// registerTLSConfig registers a custom TLS configuration for MySQL if the "tls" parameter is set to "custom" in the provided URL parameters.
+// registerMySQLTLSConfig registers a custom TLS configuration for MySQL if the "tls" parameter is set to "custom" in the provided URL parameters.
 func registerMySQLTLSConfig(params url.Values) error {
 	caCert := params.Get("tls-ca-cert")
 	clientCert := params.Get("tls-client-cert")
@@ -46,6 +46,7 @@ func registerMySQLTLSConfig(params url.Values) error {
 	tlsConfig := &tls.Config{
 		RootCAs:      rootCertPool,
 		Certificates: certs,
+		MinVersion:   tls.VersionTLS12,
 	}
 	return mysql.RegisterTLSConfig("custom", tlsConfig)
 }
