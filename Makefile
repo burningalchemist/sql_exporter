@@ -23,6 +23,9 @@ GO     := go
 GOPATH ?= $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 PROMU  := $(GOPATH)/bin/promu
 PROMU_VERSION := v0.17.0
+YQ  := $(GOPATH)/bin/yq
+YQ_VERSION  := v4.52.4
+
 pkgs    = $(shell $(GO) list ./... | grep -v /vendor/)
 
 PREFIX              ?= $(shell pwd)
@@ -52,6 +55,13 @@ vet:
 build: promu
 	@echo ">> building binaries"
 	@$(PROMU) build --prefix $(PREFIX)
+
+build-nomysql: yq promu
+	@echo ">> building binaries with -tag nomysql"
+	@echo ">> updating build tags to include 'nomysql'"
+	@$(YQ) eval '.build |= (.flags += ",nomysql")' .promu.yml > .promu_nomysql.yml
+	@$(PROMU) build --prefix $(PREFIX) --config .promu_nomysql.yml
+	@rm .promu_nomysql.yml
 
 drivers-%:
 	@echo ">> generating drivers.go with selected drivers"
@@ -88,11 +98,19 @@ promu:
 	@set GOOS=windows
 	@set GOARCH=$(subst AMD64,amd64,$(patsubst i%86,386,$(shell echo %PROCESSOR_ARCHITECTURE%)))
 	@$(GO) install github.com/prometheus/promu@$(PROMU_VERSION)
+yq:
+	@set GOOS=windows
+	@set GOARCH=$(subst AMD64,amd64,$(patsubst i%86,386,$(shell echo %PROCESSOR_ARCHITECTURE%)))
+		$(GO) install github.com/mikefarah/yq/v4@$(YQ_VERSION)
 else
 promu:
 	@GOOS=$(shell uname -s | tr A-Z a-z) \
 		GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
 		$(GO) install github.com/prometheus/promu@$(PROMU_VERSION)
+yq:
+	@GOOS=$(shell uname -s | tr A-Z a-z) \
+		GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
+		$(GO) install github.com/mikefarah/yq/v4@$(YQ_VERSION)
 endif
 
 .PHONY: all style format build test vet tarball docker promu
