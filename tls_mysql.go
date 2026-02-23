@@ -1,4 +1,4 @@
-//go:build !no_mysql
+//go:build !nomysql
 
 package sql_exporter
 
