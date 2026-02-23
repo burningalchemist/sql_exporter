@@ -27,9 +27,12 @@ var (
 	mysqlTLSConfigOnce sync.Once
 )
 
-func registerMySQLTLSConfig(params url.Values) error {
+// handleMySQLTLSConfig registers a custom TLS configuration for MySQL if the "tls" parameter is set to "custom" in the
+// provided URL parameters. It ensures that the TLS configuration is registered only once, even if multiple DSNs with
+// the same TLS parameters are processed.
+func handleMySQLTLSConfig(params url.Values) error {
 	mysqlTLSConfigOnce.Do(func() {
-		err := buildTLSConfig(params)
+		err := registerTLSConfig(params)
 		if err != nil {
 			slog.Error("Failed to register MySQL TLS config", "error", err)
 		}
@@ -39,12 +42,12 @@ func registerMySQLTLSConfig(params url.Values) error {
 
 // registerMySQLTLSConfig registers a custom TLS configuration for MySQL if the "tls" parameter is set to "custom" in
 // the provided URL parameters.
-func buildTLSConfig(params url.Values) error {
+func registerTLSConfig(params url.Values) error {
 	caCert := params.Get(mysqlTLSParamCACert)
 	clientCert := params.Get(mysqlTLSParamClientCert)
 	clientKey := params.Get(mysqlTLSParamClientKey)
 
-	slog.Debug("TLS Parameters", mysqlTLSParamCACert, caCert, mysqlTLSParamClientCert, clientCert,
+	slog.Debug("MySQL TLS Parameters", mysqlTLSParamCACert, caCert, mysqlTLSParamClientCert, clientCert,
 		mysqlTLSParamClientKey, clientKey)
 
 	var rootCertPool *x509.CertPool

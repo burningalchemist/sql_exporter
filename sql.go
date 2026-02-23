@@ -35,7 +35,7 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 
 	// Register custom TLS config for MySQL if needed
 	if driver == "mysql" && url.Query().Get("tls") == "custom" {
-		if err := registerMySQLTLSConfig(url.Query()); err != nil {
+		if err := handleMySQLTLSConfig(url.Query()); err != nil {
 			return nil, fmt.Errorf("failed to register MySQL TLS config: %w", err)
 		}
 
