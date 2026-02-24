@@ -65,7 +65,6 @@ build-nomysql: yq promu
 
 drivers-%:
 	@echo ">> generating drivers.go with selected drivers"
-	@$(GO) get github.com/dave/jennifer/jen
 	@$(GO) run drivers_gen.go -- $*
 	@$(GO) get ./...
 	@$(GO) mod tidy
