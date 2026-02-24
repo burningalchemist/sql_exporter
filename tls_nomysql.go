@@ -11,6 +11,6 @@ import (
 var mysqlTLSParams = []string{}
 
 // registerMySQLTLSConfig is a stub function that returns an error indicating that MySQL TLS support is disabled when the "nomysql" build tag is used.
-func registerMySQLTLSConfig(_ url.Values) error {
+func handleMySQLTLSConfig(_ url.Values) error {
 	return errors.New("MySQL TLS support disabled (built with -tags nomysql)")
 }

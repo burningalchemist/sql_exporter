@@ -21,34 +21,40 @@ const (
 	mysqlTLSParamClientKey  = "tls-key"
 )
 
-// mysqlTLSParams holds all custom TLS DSN parameters that must be stripped before passing the DSN to the MySQL driver.
+// mysqlTLSParams is a list of TLS parameters that can be used in MySQL DSNs. It is used to identify and strip TLS
+// parameters from the DSN after registering the TLS configuration, as these parameters are not recognized by the MySQL
+// driver and would cause connection failure if left in the DSN.
 var (
-	mysqlTLSParams     = []string{mysqlTLSParamCACert, mysqlTLSParamClientCert, mysqlTLSParamClientKey}
-	mysqlTLSConfigOnce sync.Once
+	mysqlTLSParams = []string{mysqlTLSParamCACert, mysqlTLSParamClientCert, mysqlTLSParamClientKey}
+
+	onceMap sync.Map
 )
 
 // handleMySQLTLSConfig registers a custom TLS configuration for MySQL if the "tls" parameter is set to "custom" in the
 // provided URL parameters. It ensures that the TLS configuration is registered only once, even if multiple DSNs with
 // the same TLS parameters are processed.
-func handleMySQLTLSConfig(params url.Values) error {
-	mysqlTLSConfigOnce.Do(func() {
-		err := registerTLSConfig(params)
+func handleMySQLTLSConfig(configName string, params url.Values) error {
+	onceConn, _ := onceMap.LoadOrStore(configName, &sync.Once{})
+	once := onceConn.(*sync.Once)
+	var err error
+	once.Do(func() {
+		err = registerMySQLTLSConfig(configName, params)
 		if err != nil {
 			slog.Error("Failed to register MySQL TLS config", "error", err)
 		}
 	})
-	return nil
+	return err
 }
 
 // registerMySQLTLSConfig registers a custom TLS configuration for MySQL if the "tls" parameter is set to "custom" in
 // the provided URL parameters.
-func registerTLSConfig(params url.Values) error {
+func registerMySQLTLSConfig(configName string, params url.Values) error {
 	caCert := params.Get(mysqlTLSParamCACert)
 	clientCert := params.Get(mysqlTLSParamClientCert)
 	clientKey := params.Get(mysqlTLSParamClientKey)
 
-	slog.Debug("MySQL TLS Parameters", mysqlTLSParamCACert, caCert, mysqlTLSParamClientCert, clientCert,
-		mysqlTLSParamClientKey, clientKey)
+	slog.Debug("MySQL TLS config", "configName", configName, mysqlTLSParamCACert, caCert,
+		mysqlTLSParamClientCert, clientCert, mysqlTLSParamClientKey, clientKey)
 
 	var rootCertPool *x509.CertPool
 	if caCert != "" {
@@ -80,5 +86,5 @@ func registerTLSConfig(params url.Values) error {
 		MinVersion:   tls.VersionTLS12,
 	}
 
-	return mysql.RegisterTLSConfig("custom", tlsConfig)
+	return mysql.RegisterTLSConfig(configName, tlsConfig)
 }

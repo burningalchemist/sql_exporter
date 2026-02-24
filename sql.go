@@ -3,6 +3,7 @@ package sql_exporter
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -35,8 +36,16 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 
 	// Register custom TLS config for MySQL if needed
 	if driver == "mysql" && url.Query().Get("tls") == "custom" {
-		if err := handleMySQLTLSConfig(url.Query()); err != nil {
-			return nil, fmt.Errorf("failed to register MySQL TLS config: %w", err)
+
+		// Encode the hostname and port to create a unique name for the TLS configuration. This ensures that different
+		// DSNs with the same TLS parameters will reuse the same TLS configuration.
+		configName := "custom-" +
+			base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString([]byte(url.Hostname()+
+				url.Port()))
+
+		if err := handleMySQLTLSConfig(configName, url.Query()); err != nil {
+			return nil,
+				fmt.Errorf("failed to register MySQL TLS config: %w", err)
 		}
 
 		// Strip TLS parameters from the URL as they are interpreted as system variables by the MySQL driver which
@@ -45,7 +54,11 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 		for _, param := range mysqlTLSParams {
 			q.Del(param)
 		}
+
+		// Set the "tls" parameter to the unique name of the registered TLS configuration.
+		q.Set("tls", configName)
 		url.RawQuery = q.Encode()
+
 		// Regenerate the DSN without TLS parameters for logging and connection purposes
 		tlsStripped, _, err := dburl.GenMysql(url)
 		if err != nil {
