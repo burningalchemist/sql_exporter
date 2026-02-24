@@ -39,9 +39,8 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 
 		// Encode the hostname and port to create a unique name for the TLS configuration. This ensures that different
 		// DSNs with the same TLS parameters will reuse the same TLS configuration.
-		configName := "custom-" +
-			base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString([]byte(url.Hostname()+
-				url.Port()))
+		configName := "custom-" + base64.URLEncoding.WithPadding(base64.NoPadding).
+			EncodeToString([]byte(url.Hostname()+url.Port()))
 
 		if err := handleMySQLTLSConfig(configName, url.Query()); err != nil {
 			return nil,
