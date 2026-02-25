@@ -4,6 +4,8 @@ metadata:
   name: {{ include "sql-exporter.fullname" . }}
   labels:
     {{- include "sql-exporter.labels" . | nindent 4 }}
+  annotations:
+    {{- include "sql-exporter.annotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount | default 1 }}
   selector:

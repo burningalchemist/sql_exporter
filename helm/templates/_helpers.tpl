@@ -51,6 +51,9 @@ helm.sh/chart: {{ include "sql-exporter.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- if .Values.commonLabels }}
+{{ toYaml .Values.commonLabels }}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -59,6 +62,15 @@ Selector labels
 {{- define "sql-exporter.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "sql-exporter.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Common annotations
+*/}}
+{{- define "sql-exporter.annotations" -}}
+{{- if .Values.commonAnnotations }}
+{{ toYaml .Values.commonAnnotations }}
+{{- end }}
 {{- end }}
 
 {{/*
