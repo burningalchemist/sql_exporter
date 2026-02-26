@@ -1,0 +1,179 @@
+# Example: Helm values for TLS + Authentication + DynamicConfig (Full Configuration)
+# This example demonstrates all advanced features working together:
+#   - TLS encryption for metrics endpoint
+#   - Basic authentication for access control
+#   - Dynamic config generation from database secret
+#   - Shared secret for both TLS certificates and authentication password
+#
+# Prerequisites:
+#   1. Create a secret with TLS certificates AND plaintext password:
+#      kubectl create secret generic sql-exporter-tls-auth \
+#        --from-file=tls.crt=path/to/cert.crt \
+#        --from-file=tls.key=path/to/cert.key \
+#        --from-literal=password='your-secure-password'
+#
+#      For detailed TLS certificate options (cert-manager, self-signed, etc.):
+#        See secret-tls-auth.yaml in this directory
+#
+#   2. Create a secret with database connection information:
+#      kubectl create secret generic database-credentials \
+#        --from-literal=dsn='username:password@hostname:5432/database?sslmode=disable'
+#
+# Usage:
+#   helm install sql-exporter ../../helm -f values-example.yaml
+
+image:
+  repository: burningalchemist/sql_exporter
+  tag: "0.18.6"
+
+# Disable static config creation
+createConfig: false
+
+# Enable dynamic config generation from database secret
+dynamicConfig:
+  enabled: true
+  # Secret containing the database DSN
+  secretName: database-credentials
+  # Key within the secret containing the DSN
+  secretKey: dsn
+  # Database type (postgres, mysql, mssql, etc.)
+  type: postgres
+  # Template for sql_exporter.yml (DSN will be substituted at runtime)
+  template: |
+    global:
+      scrape_timeout: 10s
+      scrape_timeout_offset: 500ms
+      min_interval: 0s
+      max_connections: 3
+      max_idle_connections: 3
+    target:
+      # __TYPE__ and __DSN__ are replaced by the init container
+      data_source_name: __TYPE__://__DSN__
+      collectors:
+        - pg_stat_activity
+        - pg_stat_database
+        - pg_replication
+    collectors:
+      - collector_name: pg_stat_activity
+        min_interval: 1m
+        metrics:
+          - metric_name: pg_stat_activity_count
+            type: gauge
+            help: 'Number of connections by state'
+            key_labels:
+              - state
+            values:
+              - count
+            query: |
+              SELECT
+                COALESCE(state, 'unknown') as state,
+                COUNT(*) as count
+              FROM pg_stat_activity
+              GROUP BY state
+
+      - collector_name: pg_stat_database
+        min_interval: 5m
+        metrics:
+          - metric_name: pg_stat_database_size_bytes
+            type: gauge
+            help: 'Database size in bytes'
+            key_labels:
+              - datname
+            values:
+              - size_bytes
+            query: |
+              SELECT
+                datname,
+                pg_database_size(datname) as size_bytes
+              FROM pg_database
+              WHERE datistemplate = false
+
+          - metric_name: pg_stat_database_conflicts
+            type: counter
+            help: 'Number of queries canceled due to conflicts'
+            key_labels:
+              - datname
+            values:
+              - conflicts
+            query: |
+              SELECT
+                datname,
+                conflicts as conflicts
+              FROM pg_stat_database_conflicts
+
+      - collector_name: pg_replication
+        min_interval: 1m
+        metrics:
+          - metric_name: pg_replication_lag_bytes
+            type: gauge
+            help: 'Replication lag in bytes'
+            key_labels:
+              - client_addr
+            values:
+              - lag_bytes
+            query: |
+              SELECT
+                client_addr::text,
+                COALESCE(pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn), 0) as lag_bytes
+              FROM pg_stat_replication
+
+# Enable web configuration with BOTH TLS and basic authentication
+webConfig:
+  enabled: true
+  
+  # TLS configuration
+  tls:
+    # Reference to the shared secret containing TLS certificates
+    secretName: sql-exporter-tls-auth
+  
+  # Basic authentication configuration
+  basicAuth:
+    enabled: true
+    # Default username for basic auth; override as needed
+    # username: prometheus
+    # Bcrypt cost for password hashing (higher = more secure but slower)
+    # bcryptCost: 12
+    # Read plaintext password from the SAME secret as TLS
+    initFromSecret:
+      enabled: true
+      secretName: sql-exporter-tls-auth  # Same secret as TLS!
+      secretKey: password
+      # image: httpd:alpine # defaults to httpd:alpine
+      # imagePullPolicy: IfNotPresent # defaults to IfNotPresent
+
+# ServiceMonitor configuration for Prometheus Operator
+# Note: This chart uses ServiceMonitor (enabled by default) for Prometheus discovery.
+# The prometheus.io/* annotations are NOT needed and are ignored by Prometheus Operator.
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
+  # Optionally add labels for Prometheus discovery
+  # selector:
+  #   monitored: prometheus
+
+# Pod labels
+podLabels:
+  app: sql-exporter
+  security: tls-enabled
+
+# Log level (info, debug, warn, error)
+logLevel: info
+
+# Notes:
+# 1. This configuration uses a SHARED SECRET (sql-exporter-tls-auth) for both:
+#    - TLS certificates (tls.crt, tls.key)
+#    - Basic auth password (password)
+#    This demonstrates the secret consolidation feature where a single Kubernetes
+#    secret can provide multiple pieces of configuration data.
+#
+# 2. The init containers will:
+#    - sql-exporter-config-from-secret: Generate sql_exporter.yml from database DSN
+#    - webconfig-bcrypt: Read plaintext password, hash it with bcrypt, generate web-config.yml
+#
+# 3. Health probes automatically switch to tcpSocket when basic auth is enabled,
+#    since Kubernetes httpGet probes don't support authentication headers.
+#
+# 4. Prometheus Operator's ServiceMonitor natively supports HTTPS and will
+#    automatically skip certificate validation.
+

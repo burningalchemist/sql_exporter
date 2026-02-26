@@ -7,7 +7,7 @@ metadata:
   annotations:
     {{- include "sql-exporter.annotations" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.replicaCount | default 1 }}
   selector:
     matchLabels:
       {{- include "sql-exporter.selectorLabels" . | nindent 6 }}
@@ -34,10 +34,40 @@ spec:
       serviceAccountName: {{ if .Values.serviceAccount.create }}{{ template "sql-exporter.fullname" . }}{{ else }}{{ include "sql-exporter.serviceAccountName" . }}{{end}}
       {{- if eq (include "sql-exporter.volumes" .)  "\"true\"" }}
       volumes:
-        {{- if .Values.createConfig }}
+        {{- if or .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
+        - name: init-script
+          configMap:
+            name: {{ include "sql-exporter.fullname" . }}-init-script
+            defaultMode: 0755
+        {{- end }}
+        {{- if or .Values.createConfig (and .Values.webConfig.enabled (not .Values.webConfig.basicAuth.initFromSecret.enabled)) }}
         - name: sql-exporter
           secret:
             secretName: {{ include "sql-exporter.fullname" . }}
+        {{- end }}
+        {{- if .Values.dynamicConfig.enabled }}
+        - name: {{ include "sql-exporter.dynamicConfig.volumeName" . }}
+          emptyDir: {}
+        - name: {{ include "sql-exporter.dynamicConfig.secretVolumeName" . }}
+          secret:
+            secretName: {{ required "dynamicConfig.secretName is required when dynamicConfig.enabled is true" .Values.dynamicConfig.secretName }}
+        {{- end }}
+        {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
+        - name: web-config-overlay
+          emptyDir: {}
+        {{- /* Auth secret volume - only if different from TLS secret or TLS not enabled */ -}}
+        {{- $authSecret := .Values.webConfig.basicAuth.initFromSecret.secretName -}}
+        {{- $tlsSecret := .Values.webConfig.tls.secretName | default "" -}}
+        {{- if ne $authSecret $tlsSecret }}
+        - name: web-config-auth
+          secret:
+            secretName: {{ $authSecret }}
+        {{- end }}
+        {{- end }}
+        {{- if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
+        - name: web-config-tls
+          secret:
+            secretName: {{ .Values.webConfig.tls.secretName }}
         {{- end }}
         {{- if .Values.collectorFiles }}
         - name: sql-collector
@@ -45,13 +75,81 @@ spec:
             name: {{ include "sql-exporter.fullname" . }}
         {{- end }}
       {{- end }}
+      {{- if .Values.extraVolumes }}
       {{- range $v := .Values.extraVolumes }}
         - name: {{ $v.name }}
           {{- toYaml $v.volume | nindent 10 }}
       {{- end }}
-{{- if .Values.initContainers }}
+      {{- end }}
+{{- if or .Values.initContainers .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
       initContainers:
+{{- if or .Values.dynamicConfig.enabled (and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled) }}
+        - name: sql-exporter-init
+          image: {{ if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}{{ .Values.webConfig.basicAuth.initFromSecret.image }}{{ else }}alpine:3.19{{ end }}
+          imagePullPolicy: {{ if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}{{ .Values.webConfig.basicAuth.initFromSecret.imagePullPolicy }}{{ else }}IfNotPresent{{ end }}
+          env:
+            {{- if .Values.dynamicConfig.enabled }}
+            - name: ENABLE_DYNAMIC_CONFIG
+              value: "true"
+            - name: PARTIAL_DSN_FILE
+              value: /dsn/{{ .Values.dynamicConfig.secretKey }}
+            - name: TYPE_SCHEME
+              value: {{ .Values.dynamicConfig.type | quote }}
+            - name: DYNAMIC_CONFIG_TEMPLATE_B64
+              value: {{ .Values.dynamicConfig.template | b64enc | quote }}
+            {{- if .Values.dynamicConfig.useApplicationName }}
+            - name: USE_APPLICATION_NAME
+              value: "true"
+            - name: APPLICATION_NAME
+              value: {{ include "sql-exporter.fullname" . | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
+            - name: ENABLE_BCRYPT
+              value: "true"
+            - name: WC_USERNAME
+              value: {{ required "webConfig.basicAuth.username is required when initFromSecret is enabled" .Values.webConfig.basicAuth.username | quote }}
+            - name: WC_BCRYPT_COST
+              value: {{ .Values.webConfig.basicAuth.bcryptCost | quote }}
+            - name: WC_PASSWORD_KEY
+              value: {{ .Values.webConfig.basicAuth.initFromSecret.secretKey | quote }}
+            - name: WEBCONFIG_TEMPLATE_B64
+              value: {{ include "sql-exporter.webconfig.yaml" . | b64enc | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: init-script
+              mountPath: /scripts
+              readOnly: true
+            {{- if .Values.dynamicConfig.enabled }}
+            - name: {{ include "sql-exporter.dynamicConfig.volumeName" . }}
+              mountPath: /config-out
+            - name: {{ include "sql-exporter.dynamicConfig.secretVolumeName" . }}
+              readOnly: true
+              mountPath: /dsn
+            {{- end }}
+            {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
+            - name: web-config-overlay
+              mountPath: /web-config
+            {{- /* Mount auth secret or TLS secret (if shared) */ -}}
+            {{- $authSecret := .Values.webConfig.basicAuth.initFromSecret.secretName -}}
+            {{- $tlsSecret := .Values.webConfig.tls.secretName | default "" -}}
+            {{- if ne $authSecret $tlsSecret }}
+            - name: web-config-auth
+              readOnly: true
+              mountPath: /secret-src
+            {{- else }}
+            - name: web-config-tls
+              readOnly: true
+              mountPath: /secret-src
+            {{- end }}
+            {{- end }}
+          command:
+            - /bin/sh
+            - /scripts/init.sh
+{{- end }}
+{{- if .Values.initContainers }}
 {{ toYaml .Values.initContainers | nindent 8 }}
+{{- end }}
 {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -63,24 +161,58 @@ spec:
             - "-config.file=/etc/sql_exporter/sql_exporter.yml"
             - "-log.level={{ .Values.logLevel | default "info"  }}"
             - "-log.format={{ .Values.logFormat | default "logfmt" }}"
+            {{- if .Values.webConfig.enabled }}
+            {{- if .Values.webConfig.basicAuth.initFromSecret.enabled }}
+            - "-web.config.file=/etc/web-config/web-config.yml"
+            {{- else }}
+            - "-web.config.file=/etc/sql_exporter/web-config.yml"
+            {{- end }}
+            {{- end }}
             {{- if .Values.reloadEnabled }}
             - "-web.enable-reload"
             {{- end }}
           {{- if eq (include "sql-exporter.volumes" .) "\"true\"" }}
           volumeMounts:
-          {{- if .Values.createConfig }}
+          {{ if .Values.dynamicConfig.enabled }}
+          {{- /* DynamicConfig: init container generates sql_exporter.yml to emptyDir */ -}}
+          - name: {{ include "sql-exporter.dynamicConfig.volumeName" . }}
+            readOnly: true
+            mountPath: /etc/sql_exporter/
+          {{- if and .Values.webConfig.enabled (not .Values.webConfig.basicAuth.initFromSecret.enabled) }}
+          {{- /* Also mount web-config.yml from main secret as subPath */ -}}
+          - name: sql-exporter
+            readOnly: true
+            mountPath: /etc/sql_exporter/web-config.yml
+            subPath: web-config.yml
+          {{- end }}
+          {{- else if .Values.createConfig }}
+          {{- /* Static config: main secret contains sql_exporter.yml and optionally web-config.yml */ -}}
           - name: sql-exporter
             readOnly: true
             mountPath: /etc/sql_exporter/
           {{- end }}
-          {{- if .Values.collectorFiles }}
+          {{ if and .Values.webConfig.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
+          {{- /* InitContainer writes web-config.yml with bcrypt hash to emptyDir overlay */ -}}
+          - name: web-config-overlay
+            readOnly: true
+            mountPath: /etc/web-config
+          {{- end }}
+          {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}
+          {{- /* TLS cert/key from separate secret */ -}}
+          - name: web-config-tls
+            readOnly: true
+            mountPath: /tls
+          {{- end }}
+          {{ if .Values.collectorFiles }}
           - name: sql-collector
             readOnly: true
             mountPath: /etc/sql_exporter/collectors/
           {{- end }}
-          {{- range $v := .Values.extraVolumes }}
+          {{ if .Values.extraVolumes }}
+          {{ range $v := .Values.extraVolumes }}
           - name: {{ $v.name }}
             {{- toYaml $v.mount | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- end }}
           {{- with .Values.envFrom }}
@@ -107,18 +239,50 @@ spec:
               {{- end }}
             {{- end }}
             {{- end }}
+          {{ if not .Values.overrideLivenessProbe }}
+          {{- /* Auto-generate probe: tcpSocket if basic auth enabled, httpGet otherwise */ -}}
           livenessProbe:
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled }}
+            tcpSocket:
+              port: 9399
+            {{- else }}
             httpGet:
               path: /healthz
               port: 9399
+              scheme: {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}HTTPS{{ else }}HTTP{{ end }}
+            {{- end }}
+            initialDelaySeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
+            timeoutSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
+            periodSeconds: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}
+            failureThreshold: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.failureThreshold | default 3 }}{{ else }}3{{ end }}
+            successThreshold: {{ if .Values.livenessProbe }}{{ .Values.livenessProbe.successThreshold | default 1 }}{{ else }}1{{ end }}
+          {{- else if .Values.livenessProbe }}
+          {{- /* Complete override: use exact configuration from values */ -}}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{ if not .Values.overrideReadinessProbe }}
+          {{- /* Auto-generate probe: tcpSocket if basic auth enabled, httpGet otherwise */ -}}
           readinessProbe:
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled }}
+            tcpSocket:
+              port: 9399
+            {{- else }}
             httpGet:
               path: /healthz
               port: 9399
+              scheme: {{ if and .Values.webConfig.enabled .Values.webConfig.tls.secretName }}HTTPS{{ else }}HTTP{{ end }}
+            {{- end }}
+            initialDelaySeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.initialDelaySeconds | default 10 }}{{ else }}10{{ end }}
+            timeoutSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.timeoutSeconds | default 5 }}{{ else }}5{{ end }}
+            periodSeconds: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.periodSeconds | default 10 }}{{ else }}10{{ end }}
+            failureThreshold: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.failureThreshold | default 3 }}{{ else }}3{{ end }}
+            successThreshold: {{ if .Values.readinessProbe }}{{ .Values.readinessProbe.successThreshold | default 1 }}{{ else }}1{{ end }}
+          {{- else if .Values.readinessProbe }}
+          {{- /* Complete override: use exact configuration from values */ -}}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 9399
