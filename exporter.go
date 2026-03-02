@@ -26,7 +26,7 @@ var (
 	scrapeErrorsMetric *prometheus.CounterVec
 )
 
-// Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the default registry.
+// Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the custom registry.
 type Exporter interface {
 	prometheus.Gatherer
 
@@ -50,11 +50,12 @@ type exporter struct {
 	targets    []Target
 	jobFilters []string
 
-	ctx context.Context
+	ctx      context.Context
+	registry prometheus.Registerer
 }
 
 // NewExporter returns a new Exporter with the provided config.
-func NewExporter(configFile string) (Exporter, error) {
+func NewExporter(configFile string, registry prometheus.Registerer) (Exporter, error) {
 	c, err := config.Load(configFile)
 	if err != nil {
 		return nil, err
@@ -90,13 +91,14 @@ func NewExporter(configFile string) (Exporter, error) {
 		}
 	}
 
-	scrapeErrorsMetric = registerScrapeErrorMetric()
+	scrapeErrorsMetric = registerScrapeErrorMetric(registry)
 
 	return &exporter{
 		config:     c,
 		targets:    targets,
 		jobFilters: nil,
 		ctx:        context.Background(),
+		registry:   registry,
 	}, nil
 }
 
@@ -106,6 +108,7 @@ func (e *exporter) WithContext(ctx context.Context) Exporter {
 		targets:    e.targets,
 		jobFilters: e.jobFilters,
 		ctx:        ctx,
+		registry:   e.registry,
 	}
 }
 
@@ -285,12 +288,12 @@ func (e *exporter) DropErrorMetrics() {
 }
 
 // registerScrapeErrorMetric registers the metrics for the exporter itself.
-func registerScrapeErrorMetric() *prometheus.CounterVec {
+func registerScrapeErrorMetric(registry prometheus.Registerer) *prometheus.CounterVec {
 	scrapeErrors := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "scrape_errors_total",
 		Help: "Total number of scrape errors per job, target, collector and query",
 	}, svcMetricLabels)
-	SvcRegistry.MustRegister(scrapeErrors)
+	registry.MustRegister(scrapeErrors)
 	return scrapeErrors
 }
 
