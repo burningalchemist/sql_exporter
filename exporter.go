@@ -26,7 +26,7 @@ var (
 	scrapeErrorsMetric *prometheus.CounterVec
 )
 
-// Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the default registry.
+// Exporter is a prometheus.Gatherer that gathers SQL metrics from targets and merges them with the custom registry.
 type Exporter interface {
 	prometheus.Gatherer
 
@@ -50,11 +50,12 @@ type exporter struct {
 	targets    []Target
 	jobFilters []string
 
-	ctx context.Context
+	ctx      context.Context
+	registry prometheus.Registerer
 }
 
 // NewExporter returns a new Exporter with the provided config.
-func NewExporter(configFile string) (Exporter, error) {
+func NewExporter(configFile string, registry prometheus.Registerer) (Exporter, error) {
 	c, err := config.Load(configFile)
 	if err != nil {
 		return nil, err
@@ -90,13 +91,17 @@ func NewExporter(configFile string) (Exporter, error) {
 		}
 	}
 
-	scrapeErrorsMetric = registerScrapeErrorMetric()
+	scrapeErrorsMetric, err = registerScrapeErrorMetric(registry)
+	if err != nil {
+		return nil, err
+	}
 
 	return &exporter{
 		config:     c,
 		targets:    targets,
 		jobFilters: nil,
 		ctx:        context.Background(),
+		registry:   registry,
 	}, nil
 }
 
@@ -106,26 +111,28 @@ func (e *exporter) WithContext(ctx context.Context) Exporter {
 		targets:    e.targets,
 		jobFilters: e.jobFilters,
 		ctx:        ctx,
+		registry:   e.registry,
 	}
 }
 
-// Gather implements prometheus.Gatherer.
+// Gather implements prometheus.Gatherer. Should be called with a context-aware Exporter returned by WithContext() to
+// ensure the context is respected by collectors.
 func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 	var (
 		metricChan = make(chan Metric, capMetricChan)
 		errs       prometheus.MultiError
 	)
 
-	// Filter out jobs that are not in the jobFilters list
-	e.filterTargets(e.jobFilters)
+	// Take a local snapshot to avoid mutating e.targets while collectors are running.
+	targets := e.filteredTargets()
 
-	if len(e.targets) == 0 {
+	if len(targets) == 0 {
 		return nil, errors.New("no targets found")
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(len(e.targets))
-	for _, t := range e.targets {
+	wg.Add(len(targets))
+	for _, t := range targets {
 		go func(target Target) {
 			defer wg.Done()
 			target.Collect(e.ctx, metricChan)
@@ -189,16 +196,18 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 	return result, errs
 }
 
-func (e *exporter) filterTargets(jf []string) {
-	if len(jf) > 0 {
-		var filteredTargets []Target
-		for _, target := range e.targets {
-			if slices.Contains(jf, target.JobGroup()) {
-				filteredTargets = append(filteredTargets, target)
-			}
-		}
-		e.targets = filteredTargets
+func (e *exporter) filteredTargets() []Target {
+	if len(e.jobFilters) == 0 {
+		return e.targets
 	}
+
+	var filtered []Target
+	for _, target := range e.targets {
+		if slices.Contains(e.jobFilters, target.JobGroup()) {
+			filtered = append(filtered, target)
+		}
+	}
+	return filtered
 }
 
 // FilterScrapeErrorsTotal filters the scrape_errors_total metric family to only include metrics for the jobs in the
@@ -285,13 +294,22 @@ func (e *exporter) DropErrorMetrics() {
 }
 
 // registerScrapeErrorMetric registers the metrics for the exporter itself.
-func registerScrapeErrorMetric() *prometheus.CounterVec {
+func registerScrapeErrorMetric(registry prometheus.Registerer) (*prometheus.CounterVec, error) {
 	scrapeErrors := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "scrape_errors_total",
 		Help: "Total number of scrape errors per job, target, collector and query",
 	}, svcMetricLabels)
-	SvcRegistry.MustRegister(scrapeErrors)
-	return scrapeErrors
+
+	if err := registry.Register(scrapeErrors); err != nil {
+		var alreadyRegisteredErr prometheus.AlreadyRegisteredError
+		if errors.As(err, &alreadyRegisteredErr) {
+			slog.Debug("scrape_errors_total metric already registered, using existing metric")
+			return alreadyRegisteredErr.ExistingCollector.(*prometheus.CounterVec), nil
+		}
+		slog.Error("failed to register scrape_errors_total metric", "error", err)
+		return nil, err
+	}
+	return scrapeErrors, nil
 }
 
 // split comma separated list of key=value pairs and return a map of key value pairs
