@@ -1,15 +1,7 @@
 package config
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"log/slog"
-	"os"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awsConfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
 //
@@ -20,7 +12,6 @@ import (
 type TargetConfig struct {
 	Name          string   `yaml:"name,omitempty" env:"NAME"`               // name of the target
 	DSN           Secret   `yaml:"data_source_name" env:"DSN"`              // data source name to connect to
-	AwsSecretName string   `yaml:"aws_secret_name" env:"AWS_SECRET_NAME"`   // AWS secret name
 	CollectorRefs []string `yaml:"collectors" env:"COLLECTORS"`             // names of collectors to execute on the target
 	EnablePing    *bool    `yaml:"enable_ping,omitempty" env:"ENABLE_PING"` // ping the target before executing the collectors
 
@@ -42,10 +33,6 @@ func (t *TargetConfig) UnmarshalYAML(unmarshal func(any) error) error {
 		return err
 	}
 
-	if t.AwsSecretName != "" {
-		t.DSN = readDSNFromAwsSecretManager(t.AwsSecretName)
-	}
-
 	// Check required fields
 	if t.DSN == "" {
 		return fmt.Errorf("missing data_source_name for target %+v", t)
@@ -55,46 +42,4 @@ func (t *TargetConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	}
 
 	return checkOverflow(t.XXX, "target")
-}
-
-// AwsSecret is a struct that represents the structure of the secret stored in AWS Secrets Manager.
-type AwsSecret struct {
-	DSN Secret `json:"data_source_name"`
-}
-
-func readDSNFromAwsSecretManager(secretName string) Secret {
-	config, err := awsConfig.LoadDefaultConfig(context.TODO(), awsConfig.WithEC2IMDSRegion())
-	if err != nil {
-		slog.Error("unable to load AWS config", "error", err)
-		os.Exit(1)
-	}
-
-	// Create Secrets Manager client
-	svc := secretsmanager.NewFromConfig(config)
-
-	input := &secretsmanager.GetSecretValueInput{
-		SecretId:     aws.String(secretName),
-		VersionStage: aws.String("AWSCURRENT"), // VersionStage defaults to AWSCURRENT if unspecified
-	}
-
-	slog.Debug("reading AWS Secret", "name", secretName)
-	result, err := svc.GetSecretValue(context.TODO(), input)
-	if err != nil {
-		// For a list of exceptions thrown, see
-		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-		slog.Error("unable to read AWS Secret", "error", err)
-		os.Exit(1)
-	}
-
-	// Decrypts secret using the associated KMS key.
-	secretString := *result.SecretString
-
-	var awsSecret AwsSecret
-	jsonErr := json.Unmarshal([]byte(secretString), &awsSecret)
-
-	if jsonErr != nil {
-		slog.Error("unable to unmarshal AWS Secret")
-		os.Exit(1)
-	}
-	return Secret(awsSecret.DSN)
 }
