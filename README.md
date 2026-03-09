@@ -308,7 +308,7 @@ the value correctly.
 </details>
 
 <details>
-<summary>Accessing DSN from Secret Managers</summary>
+<summary>Using Secret Manager references (AWS/GCP/Vault)</summary>
 
 If the database runs on AWS or Google Cloud, you might want to store the DSN in their Secret Manager services and allow
 SQL Exporter to access it from there. This way you can avoid hardcoding credentials in the configuration file and
