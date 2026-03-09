@@ -28,14 +28,6 @@ var secretProviders = map[string]secretProvider{
 	"hashivault":        vaultProvider{},
 }
 
-// ClearSecretCache drops all cached secrets, e.g. on config reload.
-func ClearSecretCache() {
-	secretCache.Range(func(k, _ any) bool {
-		secretCache.Delete(k)
-		return true
-	})
-}
-
 // secretCacheKey returns a cache key for the secret, excluding query params
 // so that multiple DSNs referencing the same secret with different keys share one fetch.
 func secretCacheKey(u *url.URL) string {

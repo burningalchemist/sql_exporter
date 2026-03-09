@@ -12,9 +12,6 @@ func Reload(e Exporter, configFile *string) error {
 	slog.Warn("Reloading collectors has started...")
 	slog.Warn("Connections will not be changed upon the restart of the exporter")
 
-	// Clear the secret cache to ensure that any changes in secrets are picked up on reload
-	cfg.ClearSecretCache()
-
 	configNext, err := cfg.Load(*configFile)
 	if err != nil {
 		slog.Error("Error reading config file", "error", err)
@@ -52,7 +49,7 @@ func Reload(e Exporter, configFile *string) error {
 func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 	slog.Warn("Recreating target...")
 
-	// We want to preserve DSN from the previous config revision to avoid any connection changes
+	// Intended: we want to preserve connection details from the previous config. Only collectors will be updated.
 	nc.Target.DSN = cc.Target.DSN
 	// Apply the new target configuration
 	cc.Target = nc.Target
