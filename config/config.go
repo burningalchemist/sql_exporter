@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -51,6 +52,10 @@ func Load(configFile string) (*Config, error) {
 
 	if c.Globals == nil {
 		return nil, fmt.Errorf("empty or no configuration provided")
+	}
+
+	if err := c.resolveSecrets(); err != nil {
+		return nil, err
 	}
 
 	return &c, nil
@@ -102,10 +107,6 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 
 	// Populate collector references for the target/jobs.
 	if err := c.populateCollectorReferences(); err != nil {
-		return err
-	}
-
-	if err := c.resolveSecrets(); err != nil {
 		return err
 	}
 
@@ -262,17 +263,21 @@ func (c *Config) resolveSecrets() error {
 	resolver := &secretResolver{} // scoped here, GC'd when resolveSecrets returns
 
 	if c.Target != nil {
-		dsn, err := resolver.resolve(ctx, string(c.Target.DSN))
-		if err != nil {
-			return fmt.Errorf("error resolving target DSN: %w", err)
+		if isSecretRef(string(c.Target.DSN)) {
+			dsn, err := resolver.resolve(ctx, string(c.Target.DSN))
+			if err != nil {
+				return fmt.Errorf("error resolving target DSN: %w", err)
+			}
+			c.Target.DSN = Secret(dsn)
 		}
-		c.Target.DSN = Secret(dsn)
 	}
-
 	// Maps are reference types, so this will update the DSNs in place for all targets defined in jobs.
 	for _, job := range c.Jobs {
 		for _, staticConfig := range job.StaticConfigs {
 			for targetName, dsn := range staticConfig.Targets {
+				if !isSecretRef(string(dsn)) {
+					continue
+				}
 				resolved, err := resolver.resolve(ctx, string(dsn))
 				if err != nil {
 					return fmt.Errorf("error resolving DSN for target %q in job %q: %w", targetName,
@@ -284,4 +289,16 @@ func (c *Config) resolveSecrets() error {
 	}
 
 	return nil
+}
+
+// isSecretRef checks if the given value is a secret reference by parsing it as a URL and checking if the scheme matches
+// any registered secret provider.
+func isSecretRef(value string) bool {
+	u, err := url.Parse(value)
+	if err != nil {
+		return false
+	}
+
+	_, ok := secretProviders[u.Scheme]
+	return ok
 }
