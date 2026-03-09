@@ -29,7 +29,7 @@ const (
 )
 
 // ExporterHandlerFor returns an http.Handler for the provided Exporter.
-func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
+func ExporterHandlerFor(exporter sql_exporter.Exporter, registry prometheus.Gatherer) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx, cancel := contextFor(req, exporter)
 		defer cancel()
@@ -43,7 +43,7 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter) http.Handler {
 		}
 
 		// Go through prometheus.Gatherers to sanitize and sort metrics.
-		gatherer := prometheus.Gatherers{exporter.WithContext(ctx), sql_exporter.SvcRegistry}
+		gatherer := prometheus.Gatherers{exporter.WithContext(ctx), registry}
 		mfs, err := gatherer.Gather()
 		if err != nil {
 			switch t := err.(type) {

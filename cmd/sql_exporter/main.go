@@ -97,7 +97,7 @@ func main() {
 	}
 
 	slog.Warn("Starting SQL exporter", "versionInfo", version.Info(), "buildContext", version.BuildContext())
-	exporter, err := sql_exporter.NewExporter(*configFile)
+	exporter, err := sql_exporter.NewExporter(*configFile, sql_exporter.SvcRegistry)
 	if err != nil {
 		slog.Error("Error creating exporter", "error", err)
 		os.Exit(1)
@@ -113,7 +113,7 @@ func main() {
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { http.Error(w, "OK", http.StatusOK) })
 	http.HandleFunc("/", HomeHandlerFunc(*metricsPath))
 	http.HandleFunc("/config", ConfigHandlerFunc(*metricsPath, exporter))
-	http.Handle(*metricsPath, promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, ExporterHandlerFor(exporter)))
+	http.Handle(*metricsPath, promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, ExporterHandlerFor(exporter, sql_exporter.SvcRegistry)))
 	// Expose exporter metrics separately, for debugging purposes.
 	http.Handle("/sql_exporter_metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 	// Expose refresh handler to reload collectors and targets
