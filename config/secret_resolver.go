@@ -6,6 +6,14 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"sync"
+
+	"golang.org/x/sync/singleflight"
+)
+
+var (
+	secretCache  sync.Map
+	secretFlight singleflight.Group
 )
 
 // secretProvider is the interface that all secret store backends must implement.
@@ -20,9 +28,18 @@ var secretProviders = map[string]secretProvider{
 	"hashivault":        vaultProvider{},
 }
 
-// secretCacheKey returns a unique cache key for the given secret reference URL, which can be used to store and retrieve resolved secrets.
-func secretCacheKey(ref *url.URL) string {
-	return ref.Scheme + "://" + ref.Host + ref.Path + "?" + ref.RawQuery
+// ClearSecretCache drops all cached secrets, e.g. on config reload.
+func ClearSecretCache() {
+	secretCache.Range(func(k, _ any) bool {
+		secretCache.Delete(k)
+		return true
+	})
+}
+
+// secretCacheKey returns a cache key for the secret, excluding query params
+// so that multiple DSNs referencing the same secret with different keys share one fetch.
+func secretCacheKey(u *url.URL) string {
+	return u.Scheme + ":" + u.Host + u.Path
 }
 
 // resolveSecretDSN checks if the given value is a secret store URL and if so fetches and returns the DSN. Otherwise it
@@ -48,11 +65,11 @@ func resolveSecretDSN(ctx context.Context, value string) (string, error) {
 
 	slog.Debug("resolving DSN from secret store", "scheme", u.Scheme, "ref", u.Host+u.Path)
 
+	// Deduplicate concurrent fetches for the same secret.
 	raw, err, _ := secretFlight.Do(cacheKey, func() (any, error) {
 		if cached, hit := secretCache.Load(cacheKey); hit {
 			return cached.(string), nil
 		}
-
 		result, err := provider.getDSN(ctx, u)
 		if err != nil {
 			return "", fmt.Errorf("failed to resolve secret %q: %w", value, err)
@@ -60,7 +77,6 @@ func resolveSecretDSN(ctx context.Context, value string) (string, error) {
 		secretCache.Store(cacheKey, result)
 		return result, nil
 	})
-
 	if err != nil {
 		return "", err
 	}
