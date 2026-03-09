@@ -1,5 +1,4 @@
-// Package config provides the configuration structures and functions for
-// sql_exporter.
+// Package config provides the configuration structures and functions for sql_exporter.
 package config
 
 import (
@@ -8,13 +7,13 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/sethvargo/go-envconfig"
 	"gopkg.in/yaml.v3"
 )
 
-// MaxInt32 defines the maximum value of allowed integers
-// and serves to help us avoid overflow/wraparound issues.
+// MaxInt32 defines the maximum value of allowed integers and serves to help us avoid overflow/wraparound issues.
 const MaxInt32 int = 1<<31 - 1
 
 // EnvPrefix is the prefix for environment variables.
@@ -24,6 +23,10 @@ const (
 	EnvConfigFile string = EnvPrefix + "CONFIG"
 	EnvDebug      string = EnvPrefix + "DEBUG"
 )
+
+// secretResolutionTimeout is the maximum time allowed for resolving secrets from secret providers to prevent hanging
+// indefinitely if a secret provider is unresponsive.
+const secretResolutionTimeout = 30 * time.Second
 
 var (
 	EnablePing        bool
@@ -102,10 +105,15 @@ func (c *Config) UnmarshalYAML(unmarshal func(any) error) error {
 		return err
 	}
 
+	if err := c.resolveSecrets(); err != nil {
+		return err
+	}
+
 	return checkOverflow(c.XXX, "config")
 }
 
-// unmarshalConfig unmarshals the config, but does not populate global defaults, process environment variables, or check required fields.
+// unmarshalConfig unmarshals the config, but does not populate global defaults, process environment variables, or
+// check required fields.
 func (c *Config) unmarshalConfig(unmarshal func(any) error) error {
 	type plain Config
 	return unmarshal((*plain)(c))
@@ -162,7 +170,8 @@ func (c *Config) populateCollectorReferences() error {
 	}
 
 	for _, j := range c.Jobs {
-		cs, err := resolveCollectorRefs(j.CollectorRefs, colls, fmt.Sprintf("job %q", j.Name))
+		cs, err := resolveCollectorRefs(j.CollectorRefs, colls,
+			fmt.Sprintf("job %q", j.Name))
 		if err != nil {
 			return err
 		}
@@ -211,7 +220,8 @@ func (c *Config) loadCollectorFiles() error {
 
 			top := node.Content[0]
 			if top.Kind != yaml.MappingNode {
-				return fmt.Errorf("collector file %s must define a single YAML map/object at the top level", cf)
+				return fmt.Errorf("collector file %s must define a single YAML map/object at the top level",
+					cf)
 			}
 
 			// Check for 'collectors' key with a sequence value
@@ -238,6 +248,38 @@ func (c *Config) loadCollectorFiles() error {
 			// Append to the config's collectors.
 			c.Collectors = append(c.Collectors, &cc)
 			slog.Debug("Loaded collector", "name", cc.Name, "file", cf)
+		}
+	}
+
+	return nil
+}
+
+func (c *Config) resolveSecrets() error {
+	// Create a context with timeout for secret resolution to avoid hanging indefinitely if a secret provider is
+	// unresponsive.
+	ctx, cancel := context.WithTimeout(context.Background(), secretResolutionTimeout)
+	defer cancel()
+	resolver := &secretResolver{} // scoped here, GC'd when resolveSecrets returns
+
+	if c.Target != nil {
+		dsn, err := resolver.resolve(ctx, string(c.Target.DSN))
+		if err != nil {
+			return fmt.Errorf("error resolving target DSN: %w", err)
+		}
+		c.Target.DSN = Secret(dsn)
+	}
+
+	// Maps are reference types, so this will update the DSNs in place for all targets defined in jobs.
+	for _, job := range c.Jobs {
+		for _, staticConfig := range job.StaticConfigs {
+			for targetName, dsn := range staticConfig.Targets {
+				resolved, err := resolver.resolve(ctx, string(dsn))
+				if err != nil {
+					return fmt.Errorf("error resolving DSN for target %q in job %q: %w", targetName,
+						job.Name, err)
+				}
+				staticConfig.Targets[targetName] = Secret(resolved)
+			}
 		}
 	}
 

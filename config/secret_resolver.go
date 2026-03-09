@@ -11,10 +11,10 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
-var (
-	secretCache  sync.Map
-	secretFlight singleflight.Group
-)
+type secretResolver struct {
+	cache  sync.Map
+	flight singleflight.Group
+}
 
 // secretProvider is the interface that all secret store backends must implement.
 type secretProvider interface {
@@ -28,15 +28,15 @@ var secretProviders = map[string]secretProvider{
 	"hashivault":        vaultProvider{},
 }
 
-// secretCacheKey returns a cache key for the secret, excluding query params
-// so that multiple DSNs referencing the same secret with different keys share one fetch.
+// secretCacheKey returns a cache key for the secret, excluding query params so that multiple DSNs referencing the same
+// secret with different keys share one fetch.
 func secretCacheKey(u *url.URL) string {
 	return u.Scheme + ":" + u.Host + u.Path
 }
 
-// resolveSecretDSN checks if the given value is a secret store URL and if so fetches and returns the DSN. Otherwise it
-// returns the value unchanged.
-func resolveSecretDSN(ctx context.Context, value string) (string, error) {
+// resolve checks if the given value is a secret store URL and if so fetches and returns the DSN. Otherwise it returns
+// the value unchanged.
+func (r *secretResolver) resolve(ctx context.Context, value string) (string, error) {
 	u, err := url.Parse(value)
 	if err != nil {
 		return value, nil
@@ -50,7 +50,7 @@ func resolveSecretDSN(ctx context.Context, value string) (string, error) {
 	cacheKey := secretCacheKey(u)
 
 	// Check cache first
-	if cached, hit := secretCache.Load(cacheKey); hit {
+	if cached, hit := r.cache.Load(cacheKey); hit {
 		slog.Debug("cache hit for secret DSN", "scheme", u.Scheme, "ref", u.Host+u.Path)
 		return extractKey(cached.(string), u, value)
 	}
@@ -58,15 +58,15 @@ func resolveSecretDSN(ctx context.Context, value string) (string, error) {
 	slog.Debug("resolving DSN from secret store", "scheme", u.Scheme, "ref", u.Host+u.Path)
 
 	// Deduplicate concurrent fetches for the same secret.
-	raw, err, _ := secretFlight.Do(cacheKey, func() (any, error) {
-		if cached, hit := secretCache.Load(cacheKey); hit {
+	raw, err, _ := r.flight.Do(cacheKey, func() (any, error) {
+		if cached, hit := r.cache.Load(cacheKey); hit {
 			return cached.(string), nil
 		}
 		result, err := provider.getDSN(ctx, u)
 		if err != nil {
 			return "", fmt.Errorf("failed to resolve secret %q: %w", value, err)
 		}
-		secretCache.Store(cacheKey, result)
+		r.cache.Store(cacheKey, result)
 		return result, nil
 	})
 	if err != nil {
