@@ -308,51 +308,40 @@ the value correctly.
 </details>
 
 <details>
-<summary>Using AWS Secrets Manager</summary>
+<summary>Accessing DSN from Secret Managers</summary>
 
-If the database runs on AWS EC2 instance, this is a secure option to store the DSN without having it in
-the configuration file. To use this option:
+If the database runs on AWS or Google Cloud, you might want to store the DSN in their Secret Manager services and allow
+SQL Exporter to access it from there. This way you can avoid hardcoding credentials in the configuration file and
+benefit from the security features of these services. In addition, Vault is also available as a secret manager option
+for SQL Exporter.
 
-- Create a [secret](https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_create-basic-secret.html) in
-  key/value pairs format, specify Key `data_source_name` and then for Value enter the DSN value.
-  For the secret name, enter a name for your secret, and pass that name in the configuration file as a value for
-  `aws_secret_name` item under `target`. Secret json example:
+The secrets can be referenced in the configuration file as a value for `data_source_name` item using the following
+syntax:
 
-```json
-{
-  "data_source_name": "sqlserver://prom_user:prom_password@dbserver1.example.com:1433"
-}
+```
+awssecretsmanager://<SECRET_NAME>?region=<AWS_REGION>&key=<JSON_KEY>
+gcpsecretsmanager://<SECRET_NAME>?project_id=<GCP_PROJECT_ID>&key=<JSON_KEY>
+hashivault://<MOUNT>/<SECRET_PATH>?key=<JSON_KEY>
 ```
 
-- Configuration file example:
+The secret value can be a simple string or a JSON object. If it's a JSON object, you need to specify the `key` query
+parameter to indicate which value to use as the DSN. If the secret is a valid json but the key is not specified, SQL
+Exporter will try to use the value of `data_source_name` key by default. If a simple string, then it will be used as
+the DSN directly. Using JSON format gives more flexibility and allows to store additional information or multiple DSNs
+in the same secret resource.
 
-```yaml
-...
-target:
-  aws_secret_name: '<AWS_SECRET_NAME>'
-...
-```
+Secret references are supported for both single-target and jobs setups, so you can use them in both cases without any
+issues. Just make sure to use the correct syntax and provide the necessary parameters for the secret manager you
+choose. Also check the permissions and access policies for the secret manager to ensure that SQL Exporter has the
+necessary access to read the secrets.
 
-- Allow read-only access from EC2 IAM role to the secret by attaching a [resource-based
-policy](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_resource-based-policies.html) to
-the secret. Policy example:
+Secrets are only resolved at startup, so if the secret value changes, you need to restart SQL Exporter to pick up the
+new value. Or use the `reload` endpoint to trigger a configuration reload without restarting the process, but keep in
+mind that this will also reload the entire configuration, not just the secrets.
 
-```json
-{
-  "Version" : "2012-10-17",
-  "Statement" : [
-    {
-      "Effect": "Allow",
-      "Principal": {"AWS": "arn:aws:iam::123456789012:role/EC2RoleToAccessSecrets"},
-      "Action": "secretsmanager:GetSecretValue",
-      "Resource": "*",
-    }
-  ]
-}
-```
-
-Currently, AWS Secret Manager integration is only available for a single target configuration.
-
+For Vault, you also need to specify the `VAULT_ADDR` and `VAULT_TOKEN` environment variables to allow SQL Exporter to
+authenticate. This is a regular practice and goes beyond the scope of this document, so please refer to Vault
+documentation for more details on how to set up and use Vault for secrets management.
 </details>
 
 <details>
