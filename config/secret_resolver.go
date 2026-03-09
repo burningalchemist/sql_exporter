@@ -20,6 +20,11 @@ var secretProviders = map[string]secretProvider{
 	"hashivault":        vaultProvider{},
 }
 
+// secretCacheKey returns a unique cache key for the given secret reference URL, which can be used to store and retrieve resolved secrets.
+func secretCacheKey(ref *url.URL) string {
+	return ref.Scheme + "://" + ref.Host + ref.Path + "?" + ref.RawQuery
+}
+
 // resolveSecretDSN checks if the given value is a secret store URL and if so fetches and returns the DSN. Otherwise it
 // returns the value unchanged.
 func resolveSecretDSN(ctx context.Context, value string) (string, error) {
@@ -33,15 +38,38 @@ func resolveSecretDSN(ctx context.Context, value string) (string, error) {
 		return value, nil
 	}
 
-	slog.Debug("resolving DSN from secret store", "scheme", u.Scheme, "ref", u.Host+u.Path)
+	cacheKey := secretCacheKey(u)
 
-	raw, err := provider.getDSN(ctx, u)
-	if err != nil {
-		return "", fmt.Errorf("failed to resolve secret %q: %w", value, err)
+	// Check cache first
+	if cached, hit := secretCache.Load(cacheKey); hit {
+		slog.Debug("cache hit for secret DSN", "scheme", u.Scheme, "ref", u.Host+u.Path)
+		return extractKey(cached.(string), u, value)
 	}
 
-	// If the raw value is a JSON object, extract the key specified by the "key" query param, falling back to
-	// "data_source_name" for backward compatibility. If it's not JSON, return the raw value as-is.
+	slog.Debug("resolving DSN from secret store", "scheme", u.Scheme, "ref", u.Host+u.Path)
+
+	raw, err, _ := secretFlight.Do(cacheKey, func() (any, error) {
+		if cached, hit := secretCache.Load(cacheKey); hit {
+			return cached.(string), nil
+		}
+
+		result, err := provider.getDSN(ctx, u)
+		if err != nil {
+			return "", fmt.Errorf("failed to resolve secret %q: %w", value, err)
+		}
+		secretCache.Store(cacheKey, result)
+		return result, nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return extractKey(raw.(string), u, value)
+}
+
+// extractKey pulls the appropriate key from a raw secret value (JSON or plain string).
+func extractKey(raw string, u *url.URL, originalValue string) (string, error) {
 	var payload map[string]string
 	if jsonErr := json.Unmarshal([]byte(raw), &payload); jsonErr == nil {
 		key := u.Query().Get("key")
@@ -50,10 +78,9 @@ func resolveSecretDSN(ctx context.Context, value string) (string, error) {
 		}
 		val, ok := payload[key]
 		if !ok {
-			return "", fmt.Errorf("key %q not found in secret %q", key, value)
+			return "", fmt.Errorf("key %q not found in secret %q", key, originalValue)
 		}
 		return val, nil
 	}
-
 	return raw, nil
 }

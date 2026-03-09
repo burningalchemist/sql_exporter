@@ -11,6 +11,10 @@ import (
 func Reload(e Exporter, configFile *string) error {
 	slog.Warn("Reloading collectors has started...")
 	slog.Warn("Connections will not be changed upon the restart of the exporter")
+
+	// Clear the secret cache to ensure that any changes in secrets are picked up on reload
+	cfg.ClearSecretCache()
+
 	configNext, err := cfg.Load(*configFile)
 	if err != nil {
 		slog.Error("Error reading config file", "error", err)
