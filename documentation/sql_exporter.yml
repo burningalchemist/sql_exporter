@@ -15,9 +15,17 @@ global:
   scrape_timeout_offset: 500ms
   # Interval between dropping scrape_errors_total metric: by default (0s) metrics are persistent.
   scrape_error_drop_interval: 0s
-  # Minimum interval between collector runs: by default (0s) collectors are executed on every scrape.
+  # Minimum interval between collector runs: by default (0s) collectors are executed on every scrape. Essentially this
+  # is a cache TTL for collector results, but it also applies to the first scrape after startup, so it can be
+  # used to stagger expensive collector runs and avoid overloading the database.
   min_interval: 0s
-  # Maximum number of open connections to any one target. Metric queries will run concurrently on multiple connections,
+  # Delay between collector scrapes during the startup cache warmup. This can be used to avoid overloading the database
+  # with expensive queries (thundering herd) when the cache is empty and all collectors are executed at once. It's
+  # intended to be used together with 'min_interval' to stagger collector runs. By default (0s) all collectors are
+  # executed immediately on the first scrape.
+  warmup_delay: 0s 
+
+# Maximum number of open connections to any one target. Metric queries will run concurrently on multiple connections,
   # as will concurrent scrapes.
   #
   # If max_connections <= 0, then there is no limit on the number of open connections. The default is 3.
