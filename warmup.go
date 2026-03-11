@@ -20,7 +20,7 @@ func NewWarmup() *Warmup {
 	return &Warmup{done: make(chan struct{})}
 }
 
-// Wait blocks until warmup is complete or the context is cancelled.
+// Done returns true if warmup has completed without blocking.
 func (w *Warmup) Done() bool {
 	select {
 	case <-w.done:
@@ -82,9 +82,4 @@ func (w *Warmup) Run(targets []Target, delay time.Duration, timeout time.Duratio
 	}
 	wg.Wait()
 	slog.Info("Warmup completed")
-}
-
-type warmupTask struct {
-	target    *target
-	collector Collector
 }
