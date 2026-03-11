@@ -36,6 +36,8 @@ type Exporter interface {
 	Config() *config.Config
 	// UpdateTarget updates the targets field
 	UpdateTarget([]Target)
+	// Targets returns the current list of targets.
+	Targets() []Target
 	// SetJobFilters sets the jobFilters field
 	SetJobFilters([]string) error
 	// DropErrorMetrics resets the scrape_errors_total metric
@@ -252,6 +254,10 @@ func (e *exporter) FilterScrapeErrorsTotal(mfs []*dto.MetricFamily) []*dto.Metri
 // Config implements Exporter.
 func (e *exporter) Config() *config.Config {
 	return e.config
+}
+
+func (e *exporter) Targets() []Target {
+	return e.targets
 }
 
 // UpdateTarget implements Exporter.

@@ -109,11 +109,20 @@ func main() {
 	// Start signal handler to reload collector and target data.
 	signalHandler(exporter, *configFile)
 
+	metricsHandler := promhttp.InstrumentMetricHandler(
+		prometheus.DefaultRegisterer, ExporterHandlerFor(exporter, sql_exporter.SvcRegistry),
+	)
+
+	// Start warmup process if configured, and wrap the metrics handler with the warmup middleware to block /metrics requests until warmup is complete.
+	if warmupMiddleware := initWarmup(exporter); warmupMiddleware != nil {
+		metricsHandler = warmupMiddleware(metricsHandler)
+	}
+
 	// Setup and start webserver.
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { http.Error(w, "OK", http.StatusOK) })
 	http.HandleFunc("/", HomeHandlerFunc(*metricsPath))
 	http.HandleFunc("/config", ConfigHandlerFunc(*metricsPath, exporter))
-	http.Handle(*metricsPath, promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, ExporterHandlerFor(exporter, sql_exporter.SvcRegistry)))
+	http.Handle(*metricsPath, metricsHandler)
 	// Expose exporter metrics separately, for debugging purposes.
 	http.Handle("/sql_exporter_metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 	// Expose refresh handler to reload collectors and targets
