@@ -15,7 +15,7 @@ type GlobalConfig struct {
 	ScrapeErrorDropInterval model.Duration `yaml:"scrape_error_drop_interval" env:"SCRAPE_ERROR_DROP_INTERVAL"` // interval to drop scrape errors from the error counter, default is 0
 	MaxConnLifetime         time.Duration  `yaml:"max_connection_lifetime" env:"MAX_CONNECTION_LIFETIME"`       // maximum amount of time a connection may be reused to any one target
 
-	WarmupDelay model.Duration `yaml:"warmup_delay,omitempty" env:"WARMUP_DELAY"` // delay to wait before executing the first query after startup, default is 0
+	WarmupDelay model.Duration `yaml:"warmup_delay,omitempty" env:"WARMUP_DELAY"` // delay between executing collectors during cache population at startup, default is 0
 
 	MaxConns     int `yaml:"max_connections" env:"MAX_CONNECTIONS"`           // maximum number of open connections to any one target
 	MaxIdleConns int `yaml:"max_idle_connections" env:"MAX_IDLE_CONNECTIONS"` // maximum number of idle connections to any one target

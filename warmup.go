@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-// Warmup pre-populates collector caches on startup by sequentially triggering
-// each collector with a configurable delay between them, avoiding the thundering
-// herd problem where all collectors hit the database simultaneously on first scrape.
+// Warmup pre-populates collector caches on startup by sequentially triggering each collector with a configurable delay
+// between them, avoiding the thundering herd problem where all collectors hit the database simultaneously on first
+// scrape.
 type Warmup struct {
 	done chan struct{}
 }
@@ -30,8 +30,8 @@ func (w *Warmup) Done() bool {
 	}
 }
 
-// Run sequentially triggers each collector across all targets with a delay
-// between each, pre-populating the in-memory caches before the first real scrape.
+// Run sequentially triggers each collector across all targets with a delay between each, pre-populating the in-memory
+// caches before the first real scrape.
 func (w *Warmup) Run(targets []Target, delay time.Duration, timeout time.Duration) {
 	defer close(w.done)
 

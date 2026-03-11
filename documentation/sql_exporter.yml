@@ -24,8 +24,7 @@ global:
   # intended to be used together with 'min_interval' to stagger collector runs. By default (0s) all collectors are
   # executed immediately on the first scrape.
   warmup_delay: 0s 
-
-# Maximum number of open connections to any one target. Metric queries will run concurrently on multiple connections,
+  # Maximum number of open connections to any one target. Metric queries will run concurrently on multiple connections,
   # as will concurrent scrapes.
   #
   # If max_connections <= 0, then there is no limit on the number of open connections. The default is 3.

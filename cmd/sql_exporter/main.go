@@ -44,8 +44,10 @@ var (
 func init() {
 	prometheus.MustRegister(info.NewCollector("sql_exporter"))
 	flag.BoolVar(&cfg.EnablePing, "config.enable-ping", true, "Enable ping for targets")
-	flag.BoolVar(&cfg.IgnoreMissingVals, "config.ignore-missing-values", false, "[EXPERIMENTAL] Ignore results with missing values for the requested columns")
-	flag.StringVar(&cfg.DsnOverride, "config.data-source-name", "", "Data source name to override the value in the configuration file with")
+	flag.BoolVar(&cfg.IgnoreMissingVals, "config.ignore-missing-values",
+		false, "[EXPERIMENTAL] Ignore results with missing values for the requested columns")
+	flag.StringVar(&cfg.DsnOverride, "config.data-source-name", "",
+		"Data source name to override the value in the configuration file with")
 	flag.StringVar(&cfg.TargetLabel, "config.target-label", "target", "Target label name")
 }
 
@@ -96,7 +98,8 @@ func main() {
 		os.Exit(0)
 	}
 
-	slog.Warn("Starting SQL exporter", "versionInfo", version.Info(), "buildContext", version.BuildContext())
+	slog.Warn("Starting SQL exporter", "versionInfo", version.Info(), "buildContext",
+		version.BuildContext())
 	exporter, err := sql_exporter.NewExporter(*configFile, sql_exporter.SvcRegistry)
 	if err != nil {
 		slog.Error("Error creating exporter", "error", err)
@@ -113,7 +116,8 @@ func main() {
 		prometheus.DefaultRegisterer, ExporterHandlerFor(exporter, sql_exporter.SvcRegistry),
 	)
 
-	// Start warmup process if configured, and wrap the metrics handler with the warmup middleware to block /metrics requests until warmup is complete.
+	// Start warmup process if configured, and wrap the metrics handler with the warmup middleware to block /metrics
+	// requests until warmup is complete.
 	if warmupMiddleware := initWarmup(exporter); warmupMiddleware != nil {
 		metricsHandler = warmupMiddleware(metricsHandler)
 	}
@@ -124,7 +128,8 @@ func main() {
 	http.HandleFunc("/config", ConfigHandlerFunc(*metricsPath, exporter))
 	http.Handle(*metricsPath, metricsHandler)
 	// Expose exporter metrics separately, for debugging purposes.
-	http.Handle("/sql_exporter_metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
+	http.Handle("/sql_exporter_metrics", promhttp.HandlerFor(prometheus.DefaultGatherer,
+		promhttp.HandlerOpts{}))
 	// Expose refresh handler to reload collectors and targets
 	if *enableReload {
 		http.HandleFunc("/reload", reloadHandler(exporter, *configFile))
