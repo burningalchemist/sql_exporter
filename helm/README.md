@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.14.2](https://img.shields.io/badge/Version-0.14.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.19.1](https://img.shields.io/badge/AppVersion-0.19.1-informational?style=flat-square)
+![Version: 0.15.0](https://img.shields.io/badge/Version-0.15.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.20.0](https://img.shields.io/badge/AppVersion-0.20.0-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -106,11 +106,12 @@ as an example.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| config | object | `{"global":{"max_connections":3,"max_idle_connections":3,"min_interval":"0s","scrape_error_drop_interval":"0s","scrape_timeout":"10s","scrape_timeout_offset":"500ms"}}` | SQL Exporter configuration, can be a dictionary, or a template yaml string. |
+| config | object | `{"global":{"max_connections":3,"max_idle_connections":3,"min_interval":"0s","scrape_error_drop_interval":"0s","scrape_timeout":"10s","scrape_timeout_offset":"500ms","warmup_delay":"0s"}}` | SQL Exporter configuration, can be a dictionary, or a template yaml string. |
 | config.global.scrape_timeout | string | `"10s"` | Scrape timeout |
 | config.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
 | config.global.scrape_error_drop_interval | string | `"0s"` | Interval between dropping scrape_errors_total metric: by default the metric is persistent. |
 | config.global.min_interval | string | `"0s"` | Minimum interval between collector runs. |
+| config.global.warmup_delay | string | `"0s"` | Delay between collector scrapes during the startup cache warmup. Disabled by default. |
 | config.global.max_connections | int | `3` | Number of open connections. |
 | config.global.max_idle_connections | int | `3` | Number of idle connections. |
 | target | object | `nil` | Check documentation. Mutually exclusive with `jobs`  |
