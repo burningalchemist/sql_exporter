@@ -1,0 +1,68 @@
+# Example: Helm values for TLS-only configuration
+# This example shows how to enable TLS using certificates from a Kubernetes secret
+#
+# Prerequisites:
+#   1. Create a secret with TLS certificates (see secret-tls.yaml for detailed instructions)
+#
+#   Quick start - create TLS secret:
+#      kubectl create secret tls sql-exporter-tls \
+#        --cert=path/to/cert.crt \
+#        --key=path/to/cert.key
+#
+#   For more options (cert-manager, self-signed, base64 YAML), see:
+#      secret-tls.yaml in this directory
+#
+# Usage:
+#   helm install sql-exporter ../../helm -f values-example.yaml
+
+image:
+  repository: burningalchemist/sql_exporter
+  tag: "0.18.6"
+
+# Static configuration with target and collectors
+createConfig: true
+config:
+  global:
+    scrape_timeout: 10s
+  target:
+    data_source_name: "postgres://username:password@hostname:5432/database?sslmode=disable"
+    collectors:
+      - pg_stat_activity
+  collectors:
+    - collector_name: pg_stat_activity
+      metrics:
+        - metric_name: pg_stat_activity_count
+          type: gauge
+          help: 'Number of connections by state'
+          key_labels:
+            - state
+          values:
+            - count
+          query: |
+            SELECT
+              state,
+              COUNT(*) as count
+            FROM pg_stat_activity
+            GROUP BY state
+
+# Enable web configuration with TLS
+webConfig:
+  enabled: true
+  tls:
+    # Reference to the Kubernetes secret containing TLS certificates
+    secretName: sql-exporter-tls
+    # Keys within the secret (defaults shown, can be omitted if using standard names)
+    certKey: tls.crt
+    keyKey: tls.key
+    # Optional: Projected filenames in the container (defaults match certKey/keyKey, can be omitted)
+    certFile: tls.crt
+    keyFile: tls.key
+
+# ServiceMonitor configuration for Prometheus Operator
+# Note: This chart uses ServiceMonitor (enabled by default) for Prometheus discovery.
+# The prometheus.io/* annotations are NOT needed and are ignored by Prometheus Operator.
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  # Prometheus Operator's ServiceMonitor will use HTTPS and skip certificate validation by default
+

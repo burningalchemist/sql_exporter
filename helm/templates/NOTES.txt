@@ -1,7 +1,27 @@
 {{- $conf := include "sql_exporter.config.yaml" . | fromYaml -}}
-------------------------------
-Hello there! 
+{{- $dynamicConf := .Values.dynamicConfig.template | fromYaml -}}
+{{- $hasCollectors := false -}}
+{{- $source := "" -}}
 
+{{- if .Values.dynamicConfig.enabled -}}
+  {{- if $dynamicConf.collectors -}}
+    {{- $hasCollectors = true -}}
+    {{- $source = "dynamicConfig.template" -}}
+  {{- end -}}
+{{- else if .Values.createConfig -}}
+  {{- if $conf.collectors -}}
+    {{- $hasCollectors = true -}}
+    {{- $source = "config.collectors" -}}
+  {{- else if .Values.collectorFiles -}}
+    {{- $hasCollectors = true -}}
+    {{- $source = "collectorFiles" -}}
+  {{- end -}}
+{{- else -}}
+  {{- $hasCollectors = true -}}
+  {{- $source = "external configuration" -}}
+{{- end -}}
+
+{{- if and .Values.createConfig (not .Values.dynamicConfig.enabled) }}
 {{- if and (not $conf.target ) (not $conf.jobs)}}
 ------------------------------
 
@@ -9,18 +29,23 @@ It seems like you haven't configured the target, please check the example here:
  
  https://github.com/burningalchemist/sql_exporter/blob/master/documentation/sql_exporter.yml#L30
 
-In case you need to have multiple targets, you can confiure jobs instead, have a look here
+In case you need to have multiple targets, you can configure jobs instead, have a look here
 
  https://github.com/burningalchemist/sql_exporter#multiple-database-connections
 
 {{- end}}
+{{- end }}
 
-{{- if and (not $conf.collectors) (not $conf.collectorFiles)}}
-
+{{- if $hasCollectors }}
+------------------------------
+✓ Collectors configured in values file section {{ $source }}
+------------------------------
+{{- else }}
 ------------------------------
 You need to configure either collectors or collectorFiles (or both), please have a look at the example here:
 
  https://github.com/burningalchemist/sql_exporter#multiple-database-connections
 
+For dynamicConfig, add collectors to dynamicConfig.template in your values file.
+------------------------------
 {{- end }}
-

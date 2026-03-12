@@ -32,7 +32,7 @@ spec:
             service:
               name: {{ include "sql-exporter.fullname" . }}
               port:
-                number: {{ .Values.service.port }}
+                number: {{ include "sql-exporter.servicePort" . }}
     {{- if .Values.ingress.host }}
     host: {{ .Values.ingress.host }}
     {{- end }}
