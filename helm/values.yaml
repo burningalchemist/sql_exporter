@@ -171,6 +171,8 @@ config:
     scrape_error_drop_interval: 0s
     # -- Minimum interval between collector runs.
     min_interval: 0s
+    # -- Delay between collector scrapes during the startup cache warmup. Disabled by default.
+    warmup_delay: 0s
     # -- Number of open connections.
     max_connections: 3
     # -- Number of idle connections.
