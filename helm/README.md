@@ -1,6 +1,8 @@
 # sql-exporter
 
-![Version: 0.15.0](https://img.shields.io/badge/Version-0.15.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.20.0](https://img.shields.io/badge/AppVersion-0.20.0-informational?style=flat-square)
+
+
+![Version: 0.16.0](https://img.shields.io/badge/Version-0.16.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.20.0](https://img.shields.io/badge/AppVersion-0.20.0-informational?style=flat-square) 
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -13,6 +15,9 @@ Database-agnostic SQL exporter for Prometheus
 | Name | Email | Url |
 | ---- | ------ | --- |
 | Nikolai Rodionov | <allanger@zohomail.com> | <https://badhouseplants.net> |
+
+
+
 
 ## Installing the Chart
 
@@ -44,6 +49,17 @@ Take a look on how it's done at the
 [nginx ingress controller](https://kubernetes.github.io/ingress-nginx/examples/auth/basic/)
 as an example.
 
+## Security Features
+
+This chart supports TLS/HTTPS encryption and basic authentication for the metrics endpoint:
+
+- **TLS Encryption**: Configure `webConfig.tls.secretName` to enable HTTPS with TLS 1.3 support and configurable cipher suites
+- **Basic Authentication**: Set `webConfig.basicAuth.enabled` to protect metrics with bcrypt-hashed passwords (automatically hashed from plaintext secrets via init container)
+- **Separate Secrets**: TLS certificates and authentication passwords can use the same secret or separate secrets for flexibility
+- **ServiceMonitor Integration**: Prometheus ServiceMonitor automatically configures HTTPS and authentication when enabled
+
+See the [examples directory](../examples/) for complete configuration examples: `tls-only`, `auth-only`, and `tls-auth-dynamic`.
+
 ## Chart Values
 
 ### General parameters
@@ -59,7 +75,6 @@ as an example.
 | image.tag | string | `appVersion` value from `Chart.yaml` | Image tag |
 | imagePullSecrets | list | `[]` | Secrets with credentials to pull images from a private registry |
 | service.type | string | `"ClusterIP"` | Service type |
-| service.port | int | `80` | Service port |
 | service.labels | object | `{}` | Service labels |
 | service.annotations | object | `{}` | Service annotations |
 | ingress.enabled | bool | `false` |  |
@@ -77,18 +92,28 @@ as an example.
 | extraManifests | list | `[]` | Arbitrary manifests list |
 | serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
-| livenessProbe.initialDelaySeconds | int | `5` |  |
-| livenessProbe.timeoutSeconds | int | `30` |  |
-| readinessProbe.initialDelaySeconds | int | `5` |  |
-| readinessProbe.timeoutSeconds | int | `30` |  |
 | resources | object | `{}` | Resource limits and requests for the application controller pods |
 | podLabels | object | `{}` | Pod labels |
 | podAnnotations | object | `{}` | Pod annotations |
 | podSecurityContext | object | `{}` | Pod security context |
 | createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
-| logLevel | string | `"debug"` | Set log level (info if unset) |
+| logLevel | string | `"info"` | Set log level (info if unset) |
 | logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
+| webConfig | object | `{"basicAuth":{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}},"enabled":false,"template":"","tls":{"certFile":"tls.crt","certKey":"tls.crt","keyFile":"tls.key","keyKey":"tls.key","secretName":""}}` | Enable and configure Prometheus web config file support web-config.yml is automatically placed at /etc/sql_exporter/web-config.yml |
+| webConfig.template | string | `""` | Template for web-config content (Exporter Toolkit format). Set to empty string to use default template (defined in _helpers.tpl) Default: TLS 1.3 with AES-GCM cipher suites, uses cert from webConfig.tls.secretName You can override with your own YAML string here if needed |
+| webConfig.tls.secretName | string | `""` | Optional secret that holds tls.crt/tls.key. When set, it is mounted and used by web-config. |
+| webConfig.tls.certKey | string | `"tls.crt"` | Key names within the secret for certificate and key |
+| webConfig.tls.certFile | string | `"tls.crt"` | Filenames to project into the container; defaults match certKey/keyKey |
+| webConfig.basicAuth.enabled | bool | `false` | Enable basic auth in web-config; passwords must be bcrypt hashes |
+| webConfig.basicAuth.username | string | `"prometheus"` | Username to protect /metrics |
+| webConfig.basicAuth.bcryptCost | int | `12` | Bcrypt cost used when hashing via initFromSecret |
+| webConfig.basicAuth.users | object | `{}` | Map of username: bcryptHash (when not using initFromSecret) |
+| webConfig.basicAuth.initFromSecret.enabled | bool | `false` | Use an initContainer to read plaintext from a secret and bcrypt it into web-config |
+| webConfig.basicAuth.initFromSecret.secretName | string | `""` | Secret name containing plaintext password |
+| webConfig.basicAuth.initFromSecret.secretKey | string | `"password"` | Key in the secret that contains plaintext password |
+| webConfig.basicAuth.initFromSecret.image | string | `"httpd:alpine"` | Image used for bcrypt hashing (httpd:alpine has htpasswd at /usr/local/apache2/bin/htpasswd) |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
+
 
 ### Prometheus ServiceMonitor
 
@@ -100,18 +125,18 @@ as an example.
 | serviceMonitor.metricRelabelings | object | `{}` | ServiceMonitor metric relabelings |
 | serviceMonitor.relabelings | object | `{}` | ServiceMonitor relabelings |
 | serviceMonitor.namespace | string | `nil` | ServiceMonitor namespace override (default is .Release.Namespace) |
+| serviceMonitor.selector | object | `{}` | Additional labels for ServiceMonitor (for Prometheus serviceMonitorSelector matching) Example: selector: { monitored: dox-prometheus } |
 | serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout |
 
 ### Configuration
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| config | object | `{"global":{"max_connections":3,"max_idle_connections":3,"min_interval":"0s","scrape_error_drop_interval":"0s","scrape_timeout":"10s","scrape_timeout_offset":"500ms","warmup_delay":"0s"}}` | SQL Exporter configuration, can be a dictionary, or a template yaml string. |
+| config | object | `{"global":{"max_connections":3,"max_idle_connections":3,"min_interval":"0s","scrape_error_drop_interval":"0s","scrape_timeout":"10s","scrape_timeout_offset":"500ms"}}` | SQL Exporter configuration, can be a dictionary, or a template yaml string. |
 | config.global.scrape_timeout | string | `"10s"` | Scrape timeout |
 | config.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
 | config.global.scrape_error_drop_interval | string | `"0s"` | Interval between dropping scrape_errors_total metric: by default the metric is persistent. |
 | config.global.min_interval | string | `"0s"` | Minimum interval between collector runs. |
-| config.global.warmup_delay | string | `"0s"` | Delay between collector scrapes during the startup cache warmup. Disabled by default. |
 | config.global.max_connections | int | `3` | Number of open connections. |
 | config.global.max_idle_connections | int | `3` | Number of idle connections. |
 | target | object | `nil` | Check documentation. Mutually exclusive with `jobs`  |
