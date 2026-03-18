@@ -202,15 +202,19 @@ webConfig:
   # Default: TLS 1.3 with AES-GCM cipher suites, uses cert from webConfig.tls.secretName
   # You can override with your own YAML string here if needed
   template: ""
+  # -- TLS configuration for web-config
   tls:
     # -- Optional secret that holds tls.crt/tls.key. When set, it is mounted and used by web-config.
     secretName: ""
-    # -- Key names within the secret for certificate and key
+    # -- Key name within the secret for certificate
     certKey: tls.crt
+    # -- Key name within the secret for key
     keyKey: tls.key
-    # -- Filenames to project into the container; defaults match certKey/keyKey
+    # -- Filename to project the certificate into the container
     certFile: tls.crt
+    # -- Filename to project the key into the container
     keyFile: tls.key
+  # -- Basic authentication configuration for web-config
   basicAuth:
     # -- Enable basic auth in web-config; passwords must be bcrypt hashes
     enabled: false
@@ -220,6 +224,7 @@ webConfig:
     bcryptCost: 12
     # -- Map of username: bcryptHash (when not using initFromSecret)
     users: {}
+    # -- Initialize basic auth from plaintext secret using bcrypt
     initFromSecret:
       # -- Use an initContainer to read plaintext from a secret and bcrypt it into web-config
       enabled: false
@@ -229,6 +234,7 @@ webConfig:
       secretKey: password
       # -- Image used for bcrypt hashing (httpd:alpine has htpasswd at /usr/local/apache2/bin/htpasswd)
       image: httpd:alpine
+      # -- Image pull policy for bcrypt hashing image
       imagePullPolicy: IfNotPresent
 # -- Enable reload collector data handler (endpoint /reload)
 reloadEnabled: false

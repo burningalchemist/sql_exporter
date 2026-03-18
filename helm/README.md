@@ -1,8 +1,6 @@
 # sql-exporter
 
-
-
-![Version: 0.16.0](https://img.shields.io/badge/Version-0.16.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.20.0](https://img.shields.io/badge/AppVersion-0.20.0-informational?style=flat-square) 
+![Version: 0.16.0](https://img.shields.io/badge/Version-0.16.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.20.0](https://img.shields.io/badge/AppVersion-0.20.0-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -15,9 +13,6 @@ Database-agnostic SQL exporter for Prometheus
 | Name | Email | Url |
 | ---- | ------ | --- |
 | Nikolai Rodionov | <allanger@zohomail.com> | <https://badhouseplants.net> |
-
-
-
 
 ## Installing the Chart
 
@@ -58,7 +53,7 @@ This chart supports TLS/HTTPS encryption and basic authentication for the metric
 - **Separate Secrets**: TLS certificates and authentication passwords can use the same secret or separate secrets for flexibility
 - **ServiceMonitor Integration**: Prometheus ServiceMonitor automatically configures HTTPS and authentication when enabled
 
-See the [examples directory](../examples/) for complete configuration examples: `tls-only`, `auth-only`, and `tls-auth-dynamic`.
+See the [examples directory](../examples/) for complete configuration examples: `tls-only`, `auth-only`, and `tls-auth`.
 
 ## Chart Values
 
@@ -66,54 +61,59 @@ See the [examples directory](../examples/) for complete configuration examples: 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| nameOverride | string | `""` | Provide a name in place of `sql-exporter` |
-| fullnameOverride | string | `""` | String to fully override "sql-exporter.fullname" |
-| commonLabels | object | `{}` | Common labels to add to all deployed resources |
 | commonAnnotations | object | `{}` | Common annotations to add to all the deployed resources |
-| image.repository | string | `"burningalchemist/sql_exporter"` | Image repository |
+| commonLabels | object | `{}` | Common labels to add to all deployed resources |
+| createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
+| extraContainers | object | `{}` | Arbitrary sidecar containers list |
+| extraManifests | list | `[]` | Arbitrary manifests list |
+| fullnameOverride | string | `""` | String to fully override "sql-exporter.fullname" |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy |
+| image.repository | string | `"burningalchemist/sql_exporter"` | Image repository |
 | image.tag | string | `appVersion` value from `Chart.yaml` | Image tag |
 | imagePullSecrets | list | `[]` | Secrets with credentials to pull images from a private registry |
-| service.type | string | `"ClusterIP"` | Service type |
-| service.labels | object | `{}` | Service labels |
-| service.annotations | object | `{}` | Service annotations |
-| ingress.enabled | bool | `false` |  |
-| ingress.labels | object | `{}` | Ingress labels |
 | ingress.annotations | object | `{}` | Ingress annotations |
-| ingress.ingressClassName | string | `""` | Ingress class name |
+| ingress.enabled | bool | `false` |  |
 | ingress.host | string | `""` | Ingress host |
+| ingress.ingressClassName | string | `""` | Ingress class name |
+| ingress.labels | object | `{}` | Ingress labels |
 | ingress.path | string | `"/"` | Ingress path |
 | ingress.tls | object | `{"crt":"","enabled":false,"key":"","secretName":""}` | Ingress TLS, can be defined by cert secret, or by key and cert. |
-| ingress.tls.secretName | string | `""` | Ingress tls secret if already exists. |
 | ingress.tls.crt | string | `""` | Ingress tls.crt, required if you don't have secret name. |
 | ingress.tls.key | string | `""` | Ingress tls.key, required if you don't have secret name. |
-| extraContainers | object | `{}` | Arbitrary sidecar containers list |
+| ingress.tls.secretName | string | `""` | Ingress tls secret if already exists. |
 | initContainers | object | `{}` | Arbitrary sidecar containers list for 1.29+ kubernetes |
-| extraManifests | list | `[]` | Arbitrary manifests list |
-| serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
-| serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
-| resources | object | `{}` | Resource limits and requests for the application controller pods |
-| podLabels | object | `{}` | Pod labels |
-| podAnnotations | object | `{}` | Pod annotations |
-| podSecurityContext | object | `{}` | Pod security context |
-| createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
-| logLevel | string | `"info"` | Set log level (info if unset) |
 | logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
-| webConfig | object | `{"basicAuth":{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}},"enabled":false,"template":"","tls":{"certFile":"tls.crt","certKey":"tls.crt","keyFile":"tls.key","keyKey":"tls.key","secretName":""}}` | Enable and configure Prometheus web config file support web-config.yml is automatically placed at /etc/sql_exporter/web-config.yml |
-| webConfig.template | string | `""` | Template for web-config content (Exporter Toolkit format). Set to empty string to use default template (defined in _helpers.tpl) Default: TLS 1.3 with AES-GCM cipher suites, uses cert from webConfig.tls.secretName You can override with your own YAML string here if needed |
-| webConfig.tls.secretName | string | `""` | Optional secret that holds tls.crt/tls.key. When set, it is mounted and used by web-config. |
-| webConfig.tls.certKey | string | `"tls.crt"` | Key names within the secret for certificate and key |
-| webConfig.tls.certFile | string | `"tls.crt"` | Filenames to project into the container; defaults match certKey/keyKey |
-| webConfig.basicAuth.enabled | bool | `false` | Enable basic auth in web-config; passwords must be bcrypt hashes |
-| webConfig.basicAuth.username | string | `"prometheus"` | Username to protect /metrics |
-| webConfig.basicAuth.bcryptCost | int | `12` | Bcrypt cost used when hashing via initFromSecret |
-| webConfig.basicAuth.users | object | `{}` | Map of username: bcryptHash (when not using initFromSecret) |
-| webConfig.basicAuth.initFromSecret.enabled | bool | `false` | Use an initContainer to read plaintext from a secret and bcrypt it into web-config |
-| webConfig.basicAuth.initFromSecret.secretName | string | `""` | Secret name containing plaintext password |
-| webConfig.basicAuth.initFromSecret.secretKey | string | `"password"` | Key in the secret that contains plaintext password |
-| webConfig.basicAuth.initFromSecret.image | string | `"httpd:alpine"` | Image used for bcrypt hashing (httpd:alpine has htpasswd at /usr/local/apache2/bin/htpasswd) |
+| logLevel | string | `"info"` | Set log level (info if unset) |
+| nameOverride | string | `""` | Provide a name in place of `sql-exporter` |
+| podAnnotations | object | `{}` | Pod annotations |
+| podLabels | object | `{}` | Pod labels |
+| podSecurityContext | object | `{}` | Pod security context |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
-
+| resources | object | `{}` | Resource limits and requests for the application controller pods |
+| service.annotations | object | `{}` | Service annotations |
+| service.labels | object | `{}` | Service labels |
+| service.type | string | `"ClusterIP"` | Service type |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
+| serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
+| webConfig | object | `{"basicAuth":{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}},"enabled":false,"template":"","tls":{"certFile":"tls.crt","certKey":"tls.crt","keyFile":"tls.key","keyKey":"tls.key","secretName":""}}` | Enable and configure Prometheus web config file support web-config.yml is automatically placed at /etc/sql_exporter/web-config.yml |
+| webConfig.basicAuth | object | `{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}}` | Basic authentication configuration for web-config |
+| webConfig.basicAuth.bcryptCost | int | `12` | Bcrypt cost used when hashing via initFromSecret |
+| webConfig.basicAuth.enabled | bool | `false` | Enable basic auth in web-config; passwords must be bcrypt hashes |
+| webConfig.basicAuth.initFromSecret | object | `{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""}` | Initialize basic auth from plaintext secret using bcrypt |
+| webConfig.basicAuth.initFromSecret.enabled | bool | `false` | Use an initContainer to read plaintext from a secret and bcrypt it into web-config |
+| webConfig.basicAuth.initFromSecret.image | string | `"httpd:alpine"` | Image used for bcrypt hashing (httpd:alpine has htpasswd at /usr/local/apache2/bin/htpasswd) |
+| webConfig.basicAuth.initFromSecret.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy for bcrypt hashing image |
+| webConfig.basicAuth.initFromSecret.secretKey | string | `"password"` | Key in the secret that contains plaintext password |
+| webConfig.basicAuth.initFromSecret.secretName | string | `""` | Secret name containing plaintext password |
+| webConfig.basicAuth.username | string | `"prometheus"` | Username to protect /metrics |
+| webConfig.basicAuth.users | object | `{}` | Map of username: bcryptHash (when not using initFromSecret) |
+| webConfig.template | string | `""` | Template for web-config content (Exporter Toolkit format). Set to empty string to use default template (defined in _helpers.tpl) Default: TLS 1.3 with AES-GCM cipher suites, uses cert from webConfig.tls.secretName You can override with your own YAML string here if needed |
+| webConfig.tls | object | `{"certFile":"tls.crt","certKey":"tls.crt","keyFile":"tls.key","keyKey":"tls.key","secretName":""}` | TLS configuration for web-config |
+| webConfig.tls.certFile | string | `"tls.crt"` | Filename to project the certificate into the container |
+| webConfig.tls.certKey | string | `"tls.crt"` | Key name within the secret for certificate |
+| webConfig.tls.keyFile | string | `"tls.key"` | Filename to project the key into the container |
+| webConfig.tls.keyKey | string | `"tls.key"` | Key name within the secret for key |
+| webConfig.tls.secretName | string | `""` | Optional secret that holds tls.crt/tls.key. When set, it is mounted and used by web-config. |
 
 ### Prometheus ServiceMonitor
 
@@ -121,10 +121,10 @@ See the [examples directory](../examples/) for complete configuration examples: 
 |-----|------|---------|-------------|
 | serviceMonitor.enabled | bool | `true` | Enable ServiceMonitor |
 | serviceMonitor.interval | string | `"15s"` | ServiceMonitor interval |
-| serviceMonitor.path | string | `"/metrics"` | ServiceMonitor path |
 | serviceMonitor.metricRelabelings | object | `{}` | ServiceMonitor metric relabelings |
-| serviceMonitor.relabelings | object | `{}` | ServiceMonitor relabelings |
 | serviceMonitor.namespace | string | `nil` | ServiceMonitor namespace override (default is .Release.Namespace) |
+| serviceMonitor.path | string | `"/metrics"` | ServiceMonitor path |
+| serviceMonitor.relabelings | object | `{}` | ServiceMonitor relabelings |
 | serviceMonitor.selector | object | `{}` | Additional labels for ServiceMonitor (for Prometheus serviceMonitorSelector matching) Example: selector: { monitored: dox-prometheus } |
 | serviceMonitor.scrapeTimeout | string | `nil` | ServiceMonitor scrape timeout |
 
@@ -132,13 +132,14 @@ See the [examples directory](../examples/) for complete configuration examples: 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| config | object | `{"global":{"max_connections":3,"max_idle_connections":3,"min_interval":"0s","scrape_error_drop_interval":"0s","scrape_timeout":"10s","scrape_timeout_offset":"500ms"}}` | SQL Exporter configuration, can be a dictionary, or a template yaml string. |
-| config.global.scrape_timeout | string | `"10s"` | Scrape timeout |
-| config.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
-| config.global.scrape_error_drop_interval | string | `"0s"` | Interval between dropping scrape_errors_total metric: by default the metric is persistent. |
-| config.global.min_interval | string | `"0s"` | Minimum interval between collector runs. |
+| config | object | `{"global":{"max_connections":3,"max_idle_connections":3,"min_interval":"0s","scrape_error_drop_interval":"0s","scrape_timeout":"10s","scrape_timeout_offset":"500ms","warmup_delay":"0s"}}` | SQL Exporter configuration, can be a dictionary, or a template yaml string. |
 | config.global.max_connections | int | `3` | Number of open connections. |
 | config.global.max_idle_connections | int | `3` | Number of idle connections. |
+| config.global.min_interval | string | `"0s"` | Minimum interval between collector runs. |
+| config.global.scrape_error_drop_interval | string | `"0s"` | Interval between dropping scrape_errors_total metric: by default the metric is persistent. |
+| config.global.scrape_timeout | string | `"10s"` | Scrape timeout |
+| config.global.scrape_timeout_offset | string | `"500ms"` | Scrape timeout offset. Must be strictly positive. |
+| config.global.warmup_delay | string | `"0s"` | Delay between collector scrapes during the startup cache warmup. Disabled by default. |
 | target | object | `nil` | Check documentation. Mutually exclusive with `jobs`  |
 | jobs   | list | `nil` | Check documentation. Mutually exclusive with `target` |
 | collector_files | list | `[]` | Check documentation |
