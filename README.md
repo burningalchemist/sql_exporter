@@ -324,20 +324,24 @@ the value correctly.
 </details>
 
 <details>
-<summary>Using Secret Manager references (AWS/GCP/Vault)</summary>
+<summary>Using Secret Manager references (AWS/GCP/Vault/Kubernetes)</summary>
 
-If the database runs on AWS or Google Cloud, you might want to store the DSN in their Secret Manager services and allow
-SQL Exporter to access it from there. This way you can avoid hardcoding credentials in the configuration file and
-benefit from the security features of these services. In addition, Vault is also available as a secret manager option
-for SQL Exporter.
+SQL Exporter supports multiple secret management backends:
+
+**Cloud-based Secret Managers**:
+If the database runs on AWS or Google Cloud, you might want to store the DSN in their Secret Manager services and allow SQL Exporter to access it from there. This way you can avoid hardcoding credentials in the configuration file and benefit from the security features of these services. In addition, Vault is also available as a secret manager option for SQL Exporter.
 
 The secrets can be referenced in the configuration file as a value for `data_source_name` item using the following
 syntax:
-
 ```
 awssecretsmanager://<SECRET_NAME>?region=<AWS_REGION>&key=<JSON_KEY>
 gcpsecretsmanager://<SECRET_NAME>?project_id=<GCP_PROJECT_ID>&key=<JSON_KEY>
 hashivault://<MOUNT>/<SECRET_PATH>?key=<JSON_KEY>
+```
+**Kubernetes Secrets** (for Kubernetes deployments):
+Recommended for Kubernetes deployments. Requires RBAC permissions for the service account to read secrets. See [k8s-secret example](examples/k8s-secret/) for detailed setup instructions and the Helm chart automatically creates necessary RBAC resources.
+```
+k8ssecret://[namespace/]secret-name?key=field[&template=dsn_template]
 ```
 
 The secret value can be a simple string or a JSON object. If it's a JSON object, you need to specify the `key` query
