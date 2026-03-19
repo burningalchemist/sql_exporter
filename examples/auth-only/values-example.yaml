@@ -1,0 +1,74 @@
+# Example: Helm values for Basic Authentication-only configuration
+# This example shows how to enable basic authentication using a password from a Kubernetes secret
+#
+# Prerequisites:
+#   1. Create a secret with plaintext password:
+#      kubectl create secret generic sql-exporter-auth \
+#        --from-literal=password='your-secure-password'
+#
+# Usage:
+#   helm install sql-exporter ../../helm -f values-example.yaml
+
+image:
+  repository: burningalchemist/sql_exporter
+  tag: "0.18.6"
+
+# Static configuration with target and collectors
+createConfig: true
+config:
+  global:
+    scrape_timeout: 10s
+  target:
+    data_source_name: "postgres://username:password@hostname:5432/database?sslmode=disable"
+    collectors:
+      - pg_stat_activity
+  collectors:
+    - collector_name: pg_stat_activity
+      metrics:
+        - metric_name: pg_stat_activity_count
+          type: gauge
+          help: 'Number of connections by state'
+          key_labels:
+            - state
+          values:
+            - count
+          query: |
+            SELECT
+              state,
+              COUNT(*) as count
+            FROM pg_stat_activity
+            GROUP BY state
+
+# Enable web configuration with basic authentication (no TLS)
+webConfig:
+  enabled: true
+  basicAuth:
+    # Enable basic authentication
+    enabled: true
+    # Username for /metrics endpoint
+    username: prometheus
+    # Bcrypt cost for password hashing (higher = more secure but slower)
+    bcryptCost: 12
+    # Use initContainer to read plaintext password from secret and hash it
+    initFromSecret:
+      enabled: true
+      # Secret containing plaintext password
+      secretName: sql-exporter-auth
+      # Key in the secret containing the password
+      secretKey: password
+      # Image with htpasswd for bcrypt hashing
+      image: httpd:alpine
+      imagePullPolicy: IfNotPresent
+
+# ServiceMonitor configuration for Prometheus Operator
+# Note: This chart uses ServiceMonitor (enabled by default) for Prometheus discovery.
+# The prometheus.io/* annotations are NOT needed and are ignored by Prometheus Operator.
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  # Note: Prometheus ServiceMonitor does not support basic auth credentials
+  # You'll need to use a different scraping method or add TLS with basic auth
+
+# Note: When basic auth is enabled, the health probes use tcpSocket instead of httpGet
+# This is because httpGet probes don't support authentication headers
+

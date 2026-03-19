@@ -2,6 +2,8 @@
 ------------------------------
 Hello there! 
 
+{{- if .Values.createConfig }}
+
 {{- if and (not $conf.target ) (not $conf.jobs)}}
 ------------------------------
 
@@ -15,12 +17,19 @@ In case you need to have multiple targets, you can confiure jobs instead, have a
 
 {{- end}}
 
-{{- if and (not $conf.collectors) (not $conf.collectorFiles)}}
+{{- if and (not $conf.collectors) (not .Values.collectorFiles)}}
 
 ------------------------------
 You need to configure either collectors or collectorFiles (or both), please have a look at the example here:
 
  https://github.com/burningalchemist/sql_exporter#multiple-database-connections
+
+{{- end }}
+
+{{- else }}
+
+------------------------------
+Collectors configured in values file section external configuration
 
 {{- end }}
 

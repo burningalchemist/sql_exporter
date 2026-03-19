@@ -21,6 +21,13 @@ spec:
     {{- include "sql-exporter.selectorLabels" . | nindent 6 }}
   endpoints:
     - port: http
+      {{- if .Values.webConfig.enabled }}
+      {{- if .Values.webConfig.tls.secretName }}
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+      {{- end }}
+      {{- end }}
       {{- if .Values.serviceMonitor.path }}
       path: {{ .Values.serviceMonitor.path }}
       {{- end }}
@@ -29,6 +36,15 @@ spec:
       {{- end }}
       {{- if .Values.serviceMonitor.scrapeTimeout }}
       scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+      {{- end }}
+      {{- if and .Values.webConfig.enabled .Values.webConfig.basicAuth.enabled .Values.webConfig.basicAuth.initFromSecret.enabled }}
+      basicAuth:
+        username:
+          name: {{ include "sql-exporter.fullname" . }}
+          key: username
+        password:
+          name: {{ .Values.webConfig.basicAuth.initFromSecret.secretName }}
+          key: {{ .Values.webConfig.basicAuth.initFromSecret.secretKey }}
       {{- end }}
       {{- if .Values.serviceMonitor.metricRelabelings }}
       metricRelabelings:

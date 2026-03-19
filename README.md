@@ -198,6 +198,22 @@ mysql:/var/run/mysqld/mysqld.sock - for Unix socket connection
 
 For additional details please refer to [xo/dburl](https://github.com/xo/dburl) documentation.
 
+## Security Features
+
+The Helm chart provides enterprise-grade security capabilities for protecting your metrics endpoint:
+
+### TLS/HTTPS Encryption
+Secure metrics transport using TLS certificates from Kubernetes secrets. Supports TLS 1.3 with configurable cipher suites. See [tls-only example](examples/tls-only/).
+
+### Basic Authentication
+Password-protected metrics endpoint with bcrypt-hashed credentials. Passwords are automatically hashed during pod initialization from plaintext secrets. See [auth-only example](examples/auth-only/).
+
+### Combined Security
+TLS and authentication can be used together, with support for shared or separate Kubernetes secrets for maximum flexibility. See [tls-auth example](examples/tls-auth/).
+
+### Prometheus Integration
+Kubernetes-native ServiceMonitor automatically configures Prometheus for HTTPS scraping and basic authentication when enabled.
+
 
 ## Miscellaneous
 

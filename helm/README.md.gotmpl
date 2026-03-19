@@ -42,6 +42,17 @@ Take a look on how it's done at the
 [nginx ingress controller](https://kubernetes.github.io/ingress-nginx/examples/auth/basic/)
 as an example.
 
+## Security Features
+
+This chart supports TLS/HTTPS encryption and basic authentication for the metrics endpoint:
+
+- **TLS Encryption**: Configure `webConfig.tls.secretName` to enable HTTPS with TLS 1.3 support and configurable cipher suites
+- **Basic Authentication**: Set `webConfig.basicAuth.enabled` to protect metrics with bcrypt-hashed passwords (automatically hashed from plaintext secrets via init container)
+- **Separate Secrets**: TLS certificates and authentication passwords can use the same secret or separate secrets for flexibility
+- **ServiceMonitor Integration**: Prometheus ServiceMonitor automatically configures HTTPS and authentication when enabled
+
+See the [examples directory](../examples/) for complete configuration examples: `tls-only`, `auth-only`, and `tls-auth`.
+
 ## Chart Values
 
 ### General parameters
