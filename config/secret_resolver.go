@@ -26,6 +26,7 @@ var secretProviders = map[string]secretProvider{
 	"awssecretsmanager": awsSecretsManagerProvider{},
 	"gcpsecretmanager":  gcpSecretManagerProvider{},
 	"hashivault":        vaultProvider{},
+	"k8ssecret":         k8sSecretProvider{},
 }
 
 // secretCacheKey returns a cache key for the secret, excluding query params so that multiple DSNs referencing the same
