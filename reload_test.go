@@ -1,4 +1,4 @@
-//go:build custom
+//go:build integration
 
 package sql_exporter
 
