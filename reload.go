@@ -50,8 +50,11 @@ func Reload(e Exporter, configFile *string) error {
 func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 	slog.Warn("Recreating target...")
 
+	// Intended: we want to preserve connection details from the previous config. Only collectors will be updated.
 	nc.Target.DSN = cc.Target.DSN
+	// Apply the new target configuration
 	cc.Target = nc.Target
+	// Recreate the target object
 	target, err := NewTarget("", cc.Target.Name, "", string(cc.Target.DSN),
 		cc.Target.Collectors(), nil, cc.Globals, cc.Target.EnablePing)
 	if err != nil {
@@ -68,6 +71,8 @@ func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 
 func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 	slog.Warn("Recreating jobs...")
+
+	// We want to preserve `static_configs`` from the previous config revision to avoid any connection changes
 	for _, currentJob := range cc.Jobs {
 		for _, newJob := range nc.Jobs {
 			if newJob.Name == currentJob.Name {
