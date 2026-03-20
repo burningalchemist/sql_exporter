@@ -235,3 +235,14 @@ func (q *Query) scanRow(rows *sql.Rows, dest []any) (map[string]any, errors.With
 	}
 	return result, nil
 }
+
+// Close releases the prepared statement if one was cached.
+func (q *Query) Close() error {
+	if q.stmt != nil {
+		err := q.stmt.Close()
+		q.stmt = nil
+		q.conn = nil
+		return err
+	}
+	return nil
+}

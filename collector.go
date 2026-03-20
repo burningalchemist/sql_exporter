@@ -18,6 +18,8 @@ import (
 type Collector interface {
 	// Collect is the equivalent of prometheus.Collector.Collect() but takes a context to run in and a database to run on.
 	Collect(context.Context, *sql.DB, chan<- Metric)
+	// Close releases any resources held by the collector (e.g. prepared statements).
+	Close() error
 }
 
 // collector implements Collector. It wraps a collection of queries, metrics and the database to collect them from.
@@ -82,6 +84,25 @@ func (c *collector) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric)
 	}
 	// Only return once all queries have been processed
 	wg.Wait()
+}
+
+// Close releases all prepared statements held by this collector's queries.
+func (c *collector) Close() error {
+	var errs []error
+	for _, q := range c.queries {
+		if err := q.Close(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("collector %s close errors: %v", c.logContext, errs)
+	}
+	return nil
+}
+
+// Close implements Collector for cachingCollector.
+func (cc *cachingCollector) Close() error {
+	return cc.rawColl.Close()
 }
 
 // newCachingCollector returns a new Collector wrapping the provided raw Collector.
