@@ -25,7 +25,8 @@ func Reload(e Exporter, configFile *string) error {
 		configCurrent.Collectors = configCurrent.Collectors[:0]
 	}
 	configCurrent.Collectors = configNext.Collectors
-	slog.Debug("Total collector size change", "from", len(configCurrent.Collectors), "to", len(configNext.Collectors))
+	slog.Debug("Total collector size change", "from", len(configCurrent.Collectors), "to",
+		len(configNext.Collectors))
 
 	// Reload targets
 	switch {
@@ -61,7 +62,8 @@ func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 		return err
 	}
 
-	// Populate the target list
+	// Close old targets before replacing — releases sql.DB pools and sql.Stmts.
+	closeTargets(e.Targets())
 	e.UpdateTarget([]Target{target})
 	slog.Warn("Collectors have been successfully updated for the target")
 	return nil
@@ -69,6 +71,7 @@ func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 
 func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 	slog.Warn("Recreating jobs...")
+
 	// We want to preserve `static_configs`` from the previous config revision to avoid any connection changes
 	for _, currentJob := range cc.Jobs {
 		for _, newJob := range nc.Jobs {
@@ -96,7 +99,19 @@ func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 		return updateErr
 	}
 
+	// Close old targets before replacing — releases sql.DB pools and sql.Stmts.
+	closeTargets(e.Targets())
 	e.UpdateTarget(targets)
 	slog.Warn("Collectors have been successfully updated for the jobs")
 	return nil
+}
+
+// closeTargets closes each target's database connection and prepared statements, logging but not propagating errors so
+// a single bad close does not block the rest.
+func closeTargets(targets []Target) {
+	for _, t := range targets {
+		if err := t.Close(); err != nil {
+			slog.Warn("Error closing target during reload", "error", err)
+		}
+	}
 }

@@ -32,6 +32,7 @@ const (
 type Target interface {
 	// Collect is the equivalent of prometheus.Collector.Collect(), but takes a context to run in.
 	Collect(ctx context.Context, ch chan<- Metric)
+	Close() error
 	JobGroup() string
 }
 
@@ -88,8 +89,10 @@ func NewTarget(
 		collectors = append(collectors, c)
 	}
 
-	upDesc := NewAutomaticMetricDesc(logContext, upMetricName, upMetricHelp, prometheus.GaugeValue, constLabelPairs)
-	scrapeDurationDesc := NewAutomaticMetricDesc(logContext, scrapeDurationName, scrapeDurationHelp, prometheus.GaugeValue, constLabelPairs)
+	upDesc := NewAutomaticMetricDesc(logContext, upMetricName, upMetricHelp,
+		prometheus.GaugeValue, constLabelPairs)
+	scrapeDurationDesc := NewAutomaticMetricDesc(logContext, scrapeDurationName, scrapeDurationHelp,
+		prometheus.GaugeValue, constLabelPairs)
 	t := target{
 		name:               tname,
 		jobGroup:           jg,
@@ -143,12 +146,37 @@ func (t *target) Collect(ctx context.Context, ch chan<- Metric) {
 	}
 }
 
+// Close closes all collectors' prepared statements and the underlying *sql.DB connection pool. Safe to call even if
+// the connection was never opened.
+func (t *target) Close() error {
+	var errs []error
+	// Close prepared statements first — before the db handle they reference is gone.
+	for _, c := range t.collectors {
+		if err := c.Close(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	// Close the connection pool, which terminates all internal sql.DB goroutines (connectionOpener,
+	// connectionResetter) and releases idle connections.
+	if t.conn != nil {
+		if err := t.conn.Close(); err != nil {
+			errs = append(errs, err)
+		}
+		t.conn = nil
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("target %s close errors: %v", t.logContext, errs)
+	}
+	return nil
+}
+
 func (t *target) ping(ctx context.Context) errors.WithContext {
-	// Create the DB handle, if necessary. It won't usually open an actual connection, so we'll need to ping afterwards.
-	// We cannot do this only once at creation time because the sql.Open() documentation says it "may" open an actual
-	// connection, so it "may" actually fail to open a handle to a DB that's initially down.
+	// Create the DB handle, if necessary. It won't usually open an actual connection, so we'll need to ping
+	// afterwards. We cannot do this only once at creation time because the sql.Open() documentation says it "may" open
+	// an actual connection, so it "may" actually fail to open a handle to a DB that's initially down.
 	if t.conn == nil {
-		conn, err := OpenConnection(ctx, t.logContext, t.dsn, t.globalConfig.MaxConns, t.globalConfig.MaxIdleConns, t.globalConfig.MaxConnLifetime)
+		conn, err := OpenConnection(ctx, t.logContext, t.dsn, t.globalConfig.MaxConns,
+			t.globalConfig.MaxIdleConns, t.globalConfig.MaxConnLifetime)
 		if err != nil {
 			if err != ctx.Err() {
 				return errors.Wrap(t.logContext, err)
@@ -160,12 +188,13 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 	}
 
 	// If we have a handle and the context is not closed, test whether the database is up.
-	// FIXME: we ping the database during each request even with cacheCollector. It leads
-	// to additional charges for paid database services.
+	// FIXME: we ping the database during each request even with cacheCollector. It leads to additional charges for
+	// paid database services.
 	if t.conn != nil && ctx.Err() == nil && *t.enablePing {
 		var err error
-		// Ping up to max_connections + 1 times as long as the returned error is driver.ErrBadConn, to purge the connection
-		// pool of bad connections. This might happen if the previous scrape timed out and in-flight queries got canceled.
+		// Ping up to max_connections + 1 times as long as the returned error is driver.ErrBadConn, to purge the
+		// connection pool of bad connections. This might happen if the previous scrape timed out and in-flight queries
+		// got canceled.
 		for i := 0; i <= t.globalConfig.MaxConns; i++ {
 			if err = PingDB(ctx, t.conn); err != driver.ErrBadConn {
 				break
