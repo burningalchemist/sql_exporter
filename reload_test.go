@@ -4,24 +4,26 @@ package sql_exporter
 
 import (
 	"fmt"
+	"io"
+	"log/slog"
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 
 	_ "github.com/mithrandie/csvq-driver"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// setupCSVDir creates a temp directory with a minimal CSV file usable as a table.
+// setupCSVDirs creates a temp directory with a minimal CSV file usable as a table.
 func setupCSVDirs(t *testing.T, n int) []string {
 	t.Helper()
 	base := t.TempDir()
 	dirs := make([]string, n)
-	for i := range n {
+	for i := range dirs {
 		dir := filepath.Join(base, fmt.Sprintf("csv_%d", i))
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf("mkdir CSV dir %d: %v", i, err)
@@ -34,55 +36,86 @@ func setupCSVDirs(t *testing.T, n int) []string {
 	return dirs
 }
 
-// writeConfig writes a sql_exporter YAML config file pointing at csvDir with
-// n targets, returning the config file path.
-func writeConfig(t *testing.T, dirs []string, n int) string {
+func writeConfig(t *testing.T, dirs []string) string {
 	t.Helper()
 
-	var sb strings.Builder
-	for i := range n {
-		fmt.Fprintf(&sb, `
-  - collector_name: col%d
-    metrics:
-      - metric_name: csvq_value_%d
-        type: gauge
-        help: "test metric %d"
-        values: [value]
-        query: "SELECT value FROM metrics"
-`, i, i, i)
+	type metric struct {
+		Name   string   `yaml:"metric_name"`
+		Type   string   `yaml:"type"`
+		Help   string   `yaml:"help"`
+		Values []string `yaml:"values"`
+		Query  string   `yaml:"query"`
 	}
-	collectors := sb.String()
-
-	sb.Reset()
-	for i := range n {
-		fmt.Fprintf(&sb, "        target%d: csvq:%s\n", i, dirs[i])
+	type collector struct {
+		Name    string   `yaml:"collector_name"`
+		Metrics []metric `yaml:"metrics"`
 	}
-	targets := sb.String()
+	type staticConfig struct {
+		Targets map[string]string `yaml:"targets"`
+	}
+	type job struct {
+		Name          string         `yaml:"job_name"`
+		Collectors    []string       `yaml:"collectors"`
+		StaticConfigs []staticConfig `yaml:"static_configs"`
+	}
+	type global struct {
+		ScrapeTimeout       string `yaml:"scrape_timeout"`
+		ScrapeTimeoutOffset string `yaml:"scrape_timeout_offset"`
+		MinInterval         string `yaml:"min_interval"`
+		MaxConnections      int    `yaml:"max_connections"`
+		MaxIdleConnections  int    `yaml:"max_idle_connections"`
+	}
+	type cfg struct {
+		Global     global      `yaml:"global"`
+		Collectors []collector `yaml:"collectors"`
+		Jobs       []job       `yaml:"jobs"`
+	}
 
-	content := fmt.Sprintf(`
-global:
-  scrape_timeout: 10s
-  scrape_timeout_offset: 500ms
-  min_interval: 0s
-  max_connections: 3
-  max_idle_connections: 3
+	n := len(dirs)
+	collectors := make([]collector, n)
+	collectorNames := make([]string, n)
+	targets := make(map[string]string, n)
 
-collector_files: []
+	for i := range dirs {
+		name := fmt.Sprintf("col%d", i)
+		collectorNames[i] = name
+		collectors[i] = collector{
+			Name: name,
+			Metrics: []metric{{
+				Name:   fmt.Sprintf("csvq_value_%d", i),
+				Type:   "gauge",
+				Help:   fmt.Sprintf("test metric %d", i),
+				Values: []string{"value"},
+				Query:  "SELECT value FROM metrics",
+			}},
+		}
+		targets[fmt.Sprintf("target%d", i)] = "csvq:" + dirs[i]
+	}
 
-collectors:%s
+	c := cfg{
+		Global: global{
+			ScrapeTimeout:       "10s",
+			ScrapeTimeoutOffset: "500ms",
+			MinInterval:         "0s",
+			MaxConnections:      3,
+			MaxIdleConnections:  3,
+		},
+		Collectors: collectors,
+		Jobs: []job{{
+			Name:          "test_job",
+			Collectors:    collectorNames,
+			StaticConfigs: []staticConfig{{Targets: targets}},
+		}},
+	}
 
-jobs:
-  - job_name: test_job
-    collectors: [col0, col1, col2, col3, col4, col5, col6, col7, col8, col9]
-    static_configs:
-    - targets:
-%s`, collectors, targets)
-
+	data, err := yaml.Marshal(c)
+	if err != nil {
+		t.Fatalf("marshal config: %v", err)
+	}
 	cfgFile := filepath.Join(t.TempDir(), "sql_exporter.yml")
-	if err := os.WriteFile(cfgFile, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(cfgFile, data, 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
-
 	return cfgFile
 }
 
@@ -132,7 +165,7 @@ func TestReloadMemoryLeak(t *testing.T) {
 	)
 
 	dirs := setupCSVDirs(t, numTargets)
-	cfgFile := writeConfig(t, dirs, numTargets)
+	cfgFile := writeConfig(t, dirs)
 
 	e, err := NewExporter(cfgFile, prometheus.NewRegistry())
 	if err != nil {
@@ -143,6 +176,11 @@ func TestReloadMemoryLeak(t *testing.T) {
 
 	t.Logf("goroutine delta=%d (expected <= %d)", delta, tolerance)
 	if delta > tolerance {
-		t.Errorf("expected goroutine delta <= %d, got %d — leak still present", tolerance, delta)
+		t.Errorf("expected goroutine delta <= %d, got %d — leak suspected", tolerance, delta)
 	}
+}
+
+func TestMain(m *testing.M) {
+	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	os.Exit(m.Run())
 }
