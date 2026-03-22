@@ -1,0 +1,74 @@
+# Example: Helm values for K8s Secret DSN Configuration
+# Demonstrates reading database DSN from Kubernetes secrets.
+# Matches the examples in secret-examples.yaml
+#
+# Prerequisites:
+#   1. Apply the secrets and RBAC:
+#      kubectl apply -f secret-examples.yaml
+#
+#   2. Deploy with Helm:
+#      helm install sql-exporter ../../helm -f values-example.yaml
+#
+# The Helm chart will automatically create the service account and RBAC if:
+#   serviceAccount.create: true
+
+# Service Account - use the pre-created one from secret-examples.yaml
+serviceAccount:
+  create: false
+  name: sql-exporter
+
+image:
+  repository: burningalchemist/sql_exporter
+  tag: "0.20.1"
+
+createConfig: true
+
+config:
+  global:
+    scrape_timeout: 10s
+    max_connections: 3
+
+  # Example 1: Using full DSN from secret
+  # target:
+  #   name: postgres-db
+  #   data_source_name: 'k8ssecret://postgres-db'
+  #   collectors:
+  #     - postgres_metrics
+
+  # Example 2: Using explicit namespace
+  # target:
+  #   name: postgres-db
+  #   data_source_name: 'k8ssecret://monitoring/postgres-db'
+  #   collectors:
+  #     - postgres_metrics
+
+  # Example 3: Using partial DSN with template (recommended for real deployments)
+  # Secret value (APP_DB_CONNECTION): user:password@postgres.default.svc.cluster.local:5432/mydb
+  # Result DSN: postgres://user:password@postgres.default.svc.cluster.local:5432/mydb?application_name=sql-exporter&sslmode=require
+  target:
+    name: postgres-db
+    data_source_name: 'k8ssecret://db-creds?key=APP_DB_CONNECTION&template=postgres://DSN_VALUE?application_name=sql-exporter&sslmode=require'
+    collectors:
+      - postgres_metrics
+
+  # Example 4: Using password-only secret with template
+  # Useful when password is stored separately and other connection details are static
+  # target:
+  #   name: postgres-db
+  #   data_source_name: 'k8ssecret://db-creds?key=password_only&template=postgres://user:DSN_VALUE@postgres.default.svc.cluster.local:5432/mydb?sslmode=require'
+  #   collectors:
+  #     - postgres_metrics
+
+  collectors:
+    - collector_name: postgres_metrics
+      min_interval: 1m
+      metrics:
+        - metric_name: pg_database_count
+          type: gauge
+          help: 'Number of databases'
+          values:
+            - count
+          query: |
+            SELECT COUNT(*) as count
+            FROM pg_database
+            WHERE datistemplate = false
