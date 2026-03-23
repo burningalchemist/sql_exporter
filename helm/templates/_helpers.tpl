@@ -77,13 +77,15 @@ Common annotations
 Create the name of the service account to use
 */}}
 {{- define "sql-exporter.serviceAccountName" -}}
-{{- dig "serviceAccount" "name" "default" .Values }}
-{{- end }}
+{{- if .Values.serviceAccount.create -}}
+{{- default (include "sql-exporter.fullname" .) .Values.serviceAccount.name -}}
+{{- else -}}
+{{- default "default" .Values.serviceAccount.name -}}
+{{- end -}}
+{{- end -}}
 
 {{- define "sql-exporter.volumes" -}}
-{{- if or .Values.createConfig .Values.collectorFiles .Values.webConfig.enabled -}}
-{{- true | quote -}}
-{{- else if .Values.extraVolumes -}}
+{{- if or .Values.createConfig .Values.collectorFiles .Values.webConfig.enabled .Values.extraVolumes -}}
 {{- true | quote -}}
 {{- else -}}
 {{- false | quote -}}
