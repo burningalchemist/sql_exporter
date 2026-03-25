@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/kardianos/minwinsvc v1.0.2
-	github.com/lib/pq v1.11.2
+	github.com/lib/pq v1.12.0
 	github.com/microsoft/go-mssqldb v1.9.7
 	github.com/mithrandie/csvq-driver v1.7.0
 	github.com/prometheus/client_golang v1.23.2
