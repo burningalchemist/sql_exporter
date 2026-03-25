@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.4
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/hashicorp/vault/api v1.22.0
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jackc/pgx/v5 v5.9.1
 	github.com/kardianos/minwinsvc v1.0.2
 	github.com/lib/pq v1.12.0
 	github.com/microsoft/go-mssqldb v1.9.7
