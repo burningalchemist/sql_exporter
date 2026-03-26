@@ -50,6 +50,10 @@ type target struct {
 	enablePing         *bool
 
 	conn *sql.DB
+	// Last successful ping time
+	lastPingTime time.Time
+	// Ping interval - only ping if last ping was more than this duration ago
+	pingInterval time.Duration
 }
 
 // NewTarget returns a new Target with the given target name, data source name, collectors and constant labels.
@@ -93,6 +97,9 @@ func NewTarget(
 		prometheus.GaugeValue, constLabelPairs)
 	scrapeDurationDesc := NewAutomaticMetricDesc(logContext, scrapeDurationName, scrapeDurationHelp,
 		prometheus.GaugeValue, constLabelPairs)
+	// Set ping interval to 30 seconds by default, adjust as needed
+	pingInterval := 30 * time.Second
+
 	t := target{
 		name:               tname,
 		jobGroup:           jg,
@@ -104,6 +111,7 @@ func NewTarget(
 		scrapeDurationDesc: scrapeDurationDesc,
 		logContext:         logContext,
 		enablePing:         ep,
+		pingInterval:       pingInterval,
 	}
 	return &t, nil
 }
@@ -184,24 +192,40 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 			// if err == ctx.Err() fall through
 		} else {
 			t.conn = conn
+			// Force ping on first connection
+			var err error
+			for i := 0; i <= t.globalConfig.MaxConns; i++ {
+				if err = PingDB(ctx, t.conn); err != driver.ErrBadConn {
+					break
+				}
+			}
+			if err != nil {
+				return errors.Wrap(t.logContext, err)
+			}
+			t.lastPingTime = time.Now()
 		}
 	}
 
 	// If we have a handle and the context is not closed, test whether the database is up.
-	// FIXME: we ping the database during each request even with cacheCollector. It leads to additional charges for
-	// paid database services.
+	// Only ping if last ping was more than pingInterval ago or if we've never pinged before
 	if t.conn != nil && ctx.Err() == nil && *t.enablePing {
-		var err error
-		// Ping up to max_connections + 1 times as long as the returned error is driver.ErrBadConn, to purge the
-		// connection pool of bad connections. This might happen if the previous scrape timed out and in-flight queries
-		// got canceled.
-		for i := 0; i <= t.globalConfig.MaxConns; i++ {
-			if err = PingDB(ctx, t.conn); err != driver.ErrBadConn {
-				break
+		now := time.Now()
+		if now.Sub(t.lastPingTime) > t.pingInterval {
+			slog.Debug("Pinging database", "logContext", t.logContext, "time_since_last_ping", now.Sub(t.lastPingTime).Seconds())
+			var err error
+			// Ping up to max_connections + 1 times as long as the returned error is driver.ErrBadConn, to purge the connection
+			// pool of bad connections. This might happen if the previous scrape timed out and in-flight queries got canceled.
+			for i := 0; i <= t.globalConfig.MaxConns; i++ {
+				if err = PingDB(ctx, t.conn); err != driver.ErrBadConn {
+					break
+				}
 			}
-		}
-		if err != nil {
-			return errors.Wrap(t.logContext, err)
+			if err != nil {
+				return errors.Wrap(t.logContext, err)
+			}
+			t.lastPingTime = now
+		} else {
+			slog.Debug("Skipping database ping", "logContext", t.logContext, "time_since_last_ping", now.Sub(t.lastPingTime).Seconds())
 		}
 	}
 
