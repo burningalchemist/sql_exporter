@@ -146,6 +146,35 @@ func (c *Config) checkRequiredFields() error {
 	if (len(c.Jobs) == 0) == (c.Target == nil) {
 		return fmt.Errorf("exactly one of `jobs` and `target` must be defined")
 	}
+
+	// Check target configuration
+	if c.Target != nil {
+		if c.Target.DSN == "" {
+			return fmt.Errorf("target.data_source_name is required")
+		}
+		if len(c.Target.CollectorRefs) == 0 {
+			return fmt.Errorf("target.collectors is required")
+		}
+	}
+
+	// Check jobs configuration
+	for i, job := range c.Jobs {
+		if job.Name == "" {
+			return fmt.Errorf("job[%d].job_name is required", i)
+		}
+		if len(job.CollectorRefs) == 0 {
+			return fmt.Errorf("job[%d].collectors is required", i)
+		}
+		if len(job.StaticConfigs) == 0 {
+			return fmt.Errorf("job[%d].static_configs is required", i)
+		}
+		for j, staticConfig := range job.StaticConfigs {
+			if len(staticConfig.Targets) == 0 {
+				return fmt.Errorf("job[%d].static_configs[%d].targets is required", i, j)
+			}
+		}
+	}
+
 	return nil
 }
 
