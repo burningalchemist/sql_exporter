@@ -97,8 +97,8 @@ func NewTarget(
 		prometheus.GaugeValue, constLabelPairs)
 	scrapeDurationDesc := NewAutomaticMetricDesc(logContext, scrapeDurationName, scrapeDurationHelp,
 		prometheus.GaugeValue, constLabelPairs)
-	// Set ping interval to 30 seconds by default, adjust as needed
-	pingInterval := 30 * time.Second
+	// Use ping interval from global config, default is 0
+	pingInterval := time.Duration(gc.PingInterval)
 
 	t := target{
 		name:               tname,
@@ -210,8 +210,9 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 	// Only ping if last ping was more than pingInterval ago or if we've never pinged before
 	if t.conn != nil && ctx.Err() == nil && *t.enablePing {
 		now := time.Now()
-		if now.Sub(t.lastPingTime) > t.pingInterval {
-			slog.Debug("Pinging database", "logContext", t.logContext, "time_since_last_ping", now.Sub(t.lastPingTime).Seconds())
+		// If pingInterval is 0, ping every time
+		if t.pingInterval == 0 || now.Sub(t.lastPingTime) > t.pingInterval {
+			slog.Debug("Pinging database", "logContext", t.logContext, "time_since_last_ping", now.Sub(t.lastPingTime).Seconds(), "ping_interval", t.pingInterval)
 			var err error
 			// Ping up to max_connections + 1 times as long as the returned error is driver.ErrBadConn, to purge the connection
 			// pool of bad connections. This might happen if the previous scrape timed out and in-flight queries got canceled.
@@ -225,7 +226,7 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 			}
 			t.lastPingTime = now
 		} else {
-			slog.Debug("Skipping database ping", "logContext", t.logContext, "time_since_last_ping", now.Sub(t.lastPingTime).Seconds())
+			slog.Debug("Skipping database ping", "logContext", t.logContext, "time_since_last_ping", now.Sub(t.lastPingTime).Seconds(), "ping_interval", t.pingInterval)
 		}
 	}
 

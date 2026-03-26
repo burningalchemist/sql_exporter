@@ -14,6 +14,7 @@ type GlobalConfig struct {
 	TimeoutOffset           model.Duration `yaml:"scrape_timeout_offset" env:"SCRAPE_TIMEOUT_OFFSET"`           // offset to subtract from timeout in seconds
 	ScrapeErrorDropInterval model.Duration `yaml:"scrape_error_drop_interval" env:"SCRAPE_ERROR_DROP_INTERVAL"` // interval to drop scrape errors from the error counter, default is 0
 	MaxConnLifetime         time.Duration  `yaml:"max_connection_lifetime" env:"MAX_CONNECTION_LIFETIME"`       // maximum amount of time a connection may be reused to any one target
+	PingInterval            model.Duration `yaml:"ping_interval" env:"PING_INTERVAL"`                           // interval between database pings, default is 30s
 
 	WarmupDelay model.Duration `yaml:"warmup_delay,omitempty" env:"WARMUP_DELAY"` // delay between executing collectors during cache population at startup, default is 0
 
@@ -34,6 +35,8 @@ func (g *GlobalConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	g.ScrapeErrorDropInterval = model.Duration(0)
 	// Default to .5 seconds.
 	g.TimeoutOffset = model.Duration(500 * time.Millisecond)
+	// Default to 0 for ping interval (no interval, ping every time when call target.ping()).
+	g.PingInterval = model.Duration(0)
 	g.MaxConns = 3
 	g.MaxIdleConns = 3
 	g.MaxConnLifetime = time.Duration(0)

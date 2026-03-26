@@ -15,6 +15,8 @@ global:
   # Maximum number of maximum amount of time a connection may be reused. Expired connections may be closed lazily before reuse.
   # If 0, connections are not closed due to a connection's age.
   max_connection_lifetime: 5m
+  # Interval between database pings. By default (0s) ping every time when call target.ping().
+  ping_interval: 30s
 
 # The target to monitor and the collectors to execute on it.
 target:
