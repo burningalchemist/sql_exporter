@@ -14,7 +14,7 @@ type GlobalConfig struct {
 	TimeoutOffset           model.Duration `yaml:"scrape_timeout_offset" env:"SCRAPE_TIMEOUT_OFFSET"`           // offset to subtract from timeout in seconds
 	ScrapeErrorDropInterval model.Duration `yaml:"scrape_error_drop_interval" env:"SCRAPE_ERROR_DROP_INTERVAL"` // interval to drop scrape errors from the error counter, default is 0
 	MaxConnLifetime         time.Duration  `yaml:"max_connection_lifetime" env:"MAX_CONNECTION_LIFETIME"`       // maximum amount of time a connection may be reused to any one target
-	PingInterval            model.Duration `yaml:"ping_interval" env:"PING_INTERVAL"`                           // interval between database pings, default is 30s
+	PingInterval            model.Duration `yaml:"ping_interval" env:"PING_INTERVAL"`                           // interval between database pings, default is 0
 
 	WarmupDelay model.Duration `yaml:"warmup_delay,omitempty" env:"WARMUP_DELAY"` // delay between executing collectors during cache population at startup, default is 0
 
