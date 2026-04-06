@@ -14,6 +14,8 @@ env:
 jobs:
   helm-jobs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -105,13 +107,38 @@ jobs:
       - name: Set the git sha annotations in the helm chart
         run: yq -i ".annotations.git/commit-sha = \"${GITHUB_SHA}\"" ./helm/Chart.yaml
 
+      - name: Install chart-releaser
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: helm/chart-releaser-action@main
+        with:
+          install_only: true
+
+      - name: Import PGP signing key
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          echo "${{ secrets.HELM_SIGNING_KEY }}" | base64 -d | gpg --import
+          gpg --export-secret-keys "${{ vars.HELM_SIGNING_KEY_ID }}" > ~/.gnupg/secring.gpg
+
+      - name: Package and sign charts
+        id: package
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          cr package helm \
+            --package-path .cr-release-packages \
+            --sign \
+            --key "${{ vars.HELM_SIGNING_KEY_ID }}" \
+            --keyring ~/.gnupg/secring.gpg
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
       - name: Release charts
-        if: ${{ github.event.repository.default_branch && github.event_name == 'push' }}
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' && steps.package.outcome == 'success'
         uses: helm/chart-releaser-action@main
         with:
           charts_dir: .
           mark_as_latest: false
           packages_with_index: true
+          skip_packaging: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_RELEASE_NAME_TEMPLATE: "chart-{{ .Name }}-{{ .Version }}"
