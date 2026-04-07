@@ -137,7 +137,7 @@ jobs:
         with:
           charts_dir: .
           mark_as_latest: false
-          packages_with_index: true
+          packages_with_index: false
           skip_packaging: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
