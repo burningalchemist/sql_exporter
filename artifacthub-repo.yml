@@ -3,3 +3,6 @@ repositoryID: d7e3cb62-7fbe-40b7-9615-2b3a0a030952
 owners:
   - name: Sergei Zyubin
     email: oss@szyubin.me
+sign:
+  fingerprint: 9F218BE64F503809BB829626B9024AEA76E9BCB3
+  url: https://burningalchemist.github.io/sql_exporter/pubkey.gpg
