@@ -139,6 +139,7 @@ jobs:
           mark_as_latest: false
           packages_with_index: false
           skip_packaging: true
+          skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_RELEASE_NAME_TEMPLATE: "chart-{{ .Name }}-{{ .Version }}"
