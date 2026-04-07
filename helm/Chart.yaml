@@ -2,8 +2,12 @@ apiVersion: v2
 name: sql-exporter
 description: Database-agnostic SQL exporter for Prometheus
 type: application
-version: 0.17.2
+version: 0.17.3
 appVersion: 0.22.1
+annotations:
+  artifacthub.io/signKey: |
+    fingerprint: 9F218BE64F503809BB829626B9024AEA76E9BCB3
+    url: https://burningalchemist.github.io/sql_exporter/pubkey.gpg
 keywords:
   - exporter
   - servicemonitor
