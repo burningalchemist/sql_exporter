@@ -125,6 +125,10 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 
 // run executes the query on the provided database, in the provided context.
 func (q *Query) run(ctx context.Context, conn *sql.DB) (*sql.Rows, errors.WithContext) {
+	if conn == nil {
+		return nil, errors.Errorf(q.logContext, "nil database connection")
+	}
+
 	if slog.Default().Enabled(ctx, slog.LevelDebug) {
 		start := time.Now()
 		defer func() {
