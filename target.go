@@ -136,12 +136,13 @@ func (t *target) Collect(ctx context.Context, ch chan<- Metric) {
 	var wg sync.WaitGroup
 	// Don't bother with the collectors if target is down.
 	if targetUp {
+		conn := t.conn
 		wg.Add(len(t.collectors))
 		for _, c := range t.collectors {
 			// If using a single DB connection, collectors will likely run sequentially anyway. But we might have more.
 			go func(collector Collector) {
 				defer wg.Done()
-				collector.Collect(ctx, t.conn, ch)
+				collector.Collect(ctx, conn, ch)
 			}(c)
 		}
 	}
