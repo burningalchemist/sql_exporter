@@ -49,6 +49,7 @@ type target struct {
 	logContext         string
 	enablePing         *bool
 
+	mu   sync.RWMutex
 	conn *sql.DB
 	// Last successful ping time
 	lastPingTime time.Time
@@ -159,6 +160,11 @@ func (t *target) Collect(ctx context.Context, ch chan<- Metric) {
 // the connection was never opened.
 func (t *target) Close() error {
 	var errs []error
+
+	// We need to lock here because if the target is being closed while a scrape is starting, they might both try to close the connection at the same time. Once we have a handle, sql.DB takes care of concurrency for us.
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	// Close prepared statements first — before the db handle they reference is gone.
 	for _, c := range t.collectors {
 		if err := c.Close(); err != nil {
@@ -183,6 +189,11 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 	// Create the DB handle, if necessary. It won't usually open an actual connection, so we'll need to ping
 	// afterwards. We cannot do this only once at creation time because the sql.Open() documentation says it "may" open
 	// an actual connection, so it "may" actually fail to open a handle to a DB that's initially down.
+
+	// We need to lock here because if multiple scrapes start at the same time when the target is down, they might all try to open a connection at the same time. Once we have a handle, sql.DB takes care of concurrency for us.
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	if t.conn == nil {
 		conn, err := OpenConnection(ctx, t.logContext, t.dsn, t.globalConfig.MaxConns,
 			t.globalConfig.MaxIdleConns, t.globalConfig.MaxConnLifetime)

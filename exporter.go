@@ -54,6 +54,8 @@ type exporter struct {
 
 	ctx      context.Context
 	registry prometheus.Registerer
+
+	mu sync.RWMutex
 }
 
 // NewExporter returns a new Exporter with the provided config.
@@ -126,7 +128,10 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 	)
 
 	// Take a local snapshot to avoid mutating e.targets while collectors are running.
+	// We need to lock targets for the duration of the snapshot to ensure we don't miss any targets or include partially updated targets.
+	e.mu.RLock()
 	targets := e.filteredTargets()
+	e.mu.RUnlock()
 
 	if len(targets) == 0 {
 		return nil, errors.New("no targets found")
@@ -257,11 +262,17 @@ func (e *exporter) Config() *config.Config {
 }
 
 func (e *exporter) Targets() []Target {
+	// We need to lock targets for the duration of the snapshot to ensure we don't return partially updated targets.
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 	return e.targets
 }
 
 // UpdateTarget implements Exporter.
 func (e *exporter) UpdateTarget(target []Target) {
+	// We need to lock targets for the duration of the update to ensure we don't return partially updated targets.
+	e.mu.Lock()
+	defer e.mu.Unlock()
 	e.targets = target
 }
 
