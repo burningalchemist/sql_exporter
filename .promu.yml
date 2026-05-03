@@ -1,6 +1,6 @@
 go:
     cgo: false
-    version: 1.25
+    version: 1.26
 repository:
     path: github.com/burningalchemist/sql_exporter
 build:
