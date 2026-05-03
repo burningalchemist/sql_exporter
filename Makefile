@@ -22,7 +22,7 @@ endif
 GO     := go
 GOPATH ?= $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 PROMU  := $(GOPATH)/bin/promu
-PROMU_VERSION := v0.17.0
+PROMU_VERSION := v0.18.1
 YQ  := $(GOPATH)/bin/yq
 YQ_VERSION  := v4.52.4
 
