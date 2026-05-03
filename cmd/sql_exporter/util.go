@@ -29,8 +29,8 @@ func giveBuf(buf *bytes.Buffer) {
 // (which is empty if no compression is enabled).
 func decorateWriter(request *http.Request, writer io.Writer) (w io.Writer, encoding string) {
 	header := request.Header.Get(acceptEncodingHeader)
-	parts := strings.Split(header, ",")
-	for _, part := range parts {
+	parts := strings.SplitSeq(header, ",")
+	for part := range parts {
 		part := strings.TrimSpace(part)
 		if part == "gzip" || strings.HasPrefix(part, "gzip;") {
 			return gzip.NewWriter(writer), "gzip"
@@ -41,10 +41,10 @@ func decorateWriter(request *http.Request, writer io.Writer) (w io.Writer, encod
 
 // LogFunc is an adapter to allow the use of any function as a promhttp.Logger. If f is a function, LogFunc(f) is a
 // promhttp.Logger that calls f.
-type LogFunc func(args ...interface{})
+type LogFunc func(args ...any)
 
 // Println implements promhttp.Logger.
-func (log LogFunc) Println(args ...interface{}) {
+func (log LogFunc) Println(args ...any) {
 	log(args)
 }
 

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -102,10 +103,8 @@ func (m *MetricConfig) validateKeyLabels() error {
 		if err := checkLabel(li, "metric", m.Name); err != nil {
 			return err
 		}
-		for _, lj := range m.KeyLabels[i+1:] {
-			if li == lj {
-				return fmt.Errorf("duplicate key label %q for metric %q", li, m.Name)
-			}
+		if slices.Contains(m.KeyLabels[i+1:], li) {
+			return fmt.Errorf("duplicate key label %q for metric %q", li, m.Name)
 		}
 		if m.ValueLabel == li {
 			return fmt.Errorf("duplicate label %q (defined in both key_labels and value_label) for metric %q", li, m.Name)
