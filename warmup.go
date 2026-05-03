@@ -57,12 +57,10 @@ func (w *Warmup) Run(targets []Target, delay time.Duration, timeout time.Duratio
 				}
 				ch := make(chan Metric, capMetricChan)
 				var cwg sync.WaitGroup
-				cwg.Add(1)
-				go func() {
-					defer cwg.Done()
+				cwg.Go(func() {
 					for range ch {
 					}
-				}()
+				})
 				c.Collect(ctx, tc.conn, ch)
 				close(ch)
 				cwg.Wait()
