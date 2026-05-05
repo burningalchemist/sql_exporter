@@ -16,8 +16,6 @@ import (
 	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
-
-	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -178,8 +176,8 @@ func (e *exporter) Gather() ([]*dto.MetricFamily, error) {
 		dtoMetricFamily, ok := dtoMetricFamilies[metricDesc.Name()]
 		if !ok {
 			dtoMetricFamily = &dto.MetricFamily{}
-			dtoMetricFamily.Name = proto.String(metricDesc.Name())
-			dtoMetricFamily.Help = proto.String(metricDesc.Help())
+			dtoMetricFamily.Name = new(metricDesc.Name())
+			dtoMetricFamily.Help = new(metricDesc.Help())
 			switch {
 			case dtoMetric.Gauge != nil:
 				dtoMetricFamily.Type = dto.MetricType_GAUGE.Enum()
