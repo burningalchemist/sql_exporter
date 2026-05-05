@@ -10,7 +10,6 @@ import (
 	"github.com/burningalchemist/sql_exporter/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
-	"google.golang.org/protobuf/proto"
 )
 
 // MetricDesc is a descriptor for a family of metrics, sharing the same name, help, labes, type.
@@ -60,8 +59,8 @@ func NewMetricFamily(logContext string, mc *config.MetricConfig, constLabels []*
 
 	for k, v := range mc.StaticLabels {
 		sortedLabels = append(sortedLabels, &dto.LabelPair{
-			Name:  proto.String(k),
-			Value: proto.String(v),
+			Name:  new(k),
+			Value: new(v),
 		})
 	}
 	sort.Sort(labelPairSorter(sortedLabels))
@@ -232,9 +231,9 @@ func (m *constMetric) Write(out *dto.Metric) errors.WithContext {
 	out.Label = m.labelPairs
 	switch t := m.desc.ValueType(); t {
 	case prometheus.CounterValue:
-		out.Counter = &dto.Counter{Value: proto.Float64(m.val)}
+		out.Counter = &dto.Counter{Value: new(m.val)}
 	case prometheus.GaugeValue:
-		out.Gauge = &dto.Gauge{Value: proto.Float64(m.val)}
+		out.Gauge = &dto.Gauge{Value: new(m.val)}
 	default:
 		return errors.Errorf(m.desc.LogContext(), "encountered unknown type %v", t)
 	}
@@ -257,8 +256,8 @@ func makeLabelPairs(desc MetricDesc, labelValues []string) []*dto.LabelPair {
 	labelPairs := make([]*dto.LabelPair, 0, totalLen)
 	for i, label := range labels {
 		labelPairs = append(labelPairs, &dto.LabelPair{
-			Name:  proto.String(label),
-			Value: proto.String(labelValues[i]),
+			Name:  new(label),
+			Value: new(labelValues[i]),
 		})
 	}
 	labelPairs = append(labelPairs, constLabels...)
@@ -303,7 +302,7 @@ type timestampedMetric struct {
 
 func (m timestampedMetric) Write(pb *dto.Metric) errors.WithContext {
 	e := m.Metric.Write(pb)
-	pb.TimestampMs = proto.Int64(m.t.Unix()*1000 + int64(m.t.Nanosecond()/1000000))
+	pb.TimestampMs = new(m.t.Unix()*1000 + int64(m.t.Nanosecond()/1000000))
 	return e
 }
 
