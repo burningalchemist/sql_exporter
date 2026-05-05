@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/sethvargo/go-envconfig"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // MaxInt32 defines the maximum value of allowed integers and serves to help us avoid overflow/wraparound issues.
