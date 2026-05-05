@@ -14,7 +14,6 @@ import (
 	"github.com/burningalchemist/sql_exporter/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -79,8 +78,8 @@ func NewTarget(
 	constLabelPairs := make([]*dto.LabelPair, 0, len(constLabels))
 	for n, v := range constLabels {
 		constLabelPairs = append(constLabelPairs, &dto.LabelPair{
-			Name:  proto.String(n),
-			Value: proto.String(v),
+			Name:  new(n),
+			Value: new(v),
 		})
 	}
 	sort.Sort(labelPairSorter(constLabelPairs))
