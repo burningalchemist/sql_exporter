@@ -111,6 +111,9 @@ global:
   max_idle_connections: 3
   # Maximum amount of time a connection may be reused to any one target. Infinite by default.
   max_connection_lifetime: 10m
+  # Expose per-query `query_duration_seconds` and `query_rows_returned` gauges, labelled with the
+  # `query` name (and `target` in multi-target mode). Off by default to keep the metric surface stable.
+  enable_query_metrics: false
 
 # The target to monitor and the list of collectors to execute on it.
 target:
@@ -216,6 +219,23 @@ Kubernetes-native ServiceMonitor automatically configures Prometheus for HTTPS s
 
 
 ## Miscellaneous
+
+<details>
+<summary>Per-query observability metrics</summary>
+
+When `global.enable_query_metrics` is set to `true`, every scrape emits two additional gauges per query
+in the configuration:
+
+- `query_duration_seconds{query="<query_name>"}` — wall-clock time the query took during the most
+  recent scrape, including row scanning. Emitted even when the query errors, so spikes preceding a
+  failure remain visible.
+- `query_rows_returned{query="<query_name>"}` — number of rows the database returned during the most
+  recent scrape. Errored or skipped rows are not counted.
+
+Both metrics inherit the same constant labels as `up` / `scrape_duration_seconds` (notably `target` in
+multi-target / jobs mode), so they can be aggregated by target the same way. The feature is off by
+default to keep the existing metric surface unchanged.
+</details>
 
 <details>
 <summary>Handling NULL values</summary>

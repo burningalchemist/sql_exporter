@@ -31,7 +31,7 @@ type collector struct {
 
 // NewCollector returns a new Collector with the given configuration and database. The metrics it creates will all have
 // the provided const labels applied.
-func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*dto.LabelPair) (Collector, errors.WithContext) {
+func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*dto.LabelPair, enableQueryMetrics bool) (Collector, errors.WithContext) {
 	logContext = TrimMissingCtx(fmt.Sprintf(`%s,collector=%s`, logContext, cc.Name))
 
 	// Maps each query to the list of metric families it populates.
@@ -53,7 +53,7 @@ func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*
 	// Instantiate queries.
 	queries := make([]*Query, 0, len(cc.Metrics))
 	for qc, mfs := range queryMFs {
-		q, err := NewQuery(logContext, qc, mfs...)
+		q, err := NewQuery(logContext, qc, constLabels, enableQueryMetrics, mfs...)
 		if err != nil {
 			return nil, err
 		}
