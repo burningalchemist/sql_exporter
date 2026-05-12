@@ -24,6 +24,11 @@ const (
 	upMetricHelp       = "1 if the target is reachable, or 0 if the scrape failed"
 	scrapeDurationName = "scrape_duration_seconds"
 	scrapeDurationHelp = "How long it took to scrape the target in seconds"
+	queryDurationName  = "query_duration_seconds"
+	queryDurationHelp  = "How long the named query took to execute in seconds (last scrape)"
+	queryRowsName      = "query_rows_returned"
+	queryRowsHelp      = "Number of rows returned by the named query (last scrape)"
+	queryLabelName     = "query"
 )
 
 // Target collects SQL metrics from a single sql.DB instance. It aggregates one or more Collectors and it looks much
@@ -86,7 +91,7 @@ func NewTarget(
 
 	collectors := make([]Collector, 0, len(ccs))
 	for _, cc := range ccs {
-		c, err := NewCollector(logContext, cc, constLabelPairs)
+		c, err := NewCollector(logContext, cc, constLabelPairs, gc.EnableQueryMetrics)
 		if err != nil {
 			return nil, err
 		}

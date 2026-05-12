@@ -5,10 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"sort"
 	"time"
 
 	"github.com/burningalchemist/sql_exporter/config"
 	"github.com/burningalchemist/sql_exporter/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 )
 
 // Query wraps a sql.Stmt and all the metrics populated from it. It helps extract keys and values from result rows.
@@ -18,6 +21,9 @@ type Query struct {
 	// columnTypes maps column names to the column type expected by metrics: key (string) or value (float64).
 	columnTypes columnTypeMap
 	logContext  string
+
+	durationDesc MetricDesc
+	rowsDesc     MetricDesc
 
 	conn *sql.DB
 	stmt *sql.Stmt
@@ -35,7 +41,7 @@ const (
 )
 
 // NewQuery returns a new Query that will populate the given metric families.
-func NewQuery(logContext string, qc *config.QueryConfig, metricFamilies ...*MetricFamily) (*Query, errors.WithContext) {
+func NewQuery(logContext string, qc *config.QueryConfig, constLabels []*dto.LabelPair, enableQueryMetrics bool, metricFamilies ...*MetricFamily) (*Query, errors.WithContext) {
 	logContext = TrimMissingCtx(fmt.Sprintf(`%s,query=%s`, logContext, qc.Name))
 
 	columnTypes := make(columnTypeMap)
@@ -58,11 +64,30 @@ func NewQuery(logContext string, qc *config.QueryConfig, metricFamilies ...*Metr
 		}
 	}
 
+	var durationDesc, rowsDesc MetricDesc
+	if enableQueryMetrics {
+		autoLabels := make([]*dto.LabelPair, 0, len(constLabels)+1)
+		autoLabels = append(autoLabels, constLabels...)
+		queryName := qc.Name
+		queryLabel := queryLabelName
+		autoLabels = append(autoLabels, &dto.LabelPair{
+			Name:  &queryLabel,
+			Value: &queryName,
+		})
+		sort.Sort(labelPairSorter(autoLabels))
+		durationDesc = NewAutomaticMetricDesc(logContext, queryDurationName, queryDurationHelp,
+			prometheus.GaugeValue, autoLabels)
+		rowsDesc = NewAutomaticMetricDesc(logContext, queryRowsName, queryRowsHelp,
+			prometheus.GaugeValue, autoLabels)
+	}
+
 	q := Query{
 		config:         qc,
 		metricFamilies: metricFamilies,
 		columnTypes:    columnTypes,
 		logContext:     logContext,
+		durationDesc:   durationDesc,
+		rowsDesc:       rowsDesc,
 	}
 	return &q, nil
 }
@@ -82,6 +107,15 @@ func setColumnType(logContext, columnName string, ctype columnType, columnTypes 
 
 // Collect is the equivalent of prometheus.Collector.Collect() but takes a context to run in and a database to run on.
 func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
+	start := time.Now()
+	var rowCount uint64
+	defer func() {
+		if q.durationDesc != nil {
+			ch <- NewMetric(q.durationDesc, time.Since(start).Seconds())
+			ch <- NewMetric(q.rowsDesc, float64(rowCount))
+		}
+	}()
+
 	if ctx.Err() != nil {
 		ch <- NewInvalidMetric(errors.Wrap(q.logContext, ctx.Err()))
 
@@ -114,6 +148,7 @@ func (q *Query) Collect(ctx context.Context, conn *sql.DB, ch chan<- Metric) {
 			ch <- NewInvalidMetric(err)
 			continue
 		}
+		rowCount++
 		for _, mf := range q.metricFamilies {
 			mf.Collect(row, ch)
 		}

@@ -21,6 +21,8 @@ type GlobalConfig struct {
 	MaxConns     int `yaml:"max_connections" env:"MAX_CONNECTIONS"`           // maximum number of open connections to any one target
 	MaxIdleConns int `yaml:"max_idle_connections" env:"MAX_IDLE_CONNECTIONS"` // maximum number of idle connections to any one target
 
+	EnableQueryMetrics bool `yaml:"enable_query_metrics,omitempty" env:"ENABLE_QUERY_METRICS"` // expose per-query duration and row count metrics
+
 	// Catches all undefined fields and must be empty after parsing.
 	XXX map[string]any `yaml:",inline" json:"-"`
 }
@@ -41,6 +43,7 @@ func (g *GlobalConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	g.MaxIdleConns = 3
 	g.MaxConnLifetime = time.Duration(0)
 	g.WarmupDelay = model.Duration(0)
+	g.EnableQueryMetrics = false
 
 	type plain GlobalConfig
 	if err := unmarshal((*plain)(g)); err != nil {
