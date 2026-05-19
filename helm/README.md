@@ -64,6 +64,7 @@ See the [examples directory](../examples/) for complete configuration examples: 
 | commonAnnotations | object | `{}` | Common annotations to add to all the deployed resources |
 | commonLabels | object | `{}` | Common labels to add to all deployed resources |
 | createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
+| dnsConfig | object | `{}` | Pod DNS configuration (e.g. set ndots to reduce DNS lookup latency) |
 | extraContainers | object | `{}` | Arbitrary sidecar containers list |
 | extraManifests | list | `[]` | Arbitrary manifests list |
 | fullnameOverride | string | `""` | String to fully override "sql-exporter.fullname" |
@@ -89,6 +90,7 @@ See the [examples directory](../examples/) for complete configuration examples: 
 | podLabels | object | `{}` | Pod labels |
 | podSecurityContext | object | `{}` | Pod security context |
 | reloadEnabled | bool | `false` | Enable reload collector data handler (endpoint /reload) |
+| resizePolicy | list | `[]` | Container resize policy for in-place vertical scaling |
 | resources | object | `{}` | Resource limits and requests for the application controller pods |
 | service.annotations | object | `{}` | Service annotations |
 | service.labels | object | `{}` | Service labels |

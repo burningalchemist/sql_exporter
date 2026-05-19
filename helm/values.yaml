@@ -127,6 +127,17 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+# -- Container resize policy for in-place vertical scaling
+resizePolicy: []
+  # - resourceName: cpu
+  #   restartPolicy: NotRequired
+  # - resourceName: memory
+  #   restartPolicy: RestartContainer
+# -- Pod DNS configuration (e.g. set ndots to reduce DNS lookup latency)
+dnsConfig: {}
+  # options:
+  #   - name: ndots
+  #     value: "2"
 # -- Pod labels
 podLabels: {}
 # -- Pod annotations
