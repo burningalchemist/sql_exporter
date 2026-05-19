@@ -240,6 +240,10 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.resizePolicy }}
+          resizePolicy:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         {{- with .Values.extraContainers }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -253,5 +257,9 @@ spec:
     {{- end }}
     {{- with .Values.tolerations }}
       tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.dnsConfig }}
+      dnsConfig:
         {{- toYaml . | nindent 8 }}
     {{- end }}
