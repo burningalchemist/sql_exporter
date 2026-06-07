@@ -8,3 +8,7 @@ updates:
     - "dependencies"
     commit-message:
       prefix: "deps"
+    ignore:
+      - dependency-name: "github.com/aws/aws-sdk-go-v2*"
+        update-types:
+          - "version-update:semver-patch"
