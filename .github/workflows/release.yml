@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-    - '*.*.*'
+      - "*.*.*"
 
 jobs:
   build:
@@ -13,41 +13,41 @@ jobs:
     env:
       VERSION: ${{ github.ref_name }}
     steps:
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v6
-      with:
-        go-version: '^1.26.0'
-        check-latest: true
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: "^1.26.0"
+          check-latest: true
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
 
-    - name: Promu - Crossbuild
-      run: make crossbuild
+      - name: Promu - Crossbuild
+        run: make crossbuild
 
-    - name: Promu - Prepare packages
-      run: make crossbuild-tarballs
+      - name: Promu - Prepare packages
+        run: make crossbuild-tarballs
 
-    - name: Create deb package
-      uses: burningalchemist/action-gh-nfpm@v1
-      with:
-        packager: deb
-        config: packaging/conf/nfpm.yaml
-        target: .tarballs/
-    - name: Create rpm package
-      uses: burningalchemist/action-gh-nfpm@v1
-      with:
-        packager: rpm
-        config: packaging/conf/nfpm.yaml
-        target: .tarballs/
+      - name: Create deb package
+        uses: burningalchemist/action-gh-nfpm@v1
+        with:
+          packager: deb
+          config: packaging/conf/nfpm.yaml
+          target: .tarballs/
+      - name: Create rpm package
+        uses: burningalchemist/action-gh-nfpm@v1
+        with:
+          packager: rpm
+          config: packaging/conf/nfpm.yaml
+          target: .tarballs/
 
-    - name: Calculate checksums
-      run: make crossbuild-checksum
+      - name: Calculate checksums
+        run: make crossbuild-checksum
 
-    - name: Upload artifacts
-      uses: softprops/action-gh-release@v2.2.2
-      with:
-        files: |
-          .tarballs/*
+      - name: Upload artifacts
+        uses: softprops/action-gh-release@v2.2.2
+        with:
+          files: |
+            .tarballs/*
   docker:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
