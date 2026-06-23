@@ -34,7 +34,7 @@ jobs:
       # --  the commit hash set in the previous step from a
       # --  currently released chart. If it doesn't exists, then
       # --  I assume that chart is not released and compare to the
-      # --  previous commit 
+      # --  previous commit
       # --
       # -- Also, I'm setting the RepoURL here. Since we plan to support
       # --  the official chart in this git repository, the helm

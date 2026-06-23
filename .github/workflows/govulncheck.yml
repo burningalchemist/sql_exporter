@@ -10,7 +10,7 @@ on:
       - main
       - master
   schedule:
-    - cron: '33 2 * * *'
+    - cron: "33 2 * * *"
 
 permissions:
   contents: read
