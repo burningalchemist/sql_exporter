@@ -25,7 +25,7 @@ require (
 	github.com/vertica/vertica-sql-go v1.3.6
 	github.com/xo/dburl v0.24.2
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/sync v0.20.0
+	golang.org/x/sync v0.21.0
 	k8s.io/apimachinery v0.36.2
 	k8s.io/client-go v0.36.1
 )
