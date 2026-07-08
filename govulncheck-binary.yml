@@ -1,0 +1,34 @@
+name: Audit Released Binary
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  scan_binary:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Set up Go environment
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      - name: Install govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Fetch latest release binary
+        run: |
+          ASSET_NAME=$(gh release view --json assets -q '.assets[].name' | grep 'linux' | head -n 1)
+          if [ -z "$ASSET_NAME" ]; then echo "No binary found"; exit 1; fi
+          gh release download --pattern "$ASSET_NAME"
+          tar -xzf "$ASSET_NAME" --strip-components=1
+
+      - name: Run govulncheck on Asset
+        run: |
+          # Mark executable if needed and scan
+          govulncheck -mode=binary sql_exporter
