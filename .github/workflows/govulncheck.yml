@@ -7,10 +7,7 @@ on:
       - .github/workflows/govulncheck.yml
   push:
     branches:
-      - main
       - master
-  schedule:
-    - cron: "33 2 * * *"
 
 permissions:
   contents: read

@@ -1,0 +1,52 @@
+name: Audit Released Binary (linux/amd64)
+
+on:
+  schedule:
+    - cron: "33 2 * * 1" # Every Monday at 02:33 UTC
+  workflow_dispatch:
+
+jobs:
+  govulncheck_binary:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Set up Go environment
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Install govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            README.md
+
+      - name: Fetch latest release binary
+        run: |
+          ASSET_NAME=$(gh release view --json assets -q '.assets[].name' | grep 'linux' | head -n 1)
+          if [ -z "$ASSET_NAME" ]; then echo "No binary found"; exit 1; fi
+          gh release download --pattern "$ASSET_NAME"
+          tar -xzf "$ASSET_NAME" --strip-components=1
+
+      - name: Run govulncheck on assets
+        id: run_vuln
+        run: |
+          govulncheck -mode=binary sql_exporter > govulncheck_output.txt
+
+      - name: Print the output to Summary
+        if: always() && steps.run_vuln.outcome != 'skipped'
+        run: |
+          echo "## 🛡️ govulncheck Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "Analysis completed for the released binary." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Click to expand raw output</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          cat govulncheck_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
