@@ -36,7 +36,17 @@ jobs:
       - name: Run govulncheck on assets
         id: run_vuln
         run: |
-          govulncheck -mode=binary sql_exporter > govulncheck_output.txt
+          govulncheck -mode=binary sql_exporter > govulncheck_output.txt || true
+
+          # GO-2026-5932 is for golang/x/crypto/openpgp that is unused
+          EXCLUDED_VULNS="GO-2026-5932"
+
+          if grep -E "GO-" govulncheck_output.txt | grep -q -E -v "$EXCLUDED_VULNS"; then
+            echo "New or unapproved vulnerabilities detected."
+            exit 1
+          else
+            echo "No unexpected vulnerabilities found."
+          fi
 
       - name: Print the output to Summary
         if: always() && steps.run_vuln.outcome != 'skipped'
