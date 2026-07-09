@@ -1,6 +1,7 @@
 # SQL Exporter for Prometheus
 
-[![Go](https://github.com/burningalchemist/sql_exporter/workflows/Go/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions?query=workflow%3AGo) [![Go Report Card](https://goreportcard.com/badge/github.com/burningalchemist/sql_exporter)](https://goreportcard.com/report/github.com/burningalchemist/sql_exporter) [![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter) ![Downloads](https://img.shields.io/github/downloads/burningalchemist/sql_exporter/total) [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/sql-exporter)](https://artifacthub.io/packages/helm/sql-exporter/sql-exporter)
+[![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter) ![Downloads](https://img.shields.io/github/downloads/burningalchemist/sql_exporter/total) [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/sql-exporter)](https://artifacthub.io/packages/helm/sql-exporter/sql-exporter)
+[![Audit Released Binary (linux/amd64)](https://github.com/burningalchemist/sql_exporter/actions/workflows/govulncheck-binary.yml/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions/workflows/govulncheck-binary.yml)
 
 ## Overview
 
