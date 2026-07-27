@@ -22,7 +22,7 @@ require (
 	github.com/sethvargo/go-envconfig v1.4.3
 	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/snowflakedb/gosnowflake/v2 v2.1.0
-	github.com/vertica/vertica-sql-go v1.3.6
+	github.com/vertica/vertica-sql-go v1.3.8
 	github.com/xo/dburl v0.24.2
 	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/sync v0.22.0
