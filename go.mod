@@ -24,7 +24,7 @@ require (
 	github.com/snowflakedb/gosnowflake/v2 v2.1.0
 	github.com/vertica/vertica-sql-go v1.3.6
 	github.com/xo/dburl v0.24.2
-	go.yaml.in/yaml/v3 v3.0.4
+	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/sync v0.22.0
 	k8s.io/apimachinery v0.36.2
 	k8s.io/client-go v0.36.2
