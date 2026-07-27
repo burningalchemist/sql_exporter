@@ -12,7 +12,7 @@ import (
 	dto "github.com/prometheus/client_model/go"
 )
 
-// MetricDesc is a descriptor for a family of metrics, sharing the same name, help, labes, type.
+// MetricDesc is a descriptor for a family of metrics, sharing the same name, help, labels, type.
 type MetricDesc interface {
 	Name() string
 	Help() string
