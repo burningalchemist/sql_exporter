@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.18.5](https://img.shields.io/badge/Version-0.18.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.24.4](https://img.shields.io/badge/AppVersion-0.24.4-informational?style=flat-square)
+![Version: 0.18.6](https://img.shields.io/badge/Version-0.18.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.24.4](https://img.shields.io/badge/AppVersion-0.24.4-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -61,6 +61,7 @@ See the [examples directory](../examples/) for complete configuration examples: 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| affinity | object | `{}` | Affinity rules for pod assignment |
 | commonAnnotations | object | `{}` | Common annotations to add to all the deployed resources |
 | commonLabels | object | `{}` | Common labels to add to all deployed resources |
 | createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
@@ -101,6 +102,7 @@ See the [examples directory](../examples/) for complete configuration examples: 
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
 | serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
 | terminationGracePeriodSeconds | string | `""` | Pod termination grace period in seconds (pod spec.terminationGracePeriodSeconds) |
+| tolerations | list | `[]` | Tolerations for pod assignment |
 | webConfig | object | `{"basicAuth":{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}},"enabled":false,"template":"","tls":{"certFile":"tls.crt","certKey":"tls.crt","keyFile":"tls.key","keyKey":"tls.key","secretName":""}}` | Enable and configure Prometheus web config file support web-config.yml is automatically placed at /etc/sql_exporter/web-config.yml |
 | webConfig.basicAuth | object | `{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}}` | Basic authentication configuration for web-config |
 | webConfig.basicAuth.bcryptCost | int | `12` | Bcrypt cost used when hashing via initFromSecret |
