@@ -8,6 +8,13 @@ metadata:
     {{- include "sql-exporter.annotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount | default 1 }}
+  {{- with .Values.deploymentStrategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "sql-exporter.selectorLabels" . | nindent 6 }}
@@ -28,6 +35,9 @@ spec:
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
     {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
@@ -242,6 +252,10 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- with .Values.resizePolicy }}
           resizePolicy:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.lifecycle }}
+          lifecycle:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- with .Values.extraContainers }}

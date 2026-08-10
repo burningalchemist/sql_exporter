@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.18.4](https://img.shields.io/badge/Version-0.18.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.24.4](https://img.shields.io/badge/AppVersion-0.24.4-informational?style=flat-square)
+![Version: 0.18.5](https://img.shields.io/badge/Version-0.18.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.24.4](https://img.shields.io/badge/AppVersion-0.24.4-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
@@ -64,6 +64,7 @@ See the [examples directory](../examples/) for complete configuration examples: 
 | commonAnnotations | object | `{}` | Common annotations to add to all the deployed resources |
 | commonLabels | object | `{}` | Common labels to add to all deployed resources |
 | createConfig | bool | `true` | Set to true to create a config as a part of the helm chart |
+| deploymentStrategy | object | `{}` | Deployment update strategy, rendered verbatim under the Deployment's spec.strategy |
 | dnsConfig | object | `{}` | Pod DNS configuration (e.g. set ndots to reduce DNS lookup latency) |
 | extraContainers | object | `{}` | Arbitrary sidecar containers list |
 | extraManifests | list | `[]` | Arbitrary manifests list |
@@ -83,8 +84,10 @@ See the [examples directory](../examples/) for complete configuration examples: 
 | ingress.tls.key | string | `""` | Ingress tls.key, required if you don't have secret name. |
 | ingress.tls.secretName | string | `""` | Ingress tls secret if already exists. |
 | initContainers | object | `{}` | Arbitrary sidecar containers list for 1.29+ kubernetes |
+| lifecycle | object | `{}` | Container lifecycle hooks (e.g. preStop, to allow graceful deregistration during rolling updates) |
 | logFormat | string | `"logfmt"` | Set log format (logfmt if unset) |
 | logLevel | string | `"info"` | Set log level (info if unset) |
+| minReadySeconds | string | `""` | Minimum number of seconds for which a newly created pod should be ready, without any of its containers crashing, to be considered available (Deployment spec.minReadySeconds) |
 | nameOverride | string | `""` | Provide a name in place of `sql-exporter` |
 | podAnnotations | object | `{}` | Pod annotations |
 | podLabels | object | `{}` | Pod labels |
@@ -97,6 +100,7 @@ See the [examples directory](../examples/) for complete configuration examples: 
 | service.type | string | `"ClusterIP"` | Service type |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the Service Account |
 | serviceAccount.create | bool | `true` | Specifies whether a Service Account should be created, creates "sql-exporter" service account if true, unless overriden. Otherwise, set to `default` if false, and custom service account name is not provided. Check all the available parameters. |
+| terminationGracePeriodSeconds | string | `""` | Pod termination grace period in seconds (pod spec.terminationGracePeriodSeconds) |
 | webConfig | object | `{"basicAuth":{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}},"enabled":false,"template":"","tls":{"certFile":"tls.crt","certKey":"tls.crt","keyFile":"tls.key","keyKey":"tls.key","secretName":""}}` | Enable and configure Prometheus web config file support web-config.yml is automatically placed at /etc/sql_exporter/web-config.yml |
 | webConfig.basicAuth | object | `{"bcryptCost":12,"enabled":false,"initFromSecret":{"enabled":false,"image":"httpd:alpine","imagePullPolicy":"IfNotPresent","secretKey":"password","secretName":""},"username":"prometheus","users":{}}` | Basic authentication configuration for web-config |
 | webConfig.basicAuth.bcryptCost | int | `12` | Bcrypt cost used when hashing via initFromSecret |
