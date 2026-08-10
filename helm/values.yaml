@@ -133,11 +133,26 @@ resizePolicy: []
   #   restartPolicy: NotRequired
   # - resourceName: memory
   #   restartPolicy: RestartContainer
+# -- Container lifecycle hooks (e.g. preStop, to allow graceful deregistration during rolling updates)
+lifecycle: {}
+  # preStop:
+  #   exec:
+  #     command: ["/bin/sh", "-c", "sleep 45"]
 # -- Pod DNS configuration (e.g. set ndots to reduce DNS lookup latency)
 dnsConfig: {}
   # options:
   #   - name: ndots
   #     value: "2"
+# -- Deployment update strategy, rendered verbatim under the Deployment's spec.strategy
+deploymentStrategy: {}
+  # type: RollingUpdate
+  # rollingUpdate:
+  #   maxSurge: 1
+  #   maxUnavailable: 0
+# -- Minimum number of seconds for which a newly created pod should be ready, without any of its containers crashing, to be considered available (Deployment spec.minReadySeconds)
+minReadySeconds: ""
+# -- Pod termination grace period in seconds (pod spec.terminationGracePeriodSeconds)
+terminationGracePeriodSeconds: ""
 # -- Pod labels
 podLabels: {}
 # -- Pod annotations
