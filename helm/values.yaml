@@ -165,6 +165,10 @@ podSecurityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
+# -- Affinity rules for pod assignment
+affinity: {}
+# -- Tolerations for pod assignment
+tolerations: []
 # @ignored
 securityContext: {}
 # Prometheus Operator values
