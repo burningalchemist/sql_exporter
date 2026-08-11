@@ -2,10 +2,11 @@ package config
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"maps"
 	"net/url"
 	"os"
-	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -102,38 +103,23 @@ func (p k8sSecretProvider) getDSN(ctx context.Context, ref *url.URL) (string, er
 		return "", fmt.Errorf("invalid k8ssecret URL format: expected k8ssecret://[namespace/]secret-name, got %s", ref.String())
 	}
 
-	// Extract the key from the secret data
-	key := ref.Query().Get("key")
-	if key == "" {
-		key = "data_source_name"
-	}
-
 	// Fetch the secret from Kubernetes API
 	secret, err := provider.clientset.CoreV1().Secrets(namespace).Get(ctx, secretName, metav1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("unable to fetch secret %q from namespace %q: %w", secretName, namespace, err)
 	}
-
-	// Extract the key from secret data - check both Data (binary) and StringData (string)
-	var secretValue string
-
-	// Check in Data field first (for binary/encoded data)
-	if data, ok := secret.Data[key]; ok {
-		secretValue = string(data)
-	} else if stringData, ok := secret.StringData[key]; ok {
-		// Check in StringData field (for direct string values)
-		secretValue = stringData
-	} else {
-		return "", fmt.Errorf("key %q not found in Kubernetes secret %s/%s", key, namespace, secretName)
+	// Return the raw secret payload (all keys) as JSON. Per-call '?key=' selection and '?template=' substitution are
+	// handled by secretResolver.extractKey, since this provider's result is cached (and shared) across all references
+	// to the same secret object regardless of query params.
+	raw := make(map[string]string, len(secret.Data)+len(secret.StringData))
+	for k, v := range secret.Data {
+		raw[k] = string(v)
 	}
+	maps.Copy(raw, secret.StringData)
 
-	// Apply template if provided
-	templateStr := ref.Query().Get("template")
-	if templateStr != "" {
-		// Simple string replacement - replace all occurrences of DSN_VALUE with the secret value
-		result := strings.ReplaceAll(templateStr, "DSN_VALUE", secretValue)
-		return result, nil
+	b, err := json.Marshal(raw)
+	if err != nil {
+		return "", fmt.Errorf("unable to marshal Kubernetes secret %s/%s: %w", namespace, secretName, err)
 	}
-
-	return secretValue, nil
+	return string(b), nil
 }

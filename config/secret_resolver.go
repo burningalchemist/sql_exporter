@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"strings"
 	"sync"
 
 	"golang.org/x/sync/singleflight"
@@ -79,17 +80,24 @@ func (r *secretResolver) resolve(ctx context.Context, value string) (string, err
 
 // extractKey pulls the appropriate key from a raw secret value (JSON or plain string).
 func extractKey(raw string, u *url.URL, originalValue string) (string, error) {
+	var resolved string
 	var payload map[string]string
 	if jsonErr := json.Unmarshal([]byte(raw), &payload); jsonErr == nil {
 		key := u.Query().Get("key")
 		if key == "" {
 			key = "data_source_name"
 		}
-		val, ok := payload[key]
+		fieldValue, ok := payload[key]
 		if !ok {
 			return "", fmt.Errorf("key %q not found in secret %q", key, originalValue)
 		}
-		return val, nil
+		resolved = fieldValue
+	} else {
+		resolved = raw
 	}
-	return raw, nil
+
+	if tmpl := u.Query().Get("template"); tmpl != "" {
+		return strings.ReplaceAll(tmpl, "DSN_VALUE", resolved), nil
+	}
+	return resolved, nil
 }
