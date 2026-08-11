@@ -13,7 +13,6 @@ type fakeSecretProvider struct {
 	calls   int
 }
 
-
 // getDSN simulates fetching a DSN from a secret provider. It returns the JSON-encoded payload and increments the call count.
 func (p *fakeSecretProvider) getDSN(_ context.Context, _ *url.URL) (string, error) {
 	p.calls++

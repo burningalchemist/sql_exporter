@@ -12,7 +12,7 @@ import (
 	vault "github.com/hashicorp/vault/api"
 )
 
-// newVaultTestServer starts an httptest server that serves a fixed KV v2 response for any path, 
+// newVaultTestServer starts an httptest server that serves a fixed KV v2 response for any path,
 // mimicking Vault's /v1/<mount>/data/<path> shape.
 func newVaultTestServer(t *testing.T, data map[string]any) *httptest.Server {
 	t.Helper()

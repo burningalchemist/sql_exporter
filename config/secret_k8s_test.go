@@ -15,7 +15,7 @@ import (
 // newTestK8sProvider builds a k8sSecretProvider via a fake clientset, bypassing getK8sProvider in-cluster setup
 func newTestK8sProvider(namespace string, objects ...*corev1.Secret) k8sSecretProvider {
 	// k8sSecretProvider.getDSN calls getK8sProvider() internally; to keep this test hermetic we exercise the
-	// provider's logic via a lightweight wrapper. 
+	// provider's logic via a lightweight wrapper.
 	return k8sSecretProvider{}
 }
 
