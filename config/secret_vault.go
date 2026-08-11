@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 
@@ -43,21 +44,22 @@ func (p vaultProvider) getDSN(ctx context.Context, ref *url.URL) (string, error)
 		return "", fmt.Errorf("unable to read Vault secret at %q: %w", secretPath, err)
 	}
 
-	// key query param specifies which field to extract, defaults to "data_source_name".
-	key := q.Get("key")
-	if key == "" {
-		key = "data_source_name"
+	// Return the raw secret payload (all keys) as JSON. Per-call ?key= selection is
+	// handled by secretResolver.extractKey, since this provider's result is cached
+	// (and shared) across all references to the same secret path regardless of
+	// query params.
+	raw := make(map[string]string, len(secret.Data))
+	for k, v := range secret.Data {
+		str, ok := v.(string)
+		if !ok {
+			return "", fmt.Errorf("value for key %q in Vault secret at %q is not a string", k, secretPath)
+		}
+		raw[k] = str
 	}
 
-	val, ok := secret.Data[key]
-	if !ok {
-		return "", fmt.Errorf("key %q not found in Vault secret at %q", key, secretPath)
+	b, err := json.Marshal(raw)
+	if err != nil {
+		return "", fmt.Errorf("unable to marshal Vault secret at %q: %w", secretPath, err)
 	}
-
-	str, ok := val.(string)
-	if !ok {
-		return "", fmt.Errorf("key %q in Vault secret at %q is not a string", key, secretPath)
-	}
-
-	return str, nil
+	return string(b), nil
 }
