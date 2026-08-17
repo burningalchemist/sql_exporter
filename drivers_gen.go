@@ -30,6 +30,7 @@ var driverList = map[string][]string{
 	},
 	"custom": {
 		"github.com/mithrandie/csvq-driver",
+		"modernc.org/sqlite",
 	},
 }
 
