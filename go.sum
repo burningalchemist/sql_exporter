@@ -321,6 +321,8 @@ github.com/shopspring/decimal v1.4.0 h1:bxl37RwXBklmTi0C79JfXCEBD1cqqHt0bbgBAGFp
 github.com/shopspring/decimal v1.4.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
 github.com/sijms/go-ora/v3 v3.0.1 h1:BU9j2MEji/hqprUFvY8DBbnfmVrt5TpVf4ngy9tqpWY=
 github.com/sijms/go-ora/v3 v3.0.1/go.mod h1:9NMI4/C/J9ExE/YNgQQlZXic2U1aCLHchJmmnDOK0jM=
+github.com/sijms/go-ora/v3 v3.0.2-0.20260809153250-b6e6835f760b h1:K+IoZtyCtDBktlrKS6EBxqnZcj1dxZ1KTfBokKcOyts=
+github.com/sijms/go-ora/v3 v3.0.2-0.20260809153250-b6e6835f760b/go.mod h1:9NMI4/C/J9ExE/YNgQQlZXic2U1aCLHchJmmnDOK0jM=
 github.com/snowflakedb/gosnowflake/v2 v2.1.0 h1:rfjs6NAMnbLKCBYlOarqQX/UKgQVrXi43TZNHCP5/jw=
 github.com/snowflakedb/gosnowflake/v2 v2.1.0/go.mod h1:c0hIqJ/dxgaMl7g1o8n4Ca3Mf5YCiiVx9igio/PNqC8=
 github.com/spf13/pflag v1.0.9 h1:9exaQaMOCwffKiiiYk6/BndUBv+iRViNW+4lEMi0PvY=
