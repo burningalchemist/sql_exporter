@@ -23,10 +23,12 @@ var driverList = map[string][]string{
 	},
 	"extra": {
 		"github.com/ClickHouse/clickhouse-go/v2",
+		"github.com/sijms/go-ora/v3",
 		"github.com/jackc/pgx/v5/stdlib",
+	},
+	"commercial": {
 		"github.com/snowflakedb/gosnowflake/v2",
 		"github.com/vertica/vertica-sql-go",
-		"github.com/sijms/go-ora/v2",
 	},
 	"custom": {
 		"github.com/mithrandie/csvq-driver",
@@ -63,10 +65,9 @@ func main() {
 
 	if key == "all" {
 		for k, list := range driverList {
-			if k == "custom" {
-				continue
+			if k == "minimal" || k == "extra" {
+				enabledDrivers = append(enabledDrivers, list...)
 			}
-			enabledDrivers = append(enabledDrivers, list...)
 		}
 	} else {
 		list, ok := driverList[key]
