@@ -377,7 +377,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.17.3.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.17.3/sql-exporter-0.17.3.tgz
     version: 0.17.3
   - annotations:
       git/commit-sha: b67b075281c7c4a07cafab6ed4d35a18263a874e
@@ -401,7 +401,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.17.2.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.17.2/sql-exporter-0.17.2.tgz
     version: 0.17.2
   - annotations:
       git/commit-sha: 615686fc6ad8636231cdb60663bec3a3e1c320d4
@@ -425,7 +425,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.17.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.17.1/sql-exporter-0.17.1.tgz
     version: 0.17.1
   - annotations:
       git/commit-sha: 5d2fb4c3d9e205b0480234a6109a90077db540a2
@@ -449,7 +449,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.17.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.17.0/sql-exporter-0.17.0.tgz
     version: 0.17.0
   - annotations:
       git/commit-sha: 7cc4af3f0c4d66842b2f88380da6d5fbca1ab081
@@ -473,7 +473,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.16.2.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.16.2/sql-exporter-0.16.2.tgz
     version: 0.16.2
   - annotations:
       git/commit-sha: 0c0a93181e2f1bc127f7dffb16f83727b8ebcdc3
@@ -497,7 +497,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.16.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.16.1/sql-exporter-0.16.1.tgz
     version: 0.16.1
   - annotations:
       git/commit-sha: b1c3e4d498acabee3c2aee0348af07e746168797
@@ -521,7 +521,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.16.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.16.0/sql-exporter-0.16.0.tgz
     version: 0.16.0
   - annotations:
       git/commit-sha: 0374d04848f0c8117c0e40e087706460c295d0bf
@@ -545,7 +545,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.15.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.15.0/sql-exporter-0.15.0.tgz
     version: 0.15.0
   - annotations:
       git/commit-sha: 2ff1b44b562861419bb78747681a81fb74e60da7
@@ -569,7 +569,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.14.2.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.14.2/sql-exporter-0.14.2.tgz
     version: 0.14.2
   - annotations:
       git/commit-sha: 117029c34a504267cd992246a2868a79f6f06492
@@ -593,7 +593,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.14.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.14.1/sql-exporter-0.14.1.tgz
     version: 0.14.1
   - annotations:
       git/commit-sha: f093760cebfa7b6ea3b6a3bd9b7ff60f5aa551c0
@@ -617,7 +617,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.14.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.14.0/sql-exporter-0.14.0.tgz
     version: 0.14.0
   - annotations:
       git/commit-sha: d74005e3c5be6418ea36572e3be1b65b3bafd13e
@@ -641,7 +641,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.13.5.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.13.5/sql-exporter-0.13.5.tgz
     version: 0.13.5
   - annotations:
       git/commit-sha: 9bee3f90cf451248ea272ba01588184e68a065a5
@@ -665,7 +665,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.13.4.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.13.4/sql-exporter-0.13.4.tgz
     version: 0.13.4
   - annotations:
       git/commit-sha: bbe885d33199f9c3620f89987279f197c4957c3a
@@ -689,7 +689,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.13.3.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.13.3/sql-exporter-0.13.3.tgz
     version: 0.13.3
   - annotations:
       git/commit-sha: 11162a70a54d217a1aafd9d1f861b19b53f174af
@@ -713,7 +713,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.13.2.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.13.2/sql-exporter-0.13.2.tgz
     version: 0.13.2
   - annotations:
       git/commit-sha: 32aeab1a081cd39b90b66e81bf6aa6e7cc573298
@@ -737,7 +737,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.13.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.13.1/sql-exporter-0.13.1.tgz
     version: 0.13.1
   - annotations:
       git/commit-sha: f49b7a74f49e1f2e8ca58f29aa8b1483ee2f6852
@@ -761,7 +761,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.13.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.13.0/sql-exporter-0.13.0.tgz
     version: 0.13.0
   - annotations:
       git/commit-sha: 31273ed1e43a294610c8d3d997e4cb1f5c550867
@@ -785,7 +785,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.12.5.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.12.5/sql-exporter-0.12.5.tgz
     version: 0.12.5
   - annotations:
       git/commit-sha: 45a4e20df9a406631b175101b54a405845d738a8
@@ -809,7 +809,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.12.4.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.12.4/sql-exporter-0.12.4.tgz
     version: 0.12.4
   - annotations:
       git/commit-sha: 0e1b0e86498dc9d9e633312990faea54db839cdb
@@ -833,7 +833,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.12.3.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.12.3/sql-exporter-0.12.3.tgz
     version: 0.12.3
   - annotations:
       git/commit-sha: f28a13698be19355e83d3d75ef36874542be9cff
@@ -857,7 +857,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.12.2.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.12.2/sql-exporter-0.12.2.tgz
     version: 0.12.2
   - annotations:
       git/commit-sha: 7879946e514f775d0841081637e619650fd34590
@@ -881,7 +881,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.12.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.12.1/sql-exporter-0.12.1.tgz
     version: 0.12.1
   - annotations:
       git/commit-sha: edcb4f98eebf41f084707124fb413562f39f9770
@@ -905,7 +905,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.12.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.12.0/sql-exporter-0.12.0.tgz
     version: 0.12.0
   - annotations:
       git/commit-sha: 263edcb4db2f288e13f0bafc6d0a217a70c48def
@@ -929,7 +929,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.11.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.11.1/sql-exporter-0.11.1.tgz
     version: 0.11.1
   - annotations:
       git/commit-sha: 2659a6068e8361e1496265b6c8623b681dd1df9e
@@ -953,7 +953,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.11.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.11.0/sql-exporter-0.11.0.tgz
     version: 0.11.0
   - annotations:
       git/commit-sha: c33a446f00206da3d6a96364022082c2fe1baf73
@@ -977,7 +977,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.10.2.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.10.2/sql-exporter-0.10.2.tgz
     version: 0.10.2
   - annotations:
       git/commit-sha: 6c65cdf8da4ecce0a49ace547b78c78caf64eb4a
@@ -1001,7 +1001,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.10.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.10.1/sql-exporter-0.10.1.tgz
     version: 0.10.1
   - annotations:
       git/commit-sha: dde9ee51988b4642461b241496fcd334a4539b51
@@ -1025,7 +1025,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.10.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.10.0/sql-exporter-0.10.0.tgz
     version: 0.10.0
   - annotations:
       git/commit-sha: d1db481be0250555b92e886b01a4c3ce7c1abb2a
@@ -1049,7 +1049,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.9.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.9.0/sql-exporter-0.9.0.tgz
     version: 0.9.0
   - annotations:
       git/commit-sha: 0833fd95bd7376e27e83e4b9253403a90812c520
@@ -1073,7 +1073,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.8.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.8.0/sql-exporter-0.8.0.tgz
     version: 0.8.0
   - annotations:
       git/commit-sha: 131c783bcddfde38335c929a6cc1ef4ca86739c6
@@ -1097,7 +1097,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.7.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.7.0/sql-exporter-0.7.0.tgz
     version: 0.7.0
   - annotations:
       git/commit-sha: 8ce8744999acae483d96786420b82e439c0f431e
@@ -1121,7 +1121,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.6.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.6.1/sql-exporter-0.6.1.tgz
     version: 0.6.1
   - annotations:
       git/commit-sha: e716263290712b43ae9218bf5d1cbad0f23cc08d
@@ -1145,7 +1145,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.6.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.6.0/sql-exporter-0.6.0.tgz
     version: 0.6.0
   - annotations:
       git/commit-sha: d6dd0d8684a048f8030c69256dde4862bc15116f
@@ -1169,7 +1169,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.5.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.5.1/sql-exporter-0.5.1.tgz
     version: 0.5.1
   - annotations:
       git/commit-sha: 881da5ba1e0d514f655cb4c93abc9201a0ef7273
@@ -1193,7 +1193,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.5.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.5.0/sql-exporter-0.5.0.tgz
     version: 0.5.0
   - annotations:
       git/commit-sha: 18936a6a87e69ef3ec78a044213e4c7cda4d9fc3
@@ -1217,7 +1217,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.4.6.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.4.6/sql-exporter-0.4.6.tgz
     version: 0.4.6
   - annotations:
       git/commit-sha: c84384f2db65dd9cc15c5e3a3a684aecf0133a66
@@ -1241,7 +1241,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.4.5.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.4.5/sql-exporter-0.4.5.tgz
     version: 0.4.5
   - annotations:
       git/commit-sha: ebb46dbb1f086c5f8977920312d4d9773d308cee
@@ -1265,7 +1265,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.4.4.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.4.4/sql-exporter-0.4.4.tgz
     version: 0.4.4
   - annotations:
       git/commit-sha: 106059dde7ef352fdccce6209618249c0487412b
@@ -1289,7 +1289,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.4.3.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.4.3/sql-exporter-0.4.3.tgz
     version: 0.4.3
   - annotations:
       git/commit-sha: cc37d602433398100b09825ae3fc22657edbdbef
@@ -1313,7 +1313,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.4.2.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.4.2/sql-exporter-0.4.2.tgz
     version: 0.4.2
   - annotations:
       git/commit-sha: 5e67ef3f08d32df4a9e61b2beaa11d7fb5279a5f
@@ -1337,7 +1337,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.4.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.4.1/sql-exporter-0.4.1.tgz
     version: 0.4.1
   - annotations:
       git/commit-sha: 0ecf82827364a3da8f134f00afd797f4dc89f2e6
@@ -1361,7 +1361,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.4.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.4.0/sql-exporter-0.4.0.tgz
     version: 0.4.0
   - annotations:
       git/commit-sha: b62d4d17a7cc017c7072e026d6bd7921909b9b09
@@ -1385,7 +1385,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.3.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.3.0/sql-exporter-0.3.0.tgz
     version: 0.3.0
   - annotations:
       git/commit-sha: b3153baa55c7538db17f50c3840ca7a714463899
@@ -1409,7 +1409,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.2.5.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.2.5/sql-exporter-0.2.5.tgz
     version: 0.2.5
   - annotations:
       git/commit-sha: bf66c18445f94585e6c872bb46837dddc51533ff
@@ -1433,7 +1433,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.2.4.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.2.4/sql-exporter-0.2.4.tgz
     version: 0.2.4
   - annotations:
       git/commit-sha: 885c365000e5f9623438aa23174953c32945a3cb
@@ -1457,7 +1457,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.2.3.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.2.3/sql-exporter-0.2.3.tgz
     version: 0.2.3
   - annotations:
       git/commit-sha: 098edd55f15d72b2aac820fc202ff6f8bed5dbd9
@@ -1481,7 +1481,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.2.2.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.2.2/sql-exporter-0.2.2.tgz
     version: 0.2.2
   - annotations:
       git/commit-sha: 0e6c0414b1f53cb003e0257f03e7a906b9869d80
@@ -1505,7 +1505,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.2.1.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.2.1/sql-exporter-0.2.1.tgz
     version: 0.2.1
   - annotations:
       git/commit-sha: 38609339b3ad4e15b39596be55f14680a06a0283
@@ -1529,7 +1529,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.2.0.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.2.0/sql-exporter-0.2.0.tgz
     version: 0.2.0
   - annotations:
       git/commit-sha: 908dc980aca606364b47e1b3e184781b3e674a06
@@ -1553,7 +1553,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.1.5.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.1.5/sql-exporter-0.1.5.tgz
     version: 0.1.5
   - annotations:
       git/commit-sha: f10545933b1389d27352552e27a4f3aab3496584
@@ -1577,7 +1577,7 @@ entries:
     - https://github.com/burningalchemist/sql_exporter
     type: application
     urls:
-    - sql-exporter-0.1.4.tgz
+    - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.1.4/sql-exporter-0.1.4.tgz
     version: 0.1.4
   - annotations:
       git/commit-sha: 4e41effd6ffe615d9c56527a57843f39cf158275
