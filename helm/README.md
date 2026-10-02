@@ -1,6 +1,6 @@
 # sql-exporter
 
-![Version: 0.18.10](https://img.shields.io/badge/Version-0.18.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.24.8](https://img.shields.io/badge/AppVersion-0.24.8-informational?style=flat-square)
+![Version: 0.18.11](https://img.shields.io/badge/Version-0.18.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.24.9](https://img.shields.io/badge/AppVersion-0.24.9-informational?style=flat-square)
 
 Database-agnostic SQL exporter for Prometheus
 
