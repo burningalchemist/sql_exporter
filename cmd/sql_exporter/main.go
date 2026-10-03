@@ -39,6 +39,9 @@ var (
 	logFormat     = flag.String("log.format", "logfmt", "Set log output format")
 	logLevel      = flag.String("log.level", "info", "Set log level")
 	logFile       = flag.String("log.file", "", "Log file to write to, leave empty to write to stderr")
+
+	collectorPathRecursiveCLI = true
+	collectorPathPatternCLI   = ""
 )
 
 func init() {
@@ -49,6 +52,12 @@ func init() {
 	flag.StringVar(&cfg.DsnOverride, "config.data-source-name", "",
 		"Data source name to override the value in the configuration file with")
 	flag.StringVar(&cfg.TargetLabel, "config.target-label", "target", "Target label name")
+	flag.StringVar(&cfg.CollectorPathOverride, "config.collector.path", "",
+		"Directory or glob containing collector definition files (overrides collector_path)")
+	flag.BoolVar(&collectorPathRecursiveCLI, "config.collector.path.recursive", true,
+		"Recurse into subdirectories when loading collectors from a directory (overrides collector_path_recursive)")
+	flag.StringVar(&collectorPathPatternCLI, "config.collector.path.pattern", "",
+		"Regex matched against collector filenames when loading from a directory (overrides collector_path_pattern)")
 }
 
 func main() {
@@ -58,6 +67,7 @@ func main() {
 	}
 
 	flag.Parse()
+	applyCollectorPathFlagOverrides()
 
 	// Show version and exit.
 	if *showVersion {
@@ -169,6 +179,20 @@ func signalHandler(e sql_exporter.Exporter, configFile string) {
 			}
 		}
 	}()
+}
+
+// applyCollectorPathFlagOverrides copies CLI collector-path flags into config overrides
+// only when those flags were explicitly provided on the command line.
+func applyCollectorPathFlagOverrides() {
+	flag.Visit(func(f *flag.Flag) {
+		switch f.Name {
+		case "config.collector.path.recursive":
+			v := collectorPathRecursiveCLI
+			cfg.CollectorPathRecursiveOverride = &v
+		case "config.collector.path.pattern":
+			cfg.CollectorPathPatternOverride = collectorPathPatternCLI
+		}
+	})
 }
 
 // startScrapeErrorsDropTicker starts a ticker that periodically drops scrape error metrics.

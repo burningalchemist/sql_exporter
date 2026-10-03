@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/url"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/sethvargo/go-envconfig"
@@ -30,10 +29,13 @@ const (
 const secretResolutionTimeout = 30 * time.Second
 
 var (
-	EnablePing        bool
-	IgnoreMissingVals bool
-	DsnOverride       string
-	TargetLabel       string
+	EnablePing                     bool
+	IgnoreMissingVals              bool
+	DsnOverride                    string
+	TargetLabel                    string
+	CollectorPathOverride          string // set by -config.collector.path; overrides collector_path when non-empty
+	CollectorPathRecursiveOverride *bool  // set by -config.collector.path.recursive when the flag is provided
+	CollectorPathPatternOverride   string // set by -config.collector.path.pattern when the flag is provided
 )
 
 // Load attempts to parse the given config file and return a Config object.
@@ -67,11 +69,14 @@ func Load(configFile string) (*Config, error) {
 
 // Config is a collection of jobs and collectors.
 type Config struct {
-	Globals        *GlobalConfig      `yaml:"global,omitempty" env:", prefix=GLOBAL_"`
-	CollectorFiles []string           `yaml:"collector_files,omitempty" env:"COLLECTOR_FILES"`
-	Target         *TargetConfig      `yaml:"target,omitempty" env:", prefix=TARGET_"`
-	Jobs           []*JobConfig       `yaml:"jobs,omitempty"`
-	Collectors     []*CollectorConfig `yaml:"collectors,omitempty"`
+	Globals                *GlobalConfig      `yaml:"global,omitempty" env:", prefix=GLOBAL_"`
+	CollectorPath          string             `yaml:"collector_path,omitempty" env:"COLLECTOR_PATH"`
+	CollectorPathRecursive *bool              `yaml:"collector_path_recursive,omitempty" env:"COLLECTOR_PATH_RECURSIVE"`
+	CollectorPathPattern   string             `yaml:"collector_path_pattern,omitempty" env:"COLLECTOR_PATH_PATTERN"`
+	CollectorFiles         []string           `yaml:"collector_files,omitempty" env:"COLLECTOR_FILES"`
+	Target                 *TargetConfig      `yaml:"target,omitempty" env:", prefix=TARGET_"`
+	Jobs                   []*JobConfig       `yaml:"jobs,omitempty"`
+	Collectors             []*CollectorConfig `yaml:"collectors,omitempty"`
 
 	configFile string
 
@@ -213,75 +218,6 @@ func (c *Config) populateCollectorReferences() error {
 // YAML marshals the config into YAML format.
 func (c *Config) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
-}
-
-// loadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
-func (c *Config) loadCollectorFiles() error {
-	baseDir := filepath.Dir(c.configFile)
-	for _, cfglob := range c.CollectorFiles {
-		// Resolve relative paths by joining them to the configuration file's directory.
-		if len(cfglob) > 0 && !filepath.IsAbs(cfglob) {
-			cfglob = filepath.Join(baseDir, cfglob)
-		}
-
-		// Resolve the glob to actual filenames.
-		cfs, err := filepath.Glob(cfglob)
-		slog.Debug("External collector files found", "count", len(cfs), "glob", cfglob)
-		if err != nil {
-			// The only error can be a bad pattern.
-			return fmt.Errorf("error resolving collector files for %s: %w", cfglob, err)
-		}
-
-		// And load the CollectorConfig defined in each file.
-		for _, cf := range cfs {
-			buf, err := os.ReadFile(cf)
-			if err != nil {
-				return err
-			}
-
-			// Inspect yaml to ensure strict parsing and expect an object, not a list.
-			var node yaml.Node
-			if err := yaml.Unmarshal(buf, &node); err != nil {
-				return fmt.Errorf("error parsing collector file %s: %w", cf, err)
-			}
-			if node.Kind != yaml.DocumentNode || len(node.Content) == 0 {
-				return fmt.Errorf("collector file %s is not a valid YAML document", cf)
-			}
-
-			top := node.Content[0]
-			if top.Kind != yaml.MappingNode {
-				return fmt.Errorf("collector file %s must define a single YAML map/object at the top level",
-					cf)
-			}
-
-			// Check for 'collectors' key with a sequence value
-			for i := 0; i < len(top.Content); i += 2 {
-				keyNode := top.Content[i]
-				valNode := top.Content[i+1]
-				if keyNode.Value == "collectors" && valNode.Kind == yaml.SequenceNode {
-					return fmt.Errorf(
-						"collector file %s contains a 'collectors' list. Each file must define a single collector object",
-						cf,
-					)
-				}
-			}
-
-			// Now unmarshal into a CollectorConfig.
-			cc := CollectorConfig{}
-			if err := node.Decode(&cc); err != nil {
-				return fmt.Errorf("error parsing collector file %s: %w", cf, err)
-			}
-			if cc.Name == "" {
-				return fmt.Errorf("collector file %s must define a collector with a name", cf)
-			}
-
-			// Append to the config's collectors.
-			c.Collectors = append(c.Collectors, &cc)
-			slog.Debug("Loaded collector", "name", cc.Name, "file", cf)
-		}
-	}
-
-	return nil
 }
 
 func (c *Config) resolveSecrets() error {

@@ -133,7 +133,14 @@ target:
   # a data warehouse you don't want to keep online all the time (due to the extra cost), you might want to disable `ping`
   # enable_ping: true
 
-# Collector definition files.
+# Optional directory of collector files (subdirs scanned by default).
+# Only collectors referenced by target/jobs `collectors` are loaded from directories.
+# Overrides: -config.collector.path, SQLEXPORTER_COLLECTOR_PATH.
+# collector_path: collectors
+# collector_path_recursive: true
+# collector_path_pattern: '(?i)\.(yml|yaml)$'
+
+# Collector definition files (globs, files, or directories).
 # Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
 collector_files:
   - "*.collector.yml"
@@ -142,6 +149,9 @@ collector_files:
 > [!NOTE]
 > The `collectors` and `collector_files` configurations support [Glob pattern matching](https://pkg.go.dev/path/filepath#Match).
 > To match names with literal pattern terms in them, e.g. `collector_*1*`, these must be escaped: `collector_\*1\*`.
+> A directory given as `collector_path` or in `collector_files` is scanned recursively by default; only files whose
+> names match `collectors` (e.g. `pricing.collector.yml` for `pricing`) are opened. Use `collector_path_pattern`
+> (regex on filenames) to further filter which files are considered.
 
 ### Collectors
 
@@ -233,6 +243,9 @@ Here is a list of available environment variables that can be used to configure 
 | :---------------------------- | :------------------------------------------------------------------ |
 | `SQLEXPORTER_CONFIG`          | file path to the configuration file, default is `sql_exporter.yml`  |
 | `SQLEXPORTER_COLLECTOR_FILES` | glob pattern(s) for collector definition files, semicolon-separated |
+| `SQLEXPORTER_COLLECTOR_PATH` | directory (or glob) of collector definition files |
+| `SQLEXPORTER_COLLECTOR_PATH_RECURSIVE` | recurse into subdirectories when loading from a directory (default `true`) |
+| `SQLEXPORTER_COLLECTOR_PATH_PATTERN` | regex matched against collector filenames when loading from a directory (default `(?i)\.(yml\|yaml)$`) |
 
 | Environment Variable                            | Description                                                                           |
 | :---------------------------------------------- | :------------------------------------------------------------------------------------ |
