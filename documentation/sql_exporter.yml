@@ -153,6 +153,13 @@ collectors:
           INNER JOIN sys.master_files b ON a.database_id = b.database_id AND a.file_id = b.file_id
           GROUP BY a.database_id
 
-# Collector files specifies a list of globs. One collector definition per file.
+# Optional directory of collector files. Subdirs are scanned by default.
+# Only files whose names match target/jobs `collectors` are opened (e.g. pricing.collector.yml).
+# Overrides: -config.collector.path, SQLEXPORTER_COLLECTOR_PATH.
+#collector_path: collectors
+#collector_path_recursive: true
+#collector_path_pattern: '(?i)\.(yml|yaml)$'
+
+# Globs, files, or directories. Directory entries use the same recursive/pattern rules.
 collector_files: 
   - "*.collector.yml"
