@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/sethvargo/go-envconfig"
@@ -218,6 +219,8 @@ func (c *Config) YAML() ([]byte, error) {
 // loadCollectorFiles resolves all collector file globs to files and loads the collectors they define.
 func (c *Config) loadCollectorFiles() error {
 	baseDir := filepath.Dir(c.configFile)
+	refs := c.referencedCollectorPatterns()
+
 	for _, cfglob := range c.CollectorFiles {
 		// Resolve relative paths by joining them to the configuration file's directory.
 		if len(cfglob) > 0 && !filepath.IsAbs(cfglob) {
@@ -239,49 +242,130 @@ func (c *Config) loadCollectorFiles() error {
 				return err
 			}
 
-			// Inspect yaml to ensure strict parsing and expect an object, not a list.
-			var node yaml.Node
-			if err := yaml.Unmarshal(buf, &node); err != nil {
-				return fmt.Errorf("error parsing collector file %s: %w", cf, err)
-			}
-			if node.Kind != yaml.DocumentNode || len(node.Content) == 0 {
-				return fmt.Errorf("collector file %s is not a valid YAML document", cf)
-			}
-
-			top := node.Content[0]
-			if top.Kind != yaml.MappingNode {
-				return fmt.Errorf("collector file %s must define a single YAML map/object at the top level",
-					cf)
-			}
-
-			// Check for 'collectors' key with a sequence value
-			for i := 0; i < len(top.Content); i += 2 {
-				keyNode := top.Content[i]
-				valNode := top.Content[i+1]
-				if keyNode.Value == "collectors" && valNode.Kind == yaml.SequenceNode {
-					return fmt.Errorf(
-						"collector file %s contains a 'collectors' list. Each file must define a single collector object",
-						cf,
-					)
+			cc, err := parseCollectorFile(cf, buf)
+			if err != nil {
+				// Broken files that are not referenced by target/jobs should not fail startup
+				// when a greedy glob matches them. Referenced collectors still fail hard.
+				if skip, skipErr := shouldSkipBrokenCollectorFile(cf, buf, refs); skipErr != nil {
+					return skipErr
+				} else if skip {
+					slog.Warn("Skipping broken collector file not referenced by target/jobs",
+						"file", cf, "error", err)
+					continue
 				}
+				return err
 			}
 
-			// Now unmarshal into a CollectorConfig.
-			cc := CollectorConfig{}
-			if err := node.Decode(&cc); err != nil {
-				return fmt.Errorf("error parsing collector file %s: %w", cf, err)
-			}
-			if cc.Name == "" {
-				return fmt.Errorf("collector file %s must define a collector with a name", cf)
-			}
-
-			// Append to the config's collectors.
-			c.Collectors = append(c.Collectors, &cc)
+			c.Collectors = append(c.Collectors, cc)
 			slog.Debug("Loaded collector", "name", cc.Name, "file", cf)
 		}
 	}
 
 	return nil
+}
+
+// parseCollectorFile parses a single external collector definition file.
+func parseCollectorFile(path string, buf []byte) (*CollectorConfig, error) {
+	var node yaml.Node
+	if err := yaml.Unmarshal(buf, &node); err != nil {
+		return nil, fmt.Errorf("error parsing collector file %s: %w", path, err)
+	}
+	if node.Kind != yaml.DocumentNode || len(node.Content) == 0 {
+		return nil, fmt.Errorf("collector file %s is not a valid YAML document", path)
+	}
+
+	top := node.Content[0]
+	if top.Kind != yaml.MappingNode {
+		return nil, fmt.Errorf("collector file %s must define a single YAML map/object at the top level", path)
+	}
+
+	// Each external file must define one collector object, not a collectors list.
+	for i := 0; i < len(top.Content); i += 2 {
+		keyNode := top.Content[i]
+		valNode := top.Content[i+1]
+		if keyNode.Value == "collectors" && valNode.Kind == yaml.SequenceNode {
+			return nil, fmt.Errorf(
+				"collector file %s contains a 'collectors' list. Each file must define a single collector object",
+				path,
+			)
+		}
+	}
+
+	cc := CollectorConfig{}
+	if err := node.Decode(&cc); err != nil {
+		return nil, fmt.Errorf("error parsing collector file %s: %w", path, err)
+	}
+	if cc.Name == "" {
+		return nil, fmt.Errorf("collector file %s must define a collector with a name", path)
+	}
+	return &cc, nil
+}
+
+// referencedCollectorPatterns returns collector name patterns from target and jobs.
+func (c *Config) referencedCollectorPatterns() []string {
+	refs := make([]string, 0)
+	if c.Target != nil {
+		refs = append(refs, c.Target.CollectorRefs...)
+	}
+	for _, job := range c.Jobs {
+		refs = append(refs, job.CollectorRefs...)
+	}
+	return refs
+}
+
+// shouldSkipBrokenCollectorFile reports whether a failed collector file can be skipped.
+// It is skipped only when none of its known identities match target/jobs collector refs.
+func shouldSkipBrokenCollectorFile(path string, buf []byte, refs []string) (bool, error) {
+	if len(refs) == 0 {
+		return false, nil
+	}
+
+	for _, name := range collectorIdentities(path, buf) {
+		matched, err := collectorNameMatchesRefs(name, refs)
+		if err != nil {
+			return false, err
+		}
+		if matched {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// collectorIdentities returns names used to decide whether a broken file is referenced.
+// Prefer collector_name from the file when readable; also include the filename stem so
+// completely invalid YAML can still be skipped for unreferenced files under a greedy glob.
+func collectorIdentities(path string, buf []byte) []string {
+	names := make([]string, 0, 2)
+
+	var peek struct {
+		Name string `yaml:"collector_name"`
+	}
+	if err := yaml.Unmarshal(buf, &peek); err == nil && peek.Name != "" {
+		names = append(names, peek.Name)
+	}
+
+	base := filepath.Base(path)
+	stem := strings.TrimSuffix(base, filepath.Ext(base))
+	names = append(names, stem)
+	if strings.EqualFold(filepath.Ext(stem), ".collector") {
+		names = append(names, strings.TrimSuffix(stem, filepath.Ext(stem)))
+	}
+	return names
+}
+
+// collectorNameMatchesRefs reports whether name matches any collector reference pattern.
+func collectorNameMatchesRefs(name string, refs []string) (bool, error) {
+	for _, ref := range refs {
+		matched, err := filepath.Match(ref, name)
+		if err != nil {
+			return false, fmt.Errorf("bad collector reference %q: %w", ref, err)
+		}
+		if matched {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (c *Config) resolveSecrets() error {
