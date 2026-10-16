@@ -344,5 +344,5 @@ func parseContextLog(list string) map[string]string {
 // TrimMissingCtx trims the leading comma and space from the log context string.
 // Leading comma appears when previous parameter is undefined, which is a side-effect of running in single target mode.
 func TrimMissingCtx(logContext string) string {
-	return strings.TrimPrefix(logContext, ", ")
+	return strings.TrimLeft(logContext, ", ")
 }
