@@ -38,8 +38,8 @@ func Reload(e Exporter, configFile *string) error {
 		if err = reloadJobs(e, configNext, configCurrent); err != nil {
 			return err
 		}
-	case configCurrent.Target != nil && len(configNext.Jobs) > 0:
-	case len(configCurrent.Jobs) > 0 && configNext.Target != nil:
+	case configCurrent.Target != nil && len(configNext.Jobs) > 0,
+		len(configCurrent.Jobs) > 0 && configNext.Target != nil:
 		return errors.New("changing scrape mode is not allowed. Please restart the exporter")
 	default:
 		slog.Warn("No target or jobs have been found - nothing to reload")
