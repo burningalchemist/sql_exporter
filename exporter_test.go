@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"log/slog"
 	"maps"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/burningalchemist/sql_exporter/config"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestTrimMissingCtx(t *testing.T) {
@@ -56,5 +60,61 @@ func TestSingleTargetErrorContext(t *testing.T) {
 	}
 	if logs.Len() != 0 {
 		t.Errorf("parseContextLog logged: %s", logs.String())
+	}
+}
+
+// Reload keeps the connections of the running exporter, so it cannot switch between single target and jobs mode. It
+// must report that in both directions instead of succeeding while the old targets stay in place.
+func TestReloadScrapeModeChange(t *testing.T) {
+	const (
+		collectors = `
+collectors:
+- collector_name: c
+  metrics:
+  - metric_name: m
+    type: gauge
+    help: h
+    values: [v]
+    query: SELECT 1 AS v
+`
+		target = `
+target:
+  data_source_name: "csvq:data"
+  collectors: [c]
+`
+		jobs = `
+jobs:
+- job_name: j
+  collectors: [c]
+  static_configs:
+  - targets:
+      t: "csvq:data"
+`
+	)
+	tests := []struct {
+		name     string
+		from, to string
+	}{
+		{"TargetToJobs", target, jobs},
+		{"JobsToTarget", jobs, target},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			current, next := filepath.Join(dir, "current.yml"), filepath.Join(dir, "next.yml")
+			for file, content := range map[string]string{current: tt.from, next: tt.to} {
+				if err := os.WriteFile(file, []byte(content+collectors), 0o644); err != nil {
+					t.Fatalf("write config: %v", err)
+				}
+			}
+			e, err := NewExporter(current, prometheus.NewRegistry())
+			if err != nil {
+				t.Fatalf("NewExporter: %v", err)
+			}
+			err = Reload(e, &next)
+			if err == nil || !strings.Contains(err.Error(), "changing scrape mode") {
+				t.Errorf("Reload = %v, want a scrape mode change error", err)
+			}
+		})
 	}
 }
