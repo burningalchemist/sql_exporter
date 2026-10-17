@@ -20,14 +20,6 @@ func Reload(e Exporter, configFile *string) error {
 
 	configCurrent := e.Config()
 
-	// Clear current collectors and replace with new ones
-	if len(configCurrent.Collectors) > 0 {
-		configCurrent.Collectors = configCurrent.Collectors[:0]
-	}
-	configCurrent.Collectors = configNext.Collectors
-	slog.Debug("Total collector size change", "from", len(configCurrent.Collectors), "to",
-		len(configNext.Collectors))
-
 	// Reload targets
 	switch {
 	case configCurrent.Target != nil && configNext.Target != nil:
@@ -44,6 +36,11 @@ func Reload(e Exporter, configFile *string) error {
 	default:
 		slog.Warn("No target or jobs have been found - nothing to reload")
 	}
+
+	// Replace the collectors only after the reload has succeeded, so a failed reload keeps the current config.
+	slog.Debug("Total collector size change", "from", len(configCurrent.Collectors), "to",
+		len(configNext.Collectors))
+	configCurrent.Collectors = configNext.Collectors
 	return nil
 }
 
@@ -52,15 +49,15 @@ func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 
 	// Intended: we want to preserve connection details from the previous config. Only collectors will be updated.
 	nc.Target.DSN = cc.Target.DSN
-	// Apply the new target configuration
-	cc.Target = nc.Target
 	// Recreate the target object
-	target, err := NewTarget("", cc.Target.Name, "", string(cc.Target.DSN),
-		cc.Target.Collectors(), nil, cc.Globals, cc.Target.EnablePing)
+	target, err := NewTarget("", nc.Target.Name, "", string(nc.Target.DSN),
+		nc.Target.Collectors(), nil, cc.Globals, nc.Target.EnablePing)
 	if err != nil {
 		slog.Error("Error recreating a target", "error", err)
 		return err
 	}
+	// Apply the new target configuration
+	cc.Target = nc.Target
 
 	// Close old targets before replacing — releases sql.DB pools and sql.Stmts.
 	closeTargets(e.Targets())
@@ -80,11 +77,10 @@ func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 			}
 		}
 	}
-	cc.Jobs = nc.Jobs
 	var updateErr error
-	targets := make([]Target, 0, len(cc.Jobs))
+	targets := make([]Target, 0, len(nc.Jobs))
 
-	for _, jobConfigItem := range cc.Jobs {
+	for _, jobConfigItem := range nc.Jobs {
 		job, err := NewJob(jobConfigItem, cc.Globals)
 		if err != nil {
 			updateErr = err
@@ -99,6 +95,8 @@ func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 		return updateErr
 	}
 
+	// Apply the new jobs configuration
+	cc.Jobs = nc.Jobs
 	// Close old targets before replacing — releases sql.DB pools and sql.Stmts.
 	closeTargets(e.Targets())
 	e.UpdateTarget(targets)
