@@ -61,6 +61,21 @@ func TestResolveCollectorRefs(t *testing.T) {
 		}
 	})
 
+	t.Run("OverlappingGlobbing", func(t *testing.T) {
+		crefs := []string{
+			"aa",
+			"a?",
+		}
+		cs, err := resolveCollectorRefs(crefs, colls, "target")
+		if err != nil {
+			t.Fatalf("expected no error but got: %v", err)
+		}
+		expected := []*CollectorConfig{colls["aa"]}
+		if !reflect.DeepEqual(cs, expected) {
+			t.Fatalf("expected cs=%v but got cs=%v", expected, cs)
+		}
+	})
+
 	t.Run("NoCollectorRefs", func(t *testing.T) {
 		crefs := []string{}
 		cs, err := resolveCollectorRefs(crefs, colls, "target")
