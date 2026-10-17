@@ -34,16 +34,19 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter, registry prometheus.Gath
 		ctx, cancel := contextFor(req, exporter)
 		defer cancel()
 
+		// Job filters belong to the request, so set them on this request's copy of the exporter, not the shared one.
+		exp := exporter.WithContext(ctx)
+
 		// Parse the query params and set the job filters if any
 		jobFilters := req.URL.Query()["jobs[]"]
-		if err := exporter.SetJobFilters(jobFilters); err != nil {
+		if err := exp.SetJobFilters(jobFilters); err != nil {
 			slog.Warn("Error setting job filters, ignoring", "error", err)
 			http.Error(w, "Error setting job filters: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		// Go through prometheus.Gatherers to sanitize and sort metrics.
-		gatherer := prometheus.Gatherers{exporter.WithContext(ctx), registry}
+		gatherer := prometheus.Gatherers{exp, registry}
 		mfs, err := gatherer.Gather()
 		if err != nil {
 			switch t := err.(type) {
@@ -66,7 +69,7 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter, registry prometheus.Gath
 		}
 
 		// Filter the scrape_errors_total metric family to only include metrics for the jobs in the jobFilters list.
-		mfs = exporter.FilterScrapeErrorsTotal(mfs)
+		mfs = exp.FilterScrapeErrorsTotal(mfs)
 
 		contentType := expfmt.Negotiate(req.Header)
 		buf := getBuf()
