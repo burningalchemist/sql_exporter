@@ -158,6 +158,10 @@ func (cc *cachingCollector) Collect(ctx context.Context, conn *sql.DB, ch chan<-
 					ch <- NewInvalidMetric(errors.Wrap(cc.rawColl.logContext, ctx.Err()))
 					continue
 				}
+				if _, invalid := metric.(invalidMetric); invalid {
+					ch <- metric
+					continue
+				}
 
 				cc.cache = append(cc.cache, metric)
 				ch <- metric

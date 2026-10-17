@@ -2,6 +2,7 @@ package sql_exporter
 
 import (
 	"bytes"
+	"fmt"
 	"log/slog"
 	"maps"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/burningalchemist/sql_exporter/config"
+	_ "github.com/mithrandie/csvq-driver"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -185,5 +187,54 @@ jobs:
 				t.Errorf("config after a failed reload:\n%s\nwant the config from before:\n%s", after, before)
 			}
 		})
+	}
+}
+
+// A collector with min_interval repeats its cached metrics until the interval has passed. A query that failed must not
+// be cached: the next scrape runs it again instead of repeating the error.
+func TestMinIntervalDoesNotCacheQueryError(t *testing.T) {
+	data := t.TempDir()
+	cfg := filepath.Join(t.TempDir(), "sql_exporter.yml")
+	err := os.WriteFile(cfg, []byte(fmt.Sprintf(`
+target:
+  data_source_name: "csvq:%s"
+  collectors: [c]
+collectors:
+- collector_name: c
+  min_interval: 1h
+  metrics:
+  - metric_name: m
+    type: gauge
+    help: h
+    values: [v]
+    query: SELECT v FROM t
+`, data)), 0o644)
+	if err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+	e, err := NewExporter(cfg, prometheus.NewRegistry())
+	if err != nil {
+		t.Fatalf("NewExporter: %v", err)
+	}
+	t.Cleanup(func() {
+		for _, target := range e.Targets() {
+			_ = target.Close()
+		}
+	})
+
+	// The table does not exist yet, so the query fails.
+	if _, err := (prometheus.Gatherers{e}).Gather(); err == nil {
+		t.Fatal("first scrape: expected the query to fail")
+	}
+
+	if err := os.WriteFile(filepath.Join(data, "t.csv"), []byte("v\n1\n"), 0o644); err != nil {
+		t.Fatalf("write table: %v", err)
+	}
+	mfs, err := (prometheus.Gatherers{e}).Gather()
+	if err != nil {
+		t.Fatalf("second scrape: %v", err)
+	}
+	if len(mfs) != 1 || mfs[0].GetName() != "m" {
+		t.Errorf("second scrape: got %v, want metric m", mfs)
 	}
 }
