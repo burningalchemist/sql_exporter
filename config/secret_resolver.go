@@ -78,10 +78,11 @@ func (r *secretResolver) resolve(ctx context.Context, value string) (string, err
 	return extractKey(raw.(string), u, value)
 }
 
-// extractKey pulls the appropriate key from a raw secret value (JSON or plain string).
+// extractKey pulls the appropriate key from a raw secret value (JSON or plain string). Only the selected key has to be
+// a string, other values of the JSON object can be of any type (e.g. the numeric "port" of a database secret).
 func extractKey(raw string, u *url.URL, originalValue string) (string, error) {
 	var resolved string
-	var payload map[string]string
+	var payload map[string]any
 	if jsonErr := json.Unmarshal([]byte(raw), &payload); jsonErr == nil {
 		key := u.Query().Get("key")
 		if key == "" {
@@ -91,7 +92,11 @@ func extractKey(raw string, u *url.URL, originalValue string) (string, error) {
 		if !ok {
 			return "", fmt.Errorf("key %q not found in secret %q", key, originalValue)
 		}
-		resolved = fieldValue
+		str, ok := fieldValue.(string)
+		if !ok {
+			return "", fmt.Errorf("key %q in secret %q is not a string", key, originalValue)
+		}
+		resolved = str
 	} else {
 		resolved = raw
 	}
