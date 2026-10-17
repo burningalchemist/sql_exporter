@@ -33,10 +33,12 @@ func resolveCollectorRefs(
 			if err != nil {
 				return nil, fmt.Errorf("bad collector %q referenced in %s: %w", cref, ctx, err)
 			}
-			if matched && !found[c] {
-				resolved = append(resolved, c)
-				found[c] = true
+			if matched {
 				crefResolved = true
+				if !found[c] {
+					resolved = append(resolved, c)
+					found[c] = true
+				}
 			}
 		}
 		if !crefResolved {
