@@ -5,6 +5,33 @@ entries:
       artifacthub.io/signKey: |
         fingerprint: 9F218BE64F503809BB829626B9024AEA76E9BCB3
         url: https://burningalchemist.github.io/sql_exporter/pubkey.gpg
+      git/commit-sha: 896f5a787a5fbb0c296037e4354422411e603b4b
+    apiVersion: v2
+    appVersion: 0.24.11
+    created: "2026-10-19T19:05:01.894843262Z"
+    description: Database-agnostic SQL exporter for Prometheus
+    digest: aca69b5ac236391d9019b77a177d5877f73ce166a65b36a3e617784e71e058a3
+    home: https://github.com/burningalchemist/sql_exporter
+    keywords:
+    - exporter
+    - servicemonitor
+    - sql
+    - metrics
+    maintainers:
+    - email: allanger@zohomail.com
+      name: Nikolai Rodionov
+      url: https://badhouseplants.net
+    name: sql-exporter
+    sources:
+    - https://github.com/burningalchemist/sql_exporter
+    type: application
+    urls:
+    - https://github.com/burningalchemist/sql_exporter/releases/download/chart-sql-exporter-0.18.13/sql-exporter-0.18.13.tgz
+    version: 0.18.13
+  - annotations:
+      artifacthub.io/signKey: |
+        fingerprint: 9F218BE64F503809BB829626B9024AEA76E9BCB3
+        url: https://burningalchemist.github.io/sql_exporter/pubkey.gpg
       git/commit-sha: 3dc980d4e9b91fb201db40a7d7b2670980a73ce8
     apiVersion: v2
     appVersion: 0.24.10
@@ -1711,4 +1738,4 @@ entries:
     urls:
     - https://github.com/burningalchemist/sql_exporter/releases/download/sql-exporter-0.1.3/sql-exporter-0.1.3.tgz
     version: 0.1.3
-generated: "2026-10-12T11:43:59.665365552Z"
+generated: "2026-10-19T19:05:01.895169433Z"
