@@ -1,533 +1,70 @@
-# SQL Exporter for Prometheus
-
-[![Docker Pulls](https://img.shields.io/docker/pulls/burningalchemist/sql_exporter)](https://hub.docker.com/r/burningalchemist/sql_exporter) ![Downloads](https://img.shields.io/github/downloads/burningalchemist/sql_exporter/total) [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/sql-exporter)](https://artifacthub.io/packages/helm/sql-exporter/sql-exporter)
-[![Audit Released Binary (linux/amd64)](https://github.com/burningalchemist/sql_exporter/actions/workflows/govulncheck-binary.yml/badge.svg)](https://github.com/burningalchemist/sql_exporter/actions/workflows/govulncheck-binary.yml)
-
-## Overview
-
-SQL Exporter is a configuration driven exporter that exposes metrics gathered from DBMSs, for use by the Prometheus
-monitoring system. Out of the box, it provides support for the following databases and compatible interfaces:
-
-- MySQL
-- PostgreSQL
-- Microsoft SQL Server
-- Oracle Database
-- Clickhouse
-- Snowflake
-- Vertica
-
-In fact, any DBMS for which a Go driver is available may be monitored after rebuilding the binary with the DBMS driver
-included.
-
-The collected metrics and the queries that produce them are entirely configuration defined. SQL queries are grouped into
-collectors -- logical groups of queries, e.g. _query stats_ or _I/O stats_, mapped to the metrics they populate.
-Collectors may be DBMS-specific (e.g. _MySQL InnoDB stats_) or custom, deployment specific (e.g. _pricing data
-freshness_). This means you can quickly and easily set up custom collectors to measure data quality, whatever that might
-mean in your specific case.
-
-Per the Prometheus philosophy, scrapes are synchronous (metrics are collected on every `/metrics` poll) but, in order to
-keep load at reasonable levels, minimum collection intervals may optionally be set per collector, producing cached
-metrics when queried more frequently than the configured interval.
-
-## Usage
-
-Get Prometheus SQL Exporter, either as a [packaged release](https://github.com/burningalchemist/sql_exporter/releases/latest),
-as a [Docker image](https://hub.docker.com/r/burningalchemist/sql_exporter).
-
-Use the `-help` flag to get help information.
-
-```shell
-$ ./sql_exporter -help
-Usage of ./sql_exporter:
-  -config.file string
-      SQL Exporter configuration file path. (default "sql_exporter.yml")
-  -config.check
-      Check configuration and exit.
-  -web.listen-address string
-      Address to listen on for web interface and telemetry. (default ":9399")
-  -web.metrics-path string
-      Path under which to expose metrics. (default "/metrics")
-  [...]
-```
-
-## Build
-
-Prerequisites:
-
-- Go Compiler
-- GNU Make
-
-By default we produce a binary with all the supported drivers with the following command:
-
-```shell
-make build
-```
-
-It's also possible to reduce the size of the binary by only including specific set of drivers like Postgres, MySQL and
-MSSQL. In this case we need to update `drivers.go`. To avoid manual manipulation there is a helper code generator
-available, so we can run the following commands:
-
-```shell
-make drivers-minimal
-make build
-```
-
-The first command will regenerate `drivers.go` file with a minimal set of imported drivers using `drivers_gen.go`.
-
-Running `make drivers-all` will regenerate driver set back to the current defaults.
-
-Feel free to revisit and add more drivers as required. There's also the `custom` list that allows managing a separate
-list of drivers for special needs.
-
-## Configuration
-
-SQL Exporter is deployed alongside the DB server it collects metrics from. If both the exporter and the DB
-server are on the same host, they will share the same failure domain: they will usually be either both up and running
-or both down. When the database is unreachable, `/metrics` responds with HTTP code 500 Internal Server Error, causing
-Prometheus to record `up=0` for that scrape. Only metrics defined by collectors are exported on the `/metrics` endpoint.
-SQL Exporter process metrics are exported at `/sql_exporter_metrics`.
-
-The configuration examples listed here only cover the core elements. For a comprehensive and comprehensively documented
-configuration file check out
-[`documentation/sql_exporter.yml`](https://github.com/burningalchemist/sql_exporter/tree/master/documentation/sql_exporter.yml).
-You will find ready to use "standard" DBMS-specific collector definitions in the
-[`examples`](https://github.com/burningalchemist/sql_exporter/tree/master/examples) directory. You may contribute your
-own collector definitions and metric additions if you think they could be more widely useful, even if they are merely
-different takes on already covered DBMSs.
-
-**`./sql_exporter.yml`**
-
-```yaml
-# Global settings and defaults.
-global:
-  # Subtracted from Prometheus' scrape_timeout to give us some headroom and prevent Prometheus from
-  # timing out first.
-  scrape_timeout_offset: 500ms
-  # Minimum interval between collector runs: by default (0s) collectors are executed on every scrape.
-  min_interval: 0s
-  # Maximum number of open connections to any one target. Metric queries will run concurrently on
-  # multiple connections.
-  max_connections: 3
-  # Maximum number of idle connections to any one target.
-  max_idle_connections: 3
-  # Maximum amount of time a connection may be reused to any one target. Infinite by default.
-  max_connection_lifetime: 10m
-  # Expose per-query `query_duration_seconds` and `query_rows_returned` gauges, labelled with the
-  # `query` name (and `target` in multi-target mode). Off by default to keep the metric surface stable.
-  enable_query_metrics: false
-
-# The target to monitor and the list of collectors to execute on it.
-target:
-  # Target name (optional). Setting this field enables extra metrics e.g. `up` and `scrape_duration` with
-  # the `target` label that are always returned on a scrape.
-  name: "prices_db"
-  # Data source name always has a URI schema that matches the driver name. In some cases (e.g. MySQL)
-  # the schema gets dropped or replaced to match the driver expected DSN format.
-  data_source_name: "sqlserver://prom_user:prom_password@dbserver1.example.com:1433"
-
-  # Collectors (referenced by name) to execute on the target.
-  # Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
-  collectors: [pricing_data_freshness, pricing_*]
-
-  # In case you need to connect to a backend that only responds to a limited set of commands (e.g. pgbouncer) or
-  # a data warehouse you don't want to keep online all the time (due to the extra cost), you might want to disable `ping`
-  # enable_ping: true
-
-# Collector definition files.
-# Glob patterns are supported (see <https://pkg.go.dev/path/filepath#Match> for syntax).
-collector_files:
-  - "*.collector.yml"
-```
-
-> [!NOTE]
-> The `collectors` and `collector_files` configurations support [Glob pattern matching](https://pkg.go.dev/path/filepath#Match).
-> To match names with literal pattern terms in them, e.g. `collector_*1*`, these must be escaped: `collector_\*1\*`.
-
-### Collectors
-
-Collectors may be defined inline, in the exporter configuration file, under `collectors`, or they may be defined in
-separate files and referenced in the exporter configuration by name, making them easy to share and reuse.
-
-The collector definition below generates gauge metrics of the form `pricing_update_time{market="US"}`.
-
-**`./pricing_data_freshness.collector.yml`**
-
-```yaml
-# This collector will be referenced in the exporter configuration as `pricing_data_freshness`.
-collector_name: pricing_data_freshness
-
-# A Prometheus metric with (optional) additional labels, value and labels populated from one query.
-metrics:
-  - metric_name: pricing_update_time
-    type: gauge
-    help: "Time when prices for a market were last updated."
-    key_labels:
-      # Populated from the `market` column of each row.
-      - Market
-    static_labels:
-      # Arbitrary key/value pair
-      portfolio: income
-    values: [LastUpdateTime]
-    # Static metric value (optional). Useful in case we are interested in string data (key_labels) only. It's mutually
-    # exclusive with `values` field.
-    # static_value: 1
-    # Timestamp value (optional). Should point at the existing column containing valid timestamps to return a metric
-    # with an explicit timestamp.
-    # timestamp_value: CreatedAt
-    query: |
-      SELECT Market, max(UpdateTime) AS LastUpdateTime
-      FROM MarketPrices
-      GROUP BY Market
-```
-
-### Database URLs (URL-format DSNs)
-
-To keep things simple and yet allow fully configurable database connections, SQL Exporter uses database URLs
-(URL-format DSNs) (like `sqlserver://prom_user:prom_password@dbserver1.example.com:1433`) to refer to database
-instances.
-
-This exporter relies on `xo/dburl` package for parsing URL-format DSNs. The goal is to have a unified way to specify
-DSNs across all supported databases. This can potentially affect your connection to certain databases like MySQL, so
-you might want to adjust your connection string accordingly:
-
-```plaintext
-mysql://user:pass@localhost/dbname - for TCP connection
-mysql:/var/run/mysqld/mysqld.sock - for Unix socket connection
-```
-
-> [!IMPORTANT]
-> If your DSN contains special characters in any part of your connection string (including passwords), you might need to
-> apply [URL encoding](https://en.wikipedia.org/wiki/URL_encoding#Reserved_characters) (percent-encoding) to them.
-> For example, `p@$$w0rd#abc` then becomes `p%40%24%24w0rd%23abc`.
-
-For additional details please refer to [xo/dburl](https://github.com/xo/dburl) documentation.
-
-## Security Features
-
-The Helm chart provides enterprise-grade security capabilities for protecting your metrics endpoint:
-
-### TLS/HTTPS Encryption
-
-Secure metrics transport using TLS certificates from Kubernetes secrets. Supports TLS 1.3 with configurable cipher suites. See [tls-only example](examples/tls-only/).
-
-### Basic Authentication
-
-Password-protected metrics endpoint with bcrypt-hashed credentials. Passwords are automatically hashed during pod initialization from plaintext secrets. See [auth-only example](examples/auth-only/).
-
-### Combined Security
-
-TLS and authentication can be used together, with support for shared or separate Kubernetes secrets for maximum flexibility. See [tls-auth example](examples/tls-auth/).
-
-### Prometheus Integration
-
-Kubernetes-native ServiceMonitor automatically configures Prometheus for HTTPS scraping and basic authentication when enabled.
-
-## Miscellaneous
-
-<details>
-<summary>Environment variables</summary>
-
-Here is a list of available environment variables that can be used to configure SQL Exporter:
-
-| Environment Variable          | Description                                                         |
-| :---------------------------- | :------------------------------------------------------------------ |
-| `SQLEXPORTER_CONFIG`          | file path to the configuration file, default is `sql_exporter.yml`  |
-| `SQLEXPORTER_COLLECTOR_FILES` | glob pattern(s) for collector definition files, semicolon-separated |
-
-| Environment Variable                            | Description                                                                           |
-| :---------------------------------------------- | :------------------------------------------------------------------------------------ |
-| `SQLEXPORTER_GLOBAL_MIN_INTERVAL`               | minimum interval between query executions (default is 0)                              |
-| `SQLEXPORTER_GLOBAL_SCRAPE_TIMEOUT`             | per-scrape timeout, global (default is 10s)                                           |
-| `SQLEXPORTER_GLOBAL_SCRAPE_TIMEOUT_OFFSET`      | offset to subtract from timeout in seconds (default is 0.5s)                          |
-| `SQLEXPORTER_GLOBAL_SCRAPE_ERROR_DROP_INTERVAL` | interval to drop scrape errors from the error counter (default is 0)                  |
-| `SQLEXPORTER_GLOBAL_PING_INTERVAL`              | interval between database pings (default is 0)                                        |
-| `SQLEXPORTER_GLOBAL_MAX_CONNECTIONS`            | maximum number of open connections to any one target (default is 3)                   |
-| `SQLEXPORTER_GLOBAL_MAX_IDLE_CONNECTIONS`       | maximum number of idle connections to any one target (default is 3)                   |
-| `SQLEXPORTER_GLOBAL_MAX_CONNECTION_LIFETIME`    | maximum amount of time a connection may be reused to any one target (default is 0)    |
-| `SQLEXPORTER_GLOBAL_WARMUP_DELAY`               | delay between executing collectors during cache population at startup, (default is 0) |
-| `SQLEXPORTER_GLOBAL_ENABLE_QUERY_METRICS`       | expose per-query duration and row count metrics (default is false)                    |
-
-| Environment Variable             | Description                                                                                    |
-| :------------------------------- | :--------------------------------------------------------------------------------------------- |
-| `SQLEXPORTER_TARGET_NAME`        | name of the target (optional, generates `up` and `scrape_duration_seconds` additional metrics) |
-| `SQLEXPORTER_TARGET_DSN`         | URL-format DSN for the target database                                                         |
-| `SQLEXPORTER_TARGET_COLLECTORS`  | names of collectors to execute on the target, semicolon-separated                              |
-| `SQLEXPORTER_TARGET_ENABLE_PING` | ping the database before executing collectors (default is true)                                |
-
-More details on the configuration options can be found in the documentation at `documentation/sql_exporter.yml`.
-
-</details>
-
-<details>
-<summary>Per-query observability metrics</summary>
-
-When `global.enable_query_metrics` is set to `true`, every scrape emits two additional gauges per query
-in the configuration:
-
-- `query_duration_seconds{query="<query_name>"}` — wall-clock time the query took during the most
-  recent scrape, including row scanning. Emitted even when the query errors, so spikes preceding a
-  failure remain visible.
-- `query_rows_returned{query="<query_name>"}` — number of rows the database returned during the most
-  recent scrape. Errored or skipped rows are not counted.
-
-Both metrics inherit the same constant labels as `up` / `scrape_duration_seconds` (notably `target` in
-multi-target / jobs mode), so they can be aggregated by target the same way. The feature is off by
-default to keep the existing metric surface unchanged.
-
-</details>
-
-<details>
-<summary>Handling NULL values</summary>
-
-Queries that return `NULL` values are supported, but they are not rendered as metrics. It's useful for situations, when
-the result set depends on some conditions, so it may be empty. Whenever a query returns `NULL` values, the exporter
-logs a message at the `Debug` level. If your query constantly returns `NULL` values, it most likely means that you need
-to revisit your query logic.
-
-</details>
-
-<details>
-<summary>Multiple database connections</summary>
-
-It is possible to run a single exporter instance against multiple database connections. In this case we need to
-configure `jobs` list instead of the `target` section as in the following example:
-
-```yaml
-jobs:
-  - job_name: db_targets
-    collectors: [pricing_data_freshness, pricing_*]
-    enable_ping: true # Optional, true by default. Set to `false` in case you connect to pgbouncer or a data warehouse
-    static_configs:
-      - targets:
-          pg1: "pg://db1@127.0.0.1:25432/postgres?sslmode=disable"
-          pg2: "postgresql://username:password@pg-host.example.com:5432/dbname?sslmode=disable"
-        labels: # Optional, arbitrary key/value pair for all targets
-          cluster: cluster1
-```
-
-, where DSN strings are assigned to the arbitrary instance names (i.e. pg1 and pg2).
-
-We can also define multiple jobs to run different collectors against different target sets.
-
-Since v0.14, sql_exporter can be passed an optional list of job names to filter out metrics. The `jobs[]` query
-parameter may be used multiple times. In Prometheus configuration we can use this syntax under the [scrape config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#%3Cscrape_config%3E):
-
-```yaml
-params:
-  jobs[]:
-    - db_targets1
-    - db_targets2
-```
-
-This might be useful for scraping targets with different intervals or any other advanced use cases, when calling all
-jobs at once is undesired.
-
-</details>
-
-<details>
-<summary>Scraping PgBouncer, ProxySQL, Clickhouse or Snowflake</summary>
-
-Given that PgBouncer is a connection pooler, it doesn't support all the commands that a regular SQL database does, so
-we need to make some adjustments to the configuration:
-
-- add `enable_ping: false` to the metric/job configuration as PgBouncer doesn't support the ping command;
-- add `no_prepared_statement: true` to the metric/job configuration as PgBouncer doesn't support the extended query protocol;
-
-For libpq (postgres) driver we only need to set `no_prepared_statement: true` parameter. For pgx driver, we also need to
-add `default_query_exec_mode=simple_protocol` parameter to the DSN (for v5).
-
-Below is an example of a metric configuration for PgBouncer:
-
-```yaml
-metrics:
-  - metric_name: max_connections
-    no_prepared_statement: true
-    type: gauge
-    values: [max_connections]
-    key_labels:
-      - name
-      - database
-      - force_user
-      - pool_mode
-      - disabled
-      - paused
-      - current_connections
-      - reserve_pool
-      - min_pool_size
-      - pool_size
-      - port
-    query: |
-      SHOW DATABASES;
-```
-
-Same goes for ProxySQL and Clickhouse, where we need to add `no_prepared_statement: true` to the metric/job
-configuration, as these databases doesn't support prepared statements.
-
-In case, you connect to a data warehouse (e.g. Snowflake) you don't want to keep online all the time (due to the extra
-cost), you might want to disable `ping` by setting `enable_ping: false`.
-
-</details>
-
-<details>
-<summary>Scraping timestamp value from the result set</summary>
-
-Some database drivers by default return DATE or DATETIME values as String type, whereas sql_exporter expects it to be Time.
-
-This may result in the following error:
-
-```
-unsupported Scan, storing driver.Value type []uint8 into type *time.Time
-```
-
-To resolve the issue, make sure to include `parseTime=true` as a parameter on the DSN, so values with TIMESTAMP,
-DATETIME, TIME, DATE types will end up as `time.Time` type, which is a requirement on the sql_exporter side to process
-the value correctly.
-
-</details>
-
-<details>
-<summary>Using Secret Manager references (AWS/GCP/Vault/Kubernetes)</summary>
-
-SQL Exporter supports multiple secret management backends:
-
-**Kubernetes Secrets** (for Kubernetes deployments):
-
-```
-k8ssecret://[namespace/]secret-name?key=field&template=dsn_template
-```
-
-Recommended for Kubernetes deployments. Requires RBAC permissions for the service account to read secrets. See [k8s-secret example](examples/k8s-secret/) for detailed setup instructions and the Helm chart automatically creates necessary RBAC resources.
-
-**Cloud-based Secret Managers**:
-If the database runs on AWS or Google Cloud, you might want to store the DSN in their Secret Manager services and allow SQL Exporter to access it from there. This way you can avoid hardcoding credentials in the configuration file and benefit from the security features of these services. In addition, Vault is also available as a secret manager option for SQL Exporter.
-
-The secrets can be referenced in the configuration file as a value for `data_source_name` item using the following syntax:
-
-```
-awssecretsmanager://<SECRET_NAME>?region=<AWS_REGION>&key=<JSON_KEY>
-gcpsecretsmanager://<SECRET_NAME>?project_id=<GCP_PROJECT_ID>&key=<JSON_KEY>
-hashivault://<MOUNT>/<SECRET_PATH>?key=<JSON_KEY>
-```
-
-The secret value can be a simple string or a JSON object. If it's a JSON object, you need to specify the `key` query parameter to indicate which value to use as the DSN. If the secret is a valid json but the key is not specified, SQL Exporter will try to use the value of `data_source_name` key by default. If a simple string, then it will be used as the DSN directly. Using JSON format gives more flexibility and allows to store additional information or multiple DSNs in the same secret resource.
-
-Secret references are supported for both single-target and jobs setups, so you can use them in both cases without any issues. Just make sure to use the correct syntax and provide the necessary parameters for the secret manager you choose. Also check the permissions and access policies for the secret manager to ensure that SQL Exporter has the necessary access to read the secrets.
-
-Secrets are only resolved at startup, so if the secret value changes, you need to restart SQL Exporter to pick up the new value. Or use the `reload` endpoint to trigger a configuration reload without restarting the process, but keep in mind that this will also reload the entire configuration, not just the secrets.
-
-For Vault, you also need to specify the `VAULT_ADDR` and `VAULT_TOKEN` environment variables to allow SQL Exporter to authenticate. This is a regular practice and goes beyond the scope of this document, so please refer to Vault documentation for more details on how to set up and use Vault for secrets management.
-
-</details>
-
-<details>
-<summary>Run as a Windows service</summary>
-
-If you run SQL Exporter from Windows, it might come in handy to register it as a service to avoid interactive sessions.
-It is **important** to define `--config.file` parameter to load the configuration file. The other settings can be added
-as well. The registration itself is performed with Powershell or CMD (make sure you run it as Administrator):
-
-Powershell:
-
-```powershell
-New-Service -name "SqlExporterSvc" `
--BinaryPathName "%SQL_EXPORTER_PATH%\sql_exporter.exe --config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" `
--StartupType Automatic `
--DisplayName "Prometheus SQL Exporter"
-```
-
-CMD:
-
-```shell
-sc.exe create SqlExporterSvc binPath= "%SQL_EXPORTER_PATH%\sql_exporter.exe --config.file %SQL_EXPORTER_PATH%\sql_exporter.yml" start= auto
-```
-
-`%SQL_EXPORTER_PATH%` is a path to the SQL Exporter binary executable. This document assumes that configuration files
-are in the same location.
-
-In case you need a more sophisticated setup (e.g. with logging, environment variables, etc), you might want to use [NSSM](https://nssm.cc/) or
-[WinSW](https://github.com/winsw/winsw). Please consult their documentation for more details.
-
-</details>
-
-<details>
-<summary>Using WinSSPI/NTLM as the authentication mechanism for MSSQL</summary>
-
-If sql_exporter is running in the same Windows domain as the MSSQL, then you can use the parameter `authenticator=winsspi` within the connection string to authenticate without any additional credentials:
-
-```
-sqlserver://@<HOST>:<PORT>?authenticator=winsspi
-```
-
-If you want to use Windows credentials to authenticate instead of MSSQL credentials, you can use the parameter `authenticator=ntlm` within the connection string. The USERNAME and PASSWORD then corresponds
-to a Windows username and password. The Windows domain may need to be prefixed to the username with a trailing `\`:
-
-```
-sqlserver://<DOMAIN\USERNAME>:<PASSWORD>@<HOST>:<PORT>?authenticator=ntlm
-```
-
-</details>
-
-<details>
-<summary>TLS and Basic Authentication</summary>
-
-SQL Exporter supports TLS and Basic Authentication. This enables better control of the various HTTP endpoints.
-
-To use TLS and/or Basic Authentication, you need to pass a configuration file using the `--web.config.file` parameter.
-The format of the file is described in the
-[exporter-toolkit](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md) repository.
-
-</details>
-
-<details>
-<summary>Rate Limiting</summary>
-
-Since v0.18.5 SQL Exporter supports rate limiting for incoming requests to the HTTP endpoints.
-
-To use rate limiting for incoming requests, you need to pass a configuration file using the `--web.config.file`
-parameter. In the configuration file you need to specify rate limiting settings as in the example below:
-
-```yaml
-...
-rate_limit:
-  interval: "1s" # time interval between two requests, set to 0 to disable rate limiter
-  burst: 20 # and permits a burst of up to 20 requests.
-...
-```
-
-The format of the file is described in the
-[exporter-toolkit](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md) repository.
-
-</details>
-
-<details>
-<summary>MySQL Custom TLS Certificate Support</summary>
-
-Since v0.20.0 SQL Exporter supports custom TLS certificates for MySQL connections. This is useful when you have a
-self-signed certificate, a certificate from a private CA, or want to use mTLS for MySQL connections.
-
-To use custom TLS certificates for MySQL connections, you need to add the following parameters to the DSN:
-
-1. `tls=custom` to indicate that you want to use a custom TLS configuration (required to enable custom TLS support);
-2. `tls-ca=<PATH_TO_CA_CERT>` to specify the path to the CA certificate file (if your certificate is self-signed or
-   from a private CA);
-3. `tls-cert=<PATH_TO_CLIENT_CERT>` and `tls-key=<PATH_TO_CLIENT_KEY>` to specify the paths to the client certificate
-   and key files if you want to use mTLS (if your MySQL server requires client authentication).
-
-The DSN would look like this:
-
-```
-mysql://user:password@hostname:port/dbname?tls=custom&tls-ca=/path/to/ca.pem
-mysql://user:password@hostname:port/dbname?tls=custom&tls-cert=/path/to/client-cert.pem&tls-key=/path/to/client-key.pem
-```
-
-This configuration is only applied to MySQL as there is no way to provide the configuration natively. For other
-databases, you may want to consult their documentation on how to set up TLS connections and apply the necessary
-parameters to the DSN if it's supported by the driver.
-
-TLS Configuration is bound to the hostname+port combinations, so if there are connections using the same hostname+port
-combination, they will share and re-use the same TLS configuration.
-
-</details>
+<p align="center">
+  <h2 align="center">SQL Exporter for Prometheus</h2>
+</p>
+
+<p align="center" style="text-decoration: none; border: none;">
+  <a
+    href="https://hub.docker.com/r/burningalchemist/sql_exporter"
+    style="text-decoration: none"
+  >
+    <img
+      alt="Docker Pulls"
+      src="https://img.shields.io/docker/pulls/burningalchemist/sql_exporter"
+    ></a>
+  <a
+    href="https://github.com/burningalchemist/sql_exporter/releases/latest"
+    style="text-decoration: none"
+  >
+    <img
+      alt="Downloads"
+      src="https://img.shields.io/github/downloads/burningalchemist/sql_exporter/total"
+    ></a>
+  <a
+    href="https://artifacthub.io/packages/helm/sql-exporter/sql-exporter"
+    style="text-decoration: none"
+  >
+    <img
+      alt="Artifact HUB"
+      src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/sql-exporter"
+    /></a>
+  <a
+    href="https://github.com/burningalchemist/sql_exporter/actions/workflows/govulncheck-binary.yml"
+    style="text-decoration: none"
+  >
+    <img
+      alt="Audit Released Binary (linux/amd64)"
+      src="https://github.com/burningalchemist/sql_exporter/actions/workflows/govulncheck-binary.yml/badge.svg"
+    /></a>
+</p>
+
+<p align="center">
+  <a href="https://burningalchemist.github.io/sql_exporter">Documentation</a>
+  ·
+  <a href="https://burningalchemist.github.io/sql_exporter/pages/config.html">Configuration Reference</a>
+</p>
+
+**SQL Exporter** is a flexible database-agnostic exporter that exposes metrics gathered from databases in Prometheus
+format.
+
+## Features
+
+- Database-agnostic with broad driver support
+- Scrape-synchronous collection with optional caching
+- Staggered cache warmup
+- Fully configuration-driven metrics
+- Flexible metric mapping
+- Multi-target (jobs) mode
+- Selective job scraping
+- Secret manager integration
+- TLS/BasicAuth support
+- Request rate limiting
+- Live reload of configuration without restart
+- Automatic metrics
+- Builtin validation and config check
+
+## Installation
+
+Head over to the [documentation website](https://burningalchemist.github.io/sql_exporter/pages/config/general.html) for installation instructions and configuration options.
 
 ## Support
 
@@ -536,28 +73,9 @@ closed [Issues](https://github.com/burningalchemist/sql_exporter/issues?q=is%3Ai
 someone else has already encountered the same problem and there is a solution. If not, feel free to create a new
 discussion.
 
-## Why It Exists
+## Special Thanks
 
-SQL Exporter started off as an exporter for Microsoft SQL Server, for which no reliable exporters exist. But what is
-the point of a configuration driven SQL exporter, if you're going to use it along with 2 more exporters with wholly
-different world views and configurations, because you also have MySQL and PostgreSQL instances to monitor?
-
-A couple of alternative database agnostic exporters are available:
-
-- [justwatchcom/sql_exporter](https://github.com/justwatchcom/sql_exporter);
-- [chop-dbhi/prometheus-sql](https://github.com/chop-dbhi/prometheus-sql).
-
-However, they both do the collection at fixed intervals, independent of Prometheus scrapes. This is partly a
-philosophical issue, but practical issues are not all that difficult to imagine:
-
-- jitter;
-- duplicate data points;
-- collected but not scraped data points.
-
-The control they provide over which labels get applied is limited, and the base label set spammy. And finally,
-configurations are not easily reused without copy-pasting and editing across jobs and instances.
-
-## Credits
-
-This is a permanent fork of Database agnostic SQL exporter for [Prometheus](https://prometheus.io) created by
-[@free](https://github.com/free/sql_exporter).
+- [@free](https://github.com/free) for creating the original implementation;
+- [@allanger](https://github.com/allanger) for contributing the helm chart and the dev/release environment around it;
+- [@itdesign-sponsoring](https://github.com/itdesign-sponsoring) for sponsoring the development of the project;
+- all the contributors who have helped improve this project over the years.
