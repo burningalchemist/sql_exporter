@@ -9,7 +9,7 @@ hero:
   actions:
     - theme: brand
       text: Documentation
-      link: /overview
+      link: /pages/overview
     - theme: alt
       text: Github
       link: https://github.com/burningalchemist/sql_exporter

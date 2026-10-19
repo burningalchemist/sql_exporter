@@ -9,71 +9,72 @@ export default defineConfig({
     },
     title: "SQL Exporter",
     description: "Database-agnostic SQL exporter for Prometheus",
-    srcDir: './pages',
+    srcDir: '.',
     base: '/sql_exporter/',
     themeConfig: {
+        logo: '/assets/logo.webp',
         search: { provider: 'local' },
         nav: [
             { text: 'Home', link: '/' },
-            { text: 'Documentation', link: '/overview' }
+            { text: 'Documentation', link: 'pages/overview' }
         ],
         sidebar: {
-            '/': [
+            '/pages/': [
                 {
                     text: 'Introduction',
                     items: [
                         {
-                            text: 'Overview', link: '/overview'
+                            text: 'Overview', link: 'pages/overview'
                         },
-                        { text: 'Features', link: '/overview/features' },
-                        { text: 'Architecture', link: '/overview/architecture' },
-                        { text: 'Supported databases', link: '/overview/databases' },
-                        { text: 'Deployment', link: '/overview/deploy.md' },
+                        { text: 'Features', link: 'pages/overview/features' },
+                        { text: 'Architecture', link: 'pages/overview/architecture' },
+                        { text: 'Supported databases', link: 'pages/overview/databases' },
+                        { text: 'Deployment', link: 'pages/overview/deploy.md' },
                     ]
                 },
                 {
                     text: 'Configuration',
                     items: [
-                        { text: 'General', link: '/config/general' },
-                        { text: 'Connection Strings', link: '/config/database_url' },
-                        { text: 'Secrets', link: '/config/secrets' },
-                        { text: 'Reload', link: '/config/reload' },
-                        { text: 'Command-line Parameters', link: '/config/cmdline' },
-                        { text: 'Environment Variables', link: '/config/env_vars' },
-                        { text: 'Reference', link: '/config' },
+                        { text: 'General', link: 'pages/config/general' },
+                        { text: 'Connection Strings', link: 'pages/config/database_url' },
+                        { text: 'Secrets', link: 'pages/config/secrets' },
+                        { text: 'Reload', link: 'pages/config/reload' },
+                        { text: 'Command-line Parameters', link: 'pages/config/cmdline' },
+                        { text: 'Environment Variables', link: 'pages/config/env_vars' },
+                        { text: 'Reference', link: 'pages/config' },
                     ]
 
                 },
                 //                {
-                //                    text: 'Deployment', link: '/deployment',
+                //                    text: 'Deployment', link: 'pages/deployment',
                 //                    items: [
-                //                        { text: 'Standalone', link: '/deploy/standalone' },
-                //                        { text: 'Container', link: '/deploy/container' },
+                //                        { text: 'Standalone', link: 'pages/deploy/standalone' },
+                //                        { text: 'Container', link: 'pages/deploy/container' },
                 //
                 //                    ]
                 //                },
                 {
                     text: 'Advanced',
                     items: [
-                        { text: 'Custom drivers', link: '/advanced/custom_drivers' },
-                        { text: 'Run as a Windows service', link: '/advanced/windows_svc' },
-                        { text: 'TLS and Basic Authentication', link: '/advanced/tls_basicauth' },
-                        { text: 'Rate Limiting', link: '/advanced/rate_limiter' },
-                        { text: 'Per-query Metrics', link: '/advanced/per_query_metrics' },
-                        { text: 'Selective scraping', link: '/advanced/selective_jobs' },
-                        { text: 'MySQL Custom Certificates', link: '/advanced/mysql_tls' },
-                        { text: 'Scraping Special Backends', link: '/advanced/special_backend_scraping' },
+                        { text: 'Custom drivers', link: 'pages/advanced/custom_drivers' },
+                        { text: 'Run as a Windows service', link: 'pages/advanced/windows_svc' },
+                        { text: 'TLS and Basic Authentication', link: 'pages/advanced/tls_basicauth' },
+                        { text: 'Rate Limiting', link: 'pages/advanced/rate_limiter' },
+                        { text: 'Per-query Metrics', link: 'pages/advanced/per_query_metrics' },
+                        { text: 'Selective scraping', link: 'pages/advanced/selective_jobs' },
+                        { text: 'MySQL Custom Certificates', link: 'pages/advanced/mysql_tls' },
+                        { text: 'Scraping Special Backends', link: 'pages/advanced/special_backend_scraping' },
                     ]
                 },
                 // TODO: Add recipes section
                 // {
                 //     text: 'Recipes',
                 //     items: [
-                //         { text: 'Runtime API Examples', link: '/recipes/api-examples' }
+                //         { text: 'Runtime API Examples', link: 'pages/recipes/api-examples' }
                 //     ]
                 // },
-                { text: 'Community', link: '/community' },
-                //                { text: 'Glossary', link: '/glossary' },
+                { text: 'Community', link: 'pages/community' },
+                //                { text: 'Glossary', link: 'pages/glossary' },
             ]
         },
 
