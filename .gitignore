@@ -4,3 +4,7 @@
 /sql_exporter
 /sql_exporter.yml
 .idea/*
+
+documentation/node_modules
+documentation/.vitepress/cache
+documentation/.vitepress/dist
