@@ -23,7 +23,7 @@ require (
 	github.com/sijms/go-ora/v3 v3.0.2-0.20260914154503-360b4b7ac9e9
 	github.com/snowflakedb/gosnowflake/v2 v2.3.0
 	github.com/vertica/vertica-sql-go v1.3.8
-	github.com/xo/dburl v0.31.0
+	github.com/xo/dburl v0.53.0
 	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/sync v0.24.0
 	k8s.io/api v0.37.1
