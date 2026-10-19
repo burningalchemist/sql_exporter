@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "vitepress": "^2.0.0-alpha.20"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview"
+  },
+  "dependencies": {
+    "@theojs/lumen": "^7.0.1",
+    "vitepress-plugin-tabs": "^0.9.1"
+  }
+}

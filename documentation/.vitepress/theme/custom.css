@@ -1,0 +1,52 @@
+/* .vitepress/theme/custom.css */
+
+
+/* 1. Force the root layout to 1700px */
+:root {
+  --vp-layout-max-width: 1536px !important;
+}
+
+/* 2. Strip the stubborn default limits from the internal wrappers */
+.VPDoc .container,
+.VPDoc .content,
+.VPDoc .content-container {
+  max-width: none !important; 
+}
+
+.vp-doc p,
+.vp-doc li {
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: manual;
+}
+
+/* 3. Apply your extended widths based on sidebar presence */
+@media (min-width: 1280px) {
+  /* With BOTH left sidebar and right table of contents */
+  .VPDoc.has-aside .content-container {
+    max-width: 1000px !important;
+  }
+}
+
+@media (min-width: 960px) {
+  /* With left sidebar, NO right table of contents */
+  .VPDoc:not(.has-aside) .content-container {
+    max-width: 1200px !important;
+  }
+}
+
+@media (min-width: 768px) {
+  /* NO sidebars at all */
+  .VPDoc:not(.has-sidebar) .container,
+  .VPDoc:not(.has-sidebar) .content-container {
+    max-width: 1700px !important;
+  }
+}
+
+.VPHero .image-src {
+  max-width: 450px;
+  width: 100%;
+  height: auto;
+}
+
+
