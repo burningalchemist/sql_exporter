@@ -208,17 +208,19 @@ func (t *target) ping(ctx context.Context) errors.WithContext {
 			// if err == ctx.Err() fall through
 		} else {
 			t.conn = conn
-			// Force ping on first connection
-			var err error
-			for i := 0; i <= t.globalConfig.MaxConns; i++ {
-				if err = PingDB(ctx, t.conn); err != driver.ErrBadConn {
-					break
+			// Force ping on first connection, unless ping is disabled for the target
+			if *t.enablePing {
+				var err error
+				for i := 0; i <= t.globalConfig.MaxConns; i++ {
+					if err = PingDB(ctx, t.conn); err != driver.ErrBadConn {
+						break
+					}
 				}
+				if err != nil {
+					return errors.Wrap(t.logContext, err)
+				}
+				t.lastPingTime = time.Now()
 			}
-			if err != nil {
-				return errors.Wrap(t.logContext, err)
-			}
-			t.lastPingTime = time.Now()
 		}
 	}
 
