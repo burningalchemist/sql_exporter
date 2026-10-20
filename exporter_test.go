@@ -2,6 +2,7 @@ package sql_exporter
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -236,5 +237,35 @@ collectors:
 	}
 	if len(mfs) != 1 || mfs[0].GetName() != "m" {
 		t.Errorf("second scrape: got %v, want metric m", mfs)
+	}
+}
+
+// PgBouncer rejects the driver's ping, so its targets set enable_ping: false. The ping that follows opening the
+// connection must be skipped too, or the first scrape after a start or reload reports the target as down.
+func TestPingDisabledSkipsFirstConnectionPing(t *testing.T) {
+	tests := []struct {
+		name       string
+		enablePing bool
+		wantErr    bool
+	}{
+		{"ping enabled", true, true},
+		{"ping disabled", false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// The handle opens lazily and csvq refuses a missing directory only when it connects, as a ping does.
+			dsn := "csvq:" + filepath.Join(t.TempDir(), "missing")
+			tgt, err := NewTarget("", "", "", dsn, nil, nil, &config.GlobalConfig{}, &tt.enablePing)
+			if err != nil {
+				t.Fatalf("NewTarget: %v", err)
+			}
+			t.Cleanup(func() { _ = tgt.Close() })
+			if err := tgt.(*target).ping(context.Background()); (err != nil) != tt.wantErr {
+				t.Errorf("ping error = %v, want an error: %t", err, tt.wantErr)
+			}
+			if tgt.(*target).conn == nil {
+				t.Error("connection was not kept")
+			}
+		})
 	}
 }
