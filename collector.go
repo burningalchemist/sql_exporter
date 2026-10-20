@@ -51,9 +51,20 @@ func NewCollector(logContext string, cc *config.CollectorConfig, constLabels []*
 	}
 
 	// Instantiate queries.
+	queryConstLabels := constLabels
+	if enableQueryMetrics {
+		collectorLabel := collectorLabelName
+		collectorName := cc.Name
+		queryConstLabels = make([]*dto.LabelPair, 0, len(constLabels)+1)
+		queryConstLabels = append(queryConstLabels, constLabels...)
+		queryConstLabels = append(queryConstLabels, &dto.LabelPair{
+			Name:  &collectorLabel,
+			Value: &collectorName,
+		})
+	}
 	queries := make([]*Query, 0, len(cc.Metrics))
 	for qc, mfs := range queryMFs {
-		q, err := NewQuery(logContext, qc, constLabels, enableQueryMetrics, mfs...)
+		q, err := NewQuery(logContext, qc, queryConstLabels, enableQueryMetrics, mfs...)
 		if err != nil {
 			return nil, err
 		}

@@ -29,6 +29,7 @@ const (
 	queryRowsName      = "query_rows_returned"
 	queryRowsHelp      = "Number of rows returned by the named query (last scrape)"
 	queryLabelName     = "query"
+	collectorLabelName = "collector"
 )
 
 // Target collects SQL metrics from a single sql.DB instance. It aggregates one or more Collectors and it looks much
