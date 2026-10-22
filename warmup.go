@@ -31,12 +31,9 @@ func (w *Warmup) Done() bool {
 }
 
 // Run sequentially triggers each collector across all targets with a delay between each, pre-populating the in-memory
-// caches before the first real scrape.
+// caches before the first real scrape. The timeout limits the ping and each collector run, not the whole warmup.
 func (w *Warmup) Run(targets []Target, delay time.Duration, timeout time.Duration) {
 	defer close(w.done)
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
 
 	var wg sync.WaitGroup
 	for _, t := range targets {
@@ -47,21 +44,23 @@ func (w *Warmup) Run(targets []Target, delay time.Duration, timeout time.Duratio
 		wg.Add(1)
 		go func(tc *target) {
 			defer wg.Done()
-			if err := tc.ping(ctx); err != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			err := tc.ping(ctx)
+			cancel()
+			if err != nil {
 				slog.Warn("Warmup: skipping target, ping failed", "target", tc.name, "error", err)
 				return
 			}
 			for i, c := range tc.collectors {
-				if ctx.Err() != nil {
-					return
-				}
 				ch := make(chan Metric, capMetricChan)
 				var cwg sync.WaitGroup
 				cwg.Go(func() {
 					for range ch {
 					}
 				})
+				ctx, cancel := context.WithTimeout(context.Background(), timeout)
 				c.Collect(ctx, tc.conn, ch)
+				cancel()
 				close(ch)
 				cwg.Wait()
 
@@ -69,11 +68,7 @@ func (w *Warmup) Run(targets []Target, delay time.Duration, timeout time.Duratio
 					"progress", fmt.Sprintf("%d/%d", i+1, len(tc.collectors)))
 
 				if i < len(tc.collectors)-1 {
-					select {
-					case <-ctx.Done():
-						return
-					case <-time.After(delay):
-					}
+					time.Sleep(delay)
 				}
 			}
 		}(tc)
