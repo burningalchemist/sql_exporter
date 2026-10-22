@@ -44,7 +44,7 @@ func (w *Warmup) Run(targets []Target, delay time.Duration, timeout time.Duratio
 		wg.Add(1)
 		go func(tc *target) {
 			defer wg.Done()
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			ctx, cancel := warmupContext(timeout)
 			err := tc.ping(ctx)
 			cancel()
 			if err != nil {
@@ -58,7 +58,7 @@ func (w *Warmup) Run(targets []Target, delay time.Duration, timeout time.Duratio
 					for range ch {
 					}
 				})
-				ctx, cancel := context.WithTimeout(context.Background(), timeout)
+				ctx, cancel := warmupContext(timeout)
 				c.Collect(ctx, tc.conn, ch)
 				cancel()
 				close(ch)
@@ -75,4 +75,11 @@ func (w *Warmup) Run(targets []Target, delay time.Duration, timeout time.Duratio
 	}
 	wg.Wait()
 	slog.Info("Warmup completed")
+}
+
+func warmupContext(timeout time.Duration) (context.Context, context.CancelFunc) {
+	if timeout <= 0 {
+		return context.Background(), func() {}
+	}
+	return context.WithTimeout(context.Background(), timeout)
 }
