@@ -347,3 +347,71 @@ func TestPingDisabledSkipsFirstConnectionPing(t *testing.T) {
 		})
 	}
 }
+
+// The warmup runs the collectors one after another, warmup_delay apart. scrape_timeout limits each run, not the whole
+// warmup: neither the delays nor a collector that runs into the timeout may leave the later collectors cold.
+func TestWarmupDoesNotShareScrapeTimeout(t *testing.T) {
+	tests := []struct {
+		name  string
+		delay string
+		rows  int       // rows in the first table, whose query joins it with itself, far slower than the timeout
+		want  []float64 // m1 to m3 on the first scrape: 1 was cached by the warmup, 2 was read from the changed table
+	}{
+		{"delays add up past the timeout", "200ms", 1, []float64{1, 1, 1}},
+		{"first collector runs into the timeout", "10ms", 5000, []float64{2, 1, 1}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := t.TempDir()
+			writeTables := func(rows ...int) {
+				for i, n := range rows {
+					table := filepath.Join(data, fmt.Sprintf("t%d.csv", i+1))
+					if err := os.WriteFile(table, []byte("v\n"+strings.Repeat("1\n", n)), 0o644); err != nil {
+						t.Fatalf("write table: %v", err)
+					}
+				}
+			}
+			writeTables(tt.rows, 1, 1)
+			var cfg strings.Builder
+			fmt.Fprintf(&cfg, "global:\n  scrape_timeout: 300ms\n  warmup_delay: %s\n", tt.delay)
+			fmt.Fprintf(&cfg, "target:\n  data_source_name: \"csvq:%s\"\n  collectors: [c1, c2, c3]\ncollectors:\n", data)
+			for i := 1; i <= 3; i++ {
+				fmt.Fprintf(&cfg, `- collector_name: c%[1]d
+  min_interval: 1h
+  metrics:
+  - metric_name: m%[1]d
+    type: gauge
+    help: h
+    values: [v]
+    query: SELECT COUNT(*) AS v FROM t%[1]d a LEFT JOIN t%[1]d b ON a.v + b.v < 0
+`, i)
+			}
+			file := filepath.Join(t.TempDir(), "sql_exporter.yml")
+			if err := os.WriteFile(file, []byte(cfg.String()), 0o644); err != nil {
+				t.Fatalf("write config: %v", err)
+			}
+			e, err := NewExporter(file, prometheus.NewRegistry())
+			if err != nil {
+				t.Fatalf("NewExporter: %v", err)
+			}
+			t.Cleanup(func() { closeTargets(e.Targets()) })
+
+			globals := e.Config().Globals
+			NewWarmup().Run(e.Targets(), time.Duration(globals.WarmupDelay), time.Duration(globals.ScrapeTimeout))
+
+			writeTables(2, 2, 2)
+			mfs, err := (prometheus.Gatherers{e}).Gather()
+			if err != nil {
+				t.Fatalf("scrape: %v", err)
+			}
+			if len(mfs) != len(tt.want) {
+				t.Fatalf("got %d metric families, want %d", len(mfs), len(tt.want))
+			}
+			for i, mf := range mfs {
+				if got := mf.GetMetric()[0].GetGauge().GetValue(); got != tt.want[i] {
+					t.Errorf("%s = %v, want %v", mf.GetName(), got, tt.want[i])
+				}
+			}
+		})
+	}
+}
