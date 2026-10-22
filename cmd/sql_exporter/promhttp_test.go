@@ -65,3 +65,40 @@ func TestExporterHandlerJobFilters(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+// A reload replaces the global settings while every scrape reads the scrape timeout and its offset from them. The two
+// must not race; the check is made by `go test -race`.
+func TestContextForDuringReload(t *testing.T) {
+	cfgFile := filepath.Join(t.TempDir(), "sql_exporter.yml")
+	if err := os.WriteFile(cfgFile, []byte("global:\n  scrape_timeout: 5s\n"+jobsConfig), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	exporter, err := sql_exporter.NewExporter(cfgFile, prometheus.NewRegistry())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+		req.Header.Set(scrapeTimeoutHeader, "10")
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				_, cancel := contextFor(req, exporter)
+				cancel()
+			}
+		}
+	})
+	defer wg.Wait()
+	defer close(stop)
+
+	for range 20 {
+		if err := sql_exporter.Reload(exporter, &cfgFile); err != nil {
+			t.Fatalf("Reload: %v", err)
+		}
+	}
+}

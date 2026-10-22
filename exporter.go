@@ -32,6 +32,11 @@ type Exporter interface {
 	WithContext(context.Context) Exporter
 	// Config returns the Exporter's underlying Config object.
 	Config() *config.Config
+	// Globals returns the current global settings. Scrapes read them while a reload may replace them, so they read
+	// them here and not from Config().
+	Globals() *config.GlobalConfig
+	// UpdateGlobals replaces the global settings.
+	UpdateGlobals(*config.GlobalConfig)
 	// UpdateTarget updates the targets field
 	UpdateTarget([]Target)
 	// Targets returns the current list of targets.
@@ -257,6 +262,20 @@ func (e *exporter) FilterScrapeErrorsTotal(mfs []*dto.MetricFamily) []*dto.Metri
 // Config implements Exporter.
 func (e *exporter) Config() *config.Config {
 	return e.config
+}
+
+// Globals implements Exporter.
+func (e *exporter) Globals() *config.GlobalConfig {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return e.config.Globals
+}
+
+// UpdateGlobals implements Exporter.
+func (e *exporter) UpdateGlobals(globals *config.GlobalConfig) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.config.Globals = globals
 }
 
 func (e *exporter) Targets() []Target {

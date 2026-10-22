@@ -37,9 +37,11 @@ func Reload(e Exporter, configFile *string) error {
 		slog.Warn("No target or jobs have been found - nothing to reload")
 	}
 
-	// Replace the collectors only after the reload has succeeded, so a failed reload keeps the current config.
+	// Replace the globals and the collectors only after the reload has succeeded, so a failed reload keeps the current
+	// config. Scrapes read the globals, so they are replaced under the exporter's lock.
 	slog.Debug("Total collector size change", "from", len(configCurrent.Collectors), "to",
 		len(configNext.Collectors))
+	e.UpdateGlobals(configNext.Globals)
 	configCurrent.Collectors = configNext.Collectors
 	return nil
 }
@@ -51,7 +53,7 @@ func reloadTarget(e Exporter, nc, cc *cfg.Config) error {
 	nc.Target.DSN = cc.Target.DSN
 	// Recreate the target object
 	target, err := NewTarget("", nc.Target.Name, "", string(nc.Target.DSN),
-		nc.Target.Collectors(), nil, cc.Globals, nc.Target.EnablePing)
+		nc.Target.Collectors(), nil, nc.Globals, nc.Target.EnablePing)
 	if err != nil {
 		slog.Error("Error recreating a target", "error", err)
 		return err
@@ -81,7 +83,7 @@ func reloadJobs(e Exporter, nc, cc *cfg.Config) error {
 	targets := make([]Target, 0, len(nc.Jobs))
 
 	for _, jobConfigItem := range nc.Jobs {
-		job, err := NewJob(jobConfigItem, cc.Globals)
+		job, err := NewJob(jobConfigItem, nc.Globals)
 		if err != nil {
 			updateErr = err
 			break
