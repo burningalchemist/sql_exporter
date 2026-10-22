@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/burningalchemist/sql_exporter/config"
 	_ "github.com/mithrandie/csvq-driver"
@@ -123,8 +124,13 @@ jobs:
 }
 
 // A reload that fails keeps the old targets serving, so the config that /config and the jobs[] filter read must stay
-// the old one too. Every exit of Reload that fails after the new config was read has a row.
+// the old one too. Every exit of Reload that fails after the new config was read has a row, and every next config also
+// changes a global setting, so applying the globals before the reload has succeeded shows in the comparison.
 func TestReloadFailureKeepsConfig(t *testing.T) {
+	// The config load lets these variables override the file, so an ambient value would hide the changed global setting.
+	t.Setenv("SQLEXPORTER_GLOBAL_SCRAPE_TIMEOUT", "")
+	t.Setenv("SQLEXPORTER_GLOBAL_ENABLE_QUERY_METRICS", "")
+
 	const (
 		collectors = `
 collectors:
@@ -151,6 +157,7 @@ jobs:
   - targets:
       t: "csvq:data"
 `
+		globals = "global:\n  scrape_timeout: 20s\n"
 	)
 	tests := []struct {
 		name     string
@@ -164,7 +171,7 @@ jobs:
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
 			current, next := filepath.Join(dir, "current.yml"), filepath.Join(dir, "next.yml")
-			for file, content := range map[string]string{current: tt.from, next: tt.to} {
+			for file, content := range map[string]string{current: tt.from, next: globals + tt.to} {
 				if err := os.WriteFile(file, []byte(content), 0o644); err != nil {
 					t.Fatalf("write config: %v", err)
 				}
@@ -186,6 +193,77 @@ jobs:
 			}
 			if !bytes.Equal(before, after) {
 				t.Errorf("config after a failed reload:\n%s\nwant the config from before:\n%s", after, before)
+			}
+		})
+	}
+}
+
+// The global settings can be reloaded. The scrape timeout is read from the config on every scrape and the query
+// metrics are set up when the targets are recreated, so a reload must hand the new globals to both.
+func TestReloadAppliesGlobals(t *testing.T) {
+	// The flag sets the target label of the jobs, the default of the package is empty.
+	prev := config.TargetLabel
+	config.TargetLabel = "target"
+	t.Cleanup(func() { config.TargetLabel = prev })
+	// The config load lets these variables override the file, so an ambient value would change what the rows reload.
+	t.Setenv("SQLEXPORTER_GLOBAL_SCRAPE_TIMEOUT", "")
+	t.Setenv("SQLEXPORTER_GLOBAL_ENABLE_QUERY_METRICS", "")
+
+	data := t.TempDir()
+	if err := os.WriteFile(filepath.Join(data, "t.csv"), []byte("v\n1\n"), 0o644); err != nil {
+		t.Fatalf("write table: %v", err)
+	}
+	const collectors = `
+collectors:
+- collector_name: c
+  metrics:
+  - metric_name: m
+    type: gauge
+    help: h
+    values: [v]
+    query: SELECT v FROM t
+`
+	tests := []struct {
+		name, scrape string
+	}{
+		{"Target", fmt.Sprintf("target:\n  data_source_name: \"csvq:%s\"\n  collectors: [c]\n", data)},
+		{"Jobs", fmt.Sprintf("jobs:\n- job_name: j\n  collectors: [c]\n  static_configs:\n  - targets:\n      t: \"csvq:%s\"\n", data)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			current, next := filepath.Join(dir, "current.yml"), filepath.Join(dir, "next.yml")
+			configs := map[string]string{
+				current: "global:\n  scrape_timeout: 10s\n" + tt.scrape + collectors,
+				next:    "global:\n  scrape_timeout: 20s\n  enable_query_metrics: true\n" + tt.scrape + collectors,
+			}
+			for file, content := range configs {
+				if err := os.WriteFile(file, []byte(content), 0o644); err != nil {
+					t.Fatalf("write config: %v", err)
+				}
+			}
+			e, err := NewExporter(current, prometheus.NewRegistry())
+			if err != nil {
+				t.Fatalf("NewExporter: %v", err)
+			}
+			if err := Reload(e, &next); err != nil {
+				t.Fatalf("Reload: %v", err)
+			}
+			t.Cleanup(func() { closeTargets(e.Targets()) })
+
+			if got, want := time.Duration(e.Config().Globals.ScrapeTimeout), 20*time.Second; got != want {
+				t.Errorf("scrape_timeout after reload = %s, want %s", got, want)
+			}
+			mfs, err := (prometheus.Gatherers{e}).Gather()
+			if err != nil {
+				t.Fatalf("Gather: %v", err)
+			}
+			found := false
+			for _, mf := range mfs {
+				found = found || mf.GetName() == queryDurationName
+			}
+			if !found {
+				t.Errorf("no %s after enabling enable_query_metrics in a reload", queryDurationName)
 			}
 		})
 	}

@@ -108,7 +108,8 @@ func ExporterHandlerFor(exporter sql_exporter.Exporter, registry prometheus.Gath
 
 func contextFor(req *http.Request, exporter sql_exporter.Exporter) (context.Context, context.CancelFunc) {
 	timeout := time.Duration(0)
-	configTimeout := time.Duration(exporter.Config().Globals.ScrapeTimeout)
+	globals := exporter.Globals()
+	configTimeout := time.Duration(globals.ScrapeTimeout)
 	// If a timeout is provided in the Prometheus header, use it.
 	if v := req.Header.Get(scrapeTimeoutHeader); v != "" {
 		timeoutSeconds, err := strconv.ParseFloat(v, 64)
@@ -123,7 +124,7 @@ func contextFor(req *http.Request, exporter sql_exporter.Exporter) (context.Cont
 			timeout = time.Duration(timeoutSeconds * float64(time.Second))
 
 			// Subtract the timeout offset, unless the result would be negative or zero.
-			timeoutOffset := time.Duration(exporter.Config().Globals.TimeoutOffset)
+			timeoutOffset := time.Duration(globals.TimeoutOffset)
 			if timeoutOffset > timeout {
 				slog.Error("global.scrape_timeout_offset is greater than Prometheus' scraping timeout, ignoring",
 					"timeout", timeout, "timeoutOffset", timeoutOffset)
