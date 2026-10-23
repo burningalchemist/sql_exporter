@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"go.yaml.in/yaml/v3"
 )
 
 func writeFile(t *testing.T, path, content string) {
@@ -114,5 +116,26 @@ func TestCollectorIdentities(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("expected filename stem identity for invalid YAML, got %v", names)
+	}
+}
+
+func TestCollectorQueryRefHonorsNoPreparedStatement(t *testing.T) {
+	var cc CollectorConfig
+	if err := yaml.Unmarshal([]byte(`
+collector_name: test
+metrics:
+- {metric_name: unprepared, type: gauge, help: h, values: [v], query_ref: q, no_prepared_statement: true}
+- {metric_name: shared, type: gauge, help: h, values: [v], query_ref: q}
+queries:
+- {query_name: q, query: SELECT 1 AS v}
+`), &cc); err != nil {
+		t.Fatalf("unmarshal collector: %v", err)
+	}
+	for _, metric := range cc.Metrics {
+		t.Run(metric.Name, func(t *testing.T) {
+			if !metric.Query().NoPreparedStatement {
+				t.Error("query no_prepared_statement = false, want true")
+			}
+		})
 	}
 }
