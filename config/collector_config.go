@@ -46,6 +46,7 @@ func (c *CollectorConfig) UnmarshalYAML(unmarshal func(any) error) error {
 			if !found {
 				return fmt.Errorf("unresolved query_ref %q in metric %q of collector %q", metric.QueryRef, metric.Name, c.Name)
 			}
+			query.NoPreparedStatement = query.NoPreparedStatement || metric.NoPreparedStatement
 			metric.query = query
 			query.metrics = append(query.metrics, metric)
 		} else {
