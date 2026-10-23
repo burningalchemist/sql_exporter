@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -58,6 +59,9 @@ func (m *MetricConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	if err := m.validateKeyLabels(); err != nil {
 		return err
 	}
+	if err := m.validateStaticLabels(); err != nil {
+		return err
+	}
 	if err := m.validateValues(); err != nil {
 		return err
 	}
@@ -111,6 +115,18 @@ func (m *MetricConfig) validateKeyLabels() error {
 		}
 	}
 
+	return nil
+}
+
+func (m *MetricConfig) validateStaticLabels() error {
+	for _, label := range slices.Sorted(maps.Keys(m.StaticLabels)) {
+		if slices.Contains(m.KeyLabels, label) {
+			return fmt.Errorf("duplicate label %q (defined in both static_labels and key_labels) for metric %q", label, m.Name)
+		}
+		if label != "" && m.ValueLabel == label {
+			return fmt.Errorf("duplicate label %q (defined in both static_labels and value_label) for metric %q", label, m.Name)
+		}
+	}
 	return nil
 }
 

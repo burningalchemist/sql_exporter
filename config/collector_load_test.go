@@ -139,3 +139,36 @@ queries:
 		})
 	}
 }
+
+func TestMetricStaticLabelCollisions(t *testing.T) {
+	tests := []struct {
+		name, labels, valueLabel, want string
+	}{
+		{"key_label", "{env: prod}", "", `duplicate label "env" (defined in both static_labels and key_labels) for metric "app_info"`},
+		{"value_label", "{kind: prod}", "kind", `duplicate label "kind" (defined in both static_labels and value_label) for metric "app_info"`},
+		{"sorted", "{kind: prod, env: prod}", "kind", `duplicate label "env" (defined in both static_labels and key_labels) for metric "app_info"`},
+		{"distinct", "{region: west, service: app}", "kind", ""},
+		{"empty_without_value_label", `{"": prod}`, "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var metric MetricConfig
+			err := yaml.Unmarshal([]byte(`
+metric_name: app_info
+type: gauge
+help: App info
+key_labels: [env]
+value_label: `+tt.valueLabel+`
+values: [v]
+query: SELECT env, 1 AS v
+static_labels: `+tt.labels), &metric)
+			if tt.want == "" {
+				if err != nil {
+					t.Fatalf("unmarshal metric: %v", err)
+				}
+			} else if err == nil || err.Error() != tt.want {
+				t.Errorf("unmarshal metric = %v, want %q", err, tt.want)
+			}
+		})
+	}
+}
