@@ -1,6 +1,6 @@
 module github.com/burningalchemist/sql_exporter
 
-go 1.26.0
+go 1.26.10
 
 require (
 	cloud.google.com/go/secretmanager v1.22.0
