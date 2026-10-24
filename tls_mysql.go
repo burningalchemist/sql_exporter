@@ -27,23 +27,27 @@ const (
 var (
 	mysqlTLSParams = []string{mysqlTLSParamCACert, mysqlTLSParamClientCert, mysqlTLSParamClientKey}
 
-	onceMap sync.Map
+	mysqlTLSMu         sync.Mutex
+	mysqlTLSRegistered = map[string]bool{}
 )
 
-// handleMySQLTLSConfig wraps the registration of a MySQL TLS configuration in a thread-safe manner. It uses a
-// sync.Once to ensure that the TLS configuration for a given config name is registered only once, even if multiple
-// goroutines attempt to register it concurrently.
+// handleMySQLTLSConfig wraps the registration of a MySQL TLS configuration in a thread-safe manner. A configuration is
+// registered once per config name, even if multiple goroutines attempt to register it concurrently. A failed
+// registration is not remembered, so the next call for the same name tries again and every caller gets the result of
+// its own attempt.
 func handleMySQLTLSConfig(configName string, params url.Values) error {
-	onceConn, _ := onceMap.LoadOrStore(configName, &sync.Once{})
-	once := onceConn.(*sync.Once)
-	var err error
-	once.Do(func() {
-		err = registerMySQLTLSConfig(configName, params)
-		if err != nil {
-			slog.Error("Failed to register MySQL TLS config", "error", err)
-		}
-	})
-	return err
+	mysqlTLSMu.Lock()
+	defer mysqlTLSMu.Unlock()
+
+	if mysqlTLSRegistered[configName] {
+		return nil
+	}
+	if err := registerMySQLTLSConfig(configName, params); err != nil {
+		slog.Error("Failed to register MySQL TLS config", "error", err)
+		return err
+	}
+	mysqlTLSRegistered[configName] = true
+	return nil
 }
 
 // registerMySQLTLSConfig registers a custom TLS configuration for MySQL with the given config name and parameters.
