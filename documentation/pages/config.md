@@ -115,7 +115,7 @@ one query to populate the metric labels and values from.
 | **query**                 | `String`           | SQL query to execute.                                                                                                              |
 | **key_labels**            | `Set(String)?`     | Set of labels derived from the existing result set columns                                                                         |
 | **values**                | `List(String)`     | Column name(s) to return as a metric value. Can be multiple but requires `value_label`                                             |
-| **value_label**           | `Map(String)?`     | Label populated with the value column name, configured via `values`. Required when multiple value columns are configured           |
+| **value_label**           | `String?`          | Label populated with the value column name, configured via `values`. Required when multiple value columns are configured           |
 | **static_labels**         | `Map(String)?`     | Arbitrary key/value pairs                                                                                                          |
 | **static_value**          | `Integer`          | Arbitraty static value. Useful, when not the value matters, but the string data (populated as labels)                              |
 | **timestamp_value**       | `String?`          | Timestamp column name to return a metric with an explicit timestamp                                                                |

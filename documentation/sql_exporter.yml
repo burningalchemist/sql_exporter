@@ -106,7 +106,7 @@ collectors:
         #
         # Required when multiple value columns are configured.
         value_label: operation
-        # Multiple value columns: their name is recorded in the label defined by `attribute_label` (e.g.
+        # Multiple value columns: their name is recorded in the label defined by `value_label` (e.g.
         # `operation="io_stall_read_ms"`).
         values:
           - io_stall_read
