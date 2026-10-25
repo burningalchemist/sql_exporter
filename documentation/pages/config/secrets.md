@@ -38,7 +38,7 @@ syntax:
 
 ```text
 awssecretsmanager://<SECRET_NAME>?region=<AWS_REGION>&key=<JSON_KEY>
-gcpsecretsmanager://<SECRET_NAME>?project_id=<GCP_PROJECT_ID>&key=<JSON_KEY>
+gcpsecretmanager://projects/<GCP_PROJECT_ID>/secrets/<SECRET_NAME>?key=<JSON_KEY>
 ```
 
 The secret value can be a simple string or a JSON object:
