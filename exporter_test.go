@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -416,4 +419,87 @@ func TestWarmupDoesNotShareScrapeTimeout(t *testing.T) {
 			}
 		})
 	}
+}
+
+// A secret reference given with -config.data-source-name is resolved like one in the configuration file, and any other
+// DSN given that way replaces the DSN of the file without fetching it.
+func TestDsnOverrideSecretRef(t *testing.T) {
+	var fetches atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		fetches.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"data":{"data":{"dsn":"csvq:vault"}}}`)
+	}))
+	defer srv.Close()
+	t.Setenv("VAULT_ADDR", srv.URL)
+	t.Setenv("VAULT_TOKEN", "test-token")
+
+	const collectors = `
+collectors:
+- collector_name: c
+  metrics:
+  - metric_name: m
+    type: gauge
+    help: h
+    values: [v]
+    query: SELECT 1 AS v
+`
+	tests := []struct {
+		name     string
+		fileDSN  string
+		override string
+		want     string
+		wantErr  string
+		fetches  int32
+	}{
+		{"Reference", "csvq:data", "hashivault://secret/db?key=dsn", "csvq:vault", "", 1},
+		{"ReferenceWithMissingKey", "csvq:data", "hashivault://secret/db?key=other", "", "error resolving target DSN", 1},
+		{"PlainDSNOverReferenceInFile", "hashivault://secret/db?key=dsn", "csvq:flag", "csvq:flag", "", 0},
+	}
+
+	orig := config.DsnOverride
+	t.Cleanup(func() { config.DsnOverride = orig })
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fetches.Store(0)
+			config.DsnOverride = tt.override
+			file := filepath.Join(t.TempDir(), "sql_exporter.yml")
+			content := fmt.Sprintf("target:\n  data_source_name: %q\n  collectors: [c]\n", tt.fileDSN) + collectors
+			if err := os.WriteFile(file, []byte(content), 0o644); err != nil {
+				t.Fatalf("write config: %v", err)
+			}
+			e, err := NewExporter(file, prometheus.NewRegistry())
+			if got := fetches.Load(); got != tt.fetches {
+				t.Errorf("fetches = %d, want %d", got, tt.fetches)
+			}
+			if tt.wantErr != "" {
+				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+					t.Fatalf("NewExporter = %v, want an error containing %q", err, tt.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("NewExporter: %v", err)
+			}
+			if got := string(e.Config().Target.DSN); got != tt.want {
+				t.Errorf("DSN = %q, want %q", got, tt.want)
+			}
+		})
+	}
+
+	// The flag is for a single target only: config.Load leaves jobs alone and NewExporter refuses them.
+	t.Run("JobsMode", func(t *testing.T) {
+		config.DsnOverride = "csvq:flag"
+		file := filepath.Join(t.TempDir(), "sql_exporter.yml")
+		content := "jobs:\n- job_name: j\n  collectors: [c]\n  static_configs:\n  - targets:\n      t: csvq:data\n"
+		content += collectors
+		if err := os.WriteFile(file, []byte(content), 0o644); err != nil {
+			t.Fatalf("write config: %v", err)
+		}
+		_, err := NewExporter(file, prometheus.NewRegistry())
+		if err == nil || !strings.Contains(err.Error(), "single target mode") {
+			t.Fatalf("NewExporter = %v, want the single target mode error", err)
+		}
+	})
 }

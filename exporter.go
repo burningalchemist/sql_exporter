@@ -68,12 +68,9 @@ func NewExporter(configFile string, registry prometheus.Registerer) (Exporter, e
 		return nil, err
 	}
 
-	// Override the DSN if requested (and in single target mode).
-	if config.DsnOverride != "" {
-		if len(c.Jobs) > 0 {
-			return nil, errors.New("the config.data-source-name flag only applies in single target mode")
-		}
-		c.Target.DSN = config.Secret(config.DsnOverride)
+	// The DSN override is applied by config.Load (in single target mode only).
+	if config.DsnOverride != "" && len(c.Jobs) > 0 {
+		return nil, errors.New("the config.data-source-name flag only applies in single target mode")
 	}
 
 	var targets []Target
