@@ -57,6 +57,9 @@ resource.
 hashivault://<MOUNT>/<SECRET_PATH>?key=<JSON_KEY>
 ```
 
+The secret is read from a KV version 2 secrets engine by default. If the mount uses KV version 1, add `engine_version=1`
+to the query parameters.
+
 For Vault, you also need to specify the `VAULT_ADDR` and `VAULT_TOKEN` environment variables to let SQL Exporter
 authenticate. This is a regular practice and goes beyond the scope of this document, so please refer to Vault
 documentation for more details on how to set up and use Vault for secrets management.
