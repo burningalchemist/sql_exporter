@@ -55,6 +55,12 @@ func Load(configFile string) (*Config, error) {
 		return nil, fmt.Errorf("empty or no configuration provided")
 	}
 
+	// Override the DSN if requested (and in single target mode), before the secret references are resolved, so that the
+	// value of the flag can be a reference too.
+	if DsnOverride != "" && c.Target != nil {
+		c.Target.DSN = Secret(DsnOverride)
+	}
+
 	if err := c.resolveSecrets(); err != nil {
 		return nil, err
 	}
