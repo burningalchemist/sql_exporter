@@ -70,7 +70,7 @@ context to the metric.
 > Otherwise, the metric may not be collected correctly or may be dropped entirely.
 
 Metrics can be defined to return a single or multiple values from a query. For multiple values (`values` field) it is
-also required to provide `values_label` parameter in the mapping section, which specifies the arbitrary label name that
+also required to provide `value_label` parameter in the mapping section, which specifies the arbitrary label name that
 will be used to differentiate between the different values returned by the query. The value for this label will be
 inferred from the column name of the query result. Check [Complete example](../config.html#complete-example) for
 clarification.
