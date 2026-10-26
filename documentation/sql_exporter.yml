@@ -102,12 +102,12 @@ collectors:
         key_labels:
           # Populated from the `db` column of the result.
           - db
-        # Label populated with the value column name, configured via `values` (e.g. `operation="io_stall_read_ms"`).
+        # Label populated with the value column name, configured via `values` (e.g. `operation="io_stall_read"`).
         #
         # Required when multiple value columns are configured.
         value_label: operation
         # Multiple value columns: their name is recorded in the label defined by `value_label` (e.g.
-        # `operation="io_stall_read_ms"`).
+        # `operation="io_stall_read"`).
         values:
           - io_stall_read
           - io_stall_write
@@ -140,7 +140,7 @@ collectors:
 
     # Named queries, referenced by one or more metrics, through query_ref.
     queries:
-      # Populates `mssql_io_stall` and `mssql_io_stall_total`
+      # Populates `mssql_io_stall_seconds` and `mssql_io_stall_total_seconds`
       - query_name: io_stall
         query: |
           SELECT

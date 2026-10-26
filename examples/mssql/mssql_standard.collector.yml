@@ -181,7 +181,7 @@ metrics:
       FROM sys.dm_os_sys_memory
 
 queries:
-  # Populates `mssql_io_stall` and `mssql_io_stall_total`
+  # Populates `mssql_io_stall_seconds` and `mssql_io_stall_total_seconds`
   - query_name: mssql_io_stall
     query: |
       SELECT
