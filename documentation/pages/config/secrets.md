@@ -23,7 +23,7 @@ k8ssecret://[namespace/]secret-name?key=field&template=dsn_template
 ```
 
 Recommended for Kubernetes deployments. Requires RBAC permissions for the service account to read secrets. See
-[k8s-secret example](https://github.com/burningalchemist/sql_exporter/examples/k8s-secret/) for detailed setup
+[k8s-secret example](https://github.com/burningalchemist/sql_exporter/tree/master/examples/k8s-secret) for detailed setup
 instructions and the Helm chart automatically creates necessary RBAC resources.
 
 ## **AWS/GCP Secret Manager**:
