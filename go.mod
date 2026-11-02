@@ -4,7 +4,7 @@ go 1.26.10
 
 require (
 	cloud.google.com/go/secretmanager v1.23.1
-	github.com/ClickHouse/clickhouse-go/v2 v2.49.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.50.0
 	github.com/aws/aws-sdk-go-v2 v1.47.1
 	github.com/aws/aws-sdk-go-v2/config v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.50.1
@@ -147,7 +147,7 @@ require (
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
-	github.com/shopspring/decimal v1.4.0 // indirect
+	github.com/shopspring/decimal v1.5.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
