@@ -4,9 +4,19 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - "helm/**"
+      - "documentation/**"
+      - ".github/workflows/helm-workflow.yml"
+      - ".github/workflows/docs_release.yml"
   pull_request:
     branches:
       - master
+    paths-ignore:
+      - "helm/**"
+      - "documentation/**"
+      - ".github/workflows/helm-workflow.yml"
+      - ".github/workflows/docs_release.yml"
 
 jobs:
   build:

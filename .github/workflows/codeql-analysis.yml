@@ -3,9 +3,16 @@ name: "CodeQL"
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - "documentation/**"
+      - ".github/workflows/docs_release.yml"
+
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [master]
+    paths-ignore:
+      - "documentation/**"
+      - ".github/workflows/docs_release.yml"
   schedule:
     - cron: "0 23 * * 5"
 
