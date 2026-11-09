@@ -30,6 +30,7 @@ jobs:
         with:
           node-version: 26
           cache: "npm"
+          cache-dependency-path: "./documentation/package-lock.json"
 
       - name: Install dependencies and build documentation
         run: |
