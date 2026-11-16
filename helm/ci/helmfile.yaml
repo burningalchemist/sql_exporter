@@ -23,15 +23,12 @@ releases:
       - prometheus:
           prometheusSpec:
             enableAdminAPI: true
-            podMonitorNamespaceSelector:
-              any: true
+            podMonitorNamespaceSelector: {}
             podMonitorSelector: {}
             podMonitorSelectorNilUsesHelmValues: false
-            ruleNamespaceSelector:
-              any: true
+            ruleNamespaceSelector: {}
             ruleSelector: {}
             ruleSelectorNilUsesHelmValues: false
-            serviceMonitorNamespaceSelector:
-              any: true
+            serviceMonitorNamespaceSelector: {}
             serviceMonitorSelector: {}
             serviceMonitorSelectorNilUsesHelmValues: false
