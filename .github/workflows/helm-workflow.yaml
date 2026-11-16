@@ -14,8 +14,8 @@ on:
       - ".github/workflows/helm-workflow.yml"
 
 env:
-  HELM_VERSION: 3.18.6
-  PYTHON_VERSION: 3.9
+  HELM_VERSION: 4.3.2
+  PYTHON_VERSION: 3.15
   TARGET_BRANCH: chart-testing-target-branch
   TARGET_REMOTE: test
 jobs:
