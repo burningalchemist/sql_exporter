@@ -68,7 +68,12 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 
 	// Open the DB handle in a separate goroutine so we can terminate early if the context closes.
 	go func() {
-		conn, err = sql.Open(driver, url.DSN)
+		// Only "true" enables AWS IAM authentication, any other value is passed to the driver as is.
+		if url.Query().Get(awsIAMParamAuth) == "true" {
+			conn, err = openWithAWSIAM(ctx, driver, url)
+		} else {
+			conn, err = sql.Open(driver, url.DSN)
+		}
 		close(ch)
 	}()
 

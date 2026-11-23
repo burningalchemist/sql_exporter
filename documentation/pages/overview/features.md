@@ -32,6 +32,9 @@
   - Google Cloud Secrets Manager
   - Hashicorp Vault
 
+- **AWS IAM database authentication**. Connect to Amazon RDS and Aurora (PostgreSQL, MySQL) with short-lived IAM auth
+  tokens instead of a static password.
+
 - **Secured HTTP/S endpoint**.
   Use TLS certificates and basic authentication to secure the endpoint.
 

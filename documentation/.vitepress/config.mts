@@ -63,6 +63,7 @@ export default defineConfig({
                         { text: 'Per-query Metrics', link: 'pages/advanced/per_query_metrics' },
                         { text: 'Selective scraping', link: 'pages/advanced/selective_jobs' },
                         { text: 'MySQL Custom Certificates', link: 'pages/advanced/mysql_tls' },
+                        { text: 'AWS IAM Authentication', link: 'pages/advanced/aws_iam_auth' },
                         { text: 'Scraping Special Backends', link: 'pages/advanced/special_backend_scraping' },
                     ]
                 },
