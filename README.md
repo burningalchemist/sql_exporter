@@ -56,6 +56,7 @@ format.
 - Multi-target (jobs) mode
 - Selective job scraping
 - Secret manager integration
+- AWS IAM database authentication
 - TLS/BasicAuth support
 - Request rate limiting
 - Live reload of configuration without restart
