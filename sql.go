@@ -30,9 +30,6 @@ func OpenConnection(ctx context.Context, logContext, dsn string, maxConns, maxId
 	}
 
 	driver := url.Driver
-	if url.GoDriver != "" {
-		driver = url.GoDriver
-	}
 
 	// Register custom TLS config for MySQL if needed
 	if driver == "mysql" && url.Query().Get("tls") == "custom" {

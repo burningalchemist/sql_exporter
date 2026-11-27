@@ -59,7 +59,7 @@ func init() {
 
 		// Re-register with the remapped drivers
 		dburl.Register(dburl.Scheme{
-			Driver:    targetDriver,
+			Name:      targetDriver,
 			Generator: baseScheme.Generator,
 			Opaque:    baseScheme.Opaque,
 			Aliases:   schemes,
