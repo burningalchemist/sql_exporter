@@ -14,15 +14,17 @@ type overrideRule struct {
 }
 
 var overrideMap = map[string]overrideRule{
+	// moderncsqlite driver is used if available, otherwise falls back to mattn/go-sqlite3 (requires CGO)
 	"sqlite": {
 		shadowedDriver: "sqlite3",
 		claims:         []string{"mq", "moderncsqlite", "modernsqlite"},
-		fallback:       []string{"sqlite", "sqlite3", "file"},
+		fallback:       []string{"sqlite3", "file"},
 	},
-	"pgx": {
-		shadowedDriver: "postgres",
-		claims:         []string{"pgx", "px"},
-		fallback:       []string{"pg", "pgsql", "postgres", "postgresql"},
+	// pgx driver is used as the new default, otherwise falls back to lib/pq
+	"postgres": {
+		shadowedDriver: "pgx",
+		claims:         []string{"pq", "libpq", "postgresql", "pg", "pgsql"},
+		fallback:       []string{"pgx", "px"},
 	},
 }
 
@@ -37,32 +39,39 @@ func init() {
 			continue
 		}
 
-		schemes := append([]string{targetDriver}, rule.claims...)
-
-		if !slices.Contains(available, rule.shadowedDriver) {
-			schemes = append(schemes, rule.fallback...)
+		if slices.Contains(available, rule.shadowedDriver) {
+			continue
 		}
 
 		var baseScheme *dburl.Scheme
-
-		// Unregister all aliases to clear possible conflicts
-		for _, alias := range schemes {
-			if old := dburl.Unregister(alias); old != nil && baseScheme == nil {
+		for _, name := range slices.Concat(rule.claims, []string{rule.shadowedDriver, targetDriver}) {
+			if old := dburl.Unregister(name); old != nil && baseScheme == nil {
 				baseScheme = old
 			}
 		}
-
 		// Fallback to a default scheme if none was found
 		if baseScheme == nil {
 			baseScheme = &dburl.Scheme{}
 		}
 
 		// Re-register with the remapped drivers
+		origGen := baseScheme.Generator
+		driver := targetDriver
+		gen := func(u *dburl.URL) (string, string, error) {
+			dsn, drv, err := origGen(u)
+			if drv == rule.shadowedDriver || drv == "" {
+				drv = driver
+			}
+			return dsn, drv, err
+		}
+
 		dburl.Register(dburl.Scheme{
 			Name:      targetDriver,
-			Generator: baseScheme.Generator,
+			Generator: gen,
+			Transport: baseScheme.Transport,
 			Opaque:    baseScheme.Opaque,
-			Aliases:   schemes,
+			Dialect:   baseScheme.Dialect,
+			Aliases:   slices.Concat(rule.claims, rule.fallback),
 		})
 	}
 }
